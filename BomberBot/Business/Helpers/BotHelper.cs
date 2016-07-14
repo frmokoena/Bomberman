@@ -132,6 +132,11 @@ namespace BomberBot.Business.Helpers
             {
                 qMapNode = openList.OrderBy(node => node.FCost).First();
 
+                if (qMapNode.Location.Equals(targetLoc))
+                {
+                    return qMapNode;
+                }
+
                 openList.Remove(qMapNode);
                 closedList.Add(qMapNode);
 
@@ -153,11 +158,6 @@ namespace BomberBot.Business.Helpers
                         HCost = hCost,
                         FCost = fCost
                     };
-
-                    if (loc.Equals(targetLoc))
-                    {
-                        return newChild;
-                    }
 
                     var nodeInOpenList = openList.FirstOrDefault(node => (node.Location.Equals(loc)));
 
@@ -183,6 +183,8 @@ namespace BomberBot.Business.Helpers
         public static Location RecontractPath(Location startLoc, MapNode goalMapNode)
         {
             if (goalMapNode == null) return null;
+
+            if (goalMapNode.Location.Equals(startLoc)) return startLoc;
 
             var currentMapNode = goalMapNode;
             while (!currentMapNode.Parent.Location.Equals(startLoc))

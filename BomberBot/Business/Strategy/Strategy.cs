@@ -75,34 +75,37 @@ namespace BomberBot.Business.Strategy
 
             // Place bomb
 
-            if (playerBombs == null || playerBombs.Count < playerBombs[0].Owner.BombBag)
-            {
-                var walls = BotHelper.FindWallsInLOS(state, homePlayerLocation, homePlayer);
+            //if (playerBombs == null || playerBombs.Count < playerBombs[0].Owner.BombBag)
+            //{
+            var walls = BotHelper.FindWallsInLOS(state, homePlayerLocation, homePlayer);
 
-                if (walls != null)
+            if (walls != null)
+            {
+                if (playerBombs == null || playerBombs.Count < playerBombs[0].Owner.BombBag)
                 {
                     var move = Move.PlaceBomb;
                     GameService.WriteMove(move);
                     return;
                 }
+            }
 
-                // search for placement block
-                Location bombPlantBlock = FindBombPlacementBlock(state, homePlayerLocation, homePlayer);
+            // search for placement block
+            Location bombPlantBlock = FindBombPlacementBlock(state, homePlayerLocation, homePlayer);
 
-                if (bombPlantBlock != null)
+            if (bombPlantBlock != null)
+            {
+                var bombPlantLocationOnMap = BotHelper.BuildPathToTarget(state, homePlayerLocation, bombPlantBlock);
+
+                if (bombPlantLocationOnMap != null)
                 {
-                    var bombPlantLocationOnMap = BotHelper.BuildPathToTarget(state, homePlayerLocation, bombPlantBlock);
+                    var nextLocationToPlant = BotHelper.RecontractPath(homePlayerLocation, bombPlantLocationOnMap);
 
-                    if (bombPlantLocationOnMap != null)
-                    {
-                        var nextLocationToPlant = BotHelper.RecontractPath(homePlayerLocation, bombPlantLocationOnMap);
-
-                        var move = GetMoveFromLocation(homePlayerLocation, nextLocationToPlant);
-                        GameService.WriteMove(move);
-                        return;
-                    }
+                    var move = GetMoveFromLocation(homePlayerLocation, nextLocationToPlant);
+                    GameService.WriteMove(move);
+                    return;
                 }
             }
+            //}
 
             GameService.WriteMove(Move.DoNothing);
         }
