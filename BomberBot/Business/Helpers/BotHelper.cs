@@ -122,7 +122,7 @@ namespace BomberBot.Business.Helpers
         /// <returns></returns>
         public static MapNode BuildPathToTarget(GameState state, Location start, Location target, bool stayClear = false)
         {
-            var openList = new List<MapNode> { new MapNode { Parent = null, Location = start, GCost = 0, HCost = 0, FCost = 0 } };
+            var openList = new List<MapNode> { new MapNode { Location = start } };
             var closedList = new List<MapNode>();
             int gCost, hCost, fCost;
 
