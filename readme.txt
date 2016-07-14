@@ -12,6 +12,8 @@ This is my entry to the 2016 Entelect AI Challenge. The challenge details can be
 
 **Unit-testing Framework:** NUnit Framework 
 
+# Building and running the solution
+
 ## Building the solution
 
 Either of the following two methods will do the job.
@@ -48,13 +50,13 @@ To run the tests, you will need the `NUnit Framework`, and the steps are:
   2. Open the Command Prompt and change to the root directory of the Game Engine.
   3. Execute the application by running the following command: `Run.bat`
 
-## Solution strategy
+# Strategy and project structure 
 
-### Strategy
+## Strategy
 
 I use lot of DIY hacks for my bot with A* strategy for path finding.
 		   
-### Project Structure
+## Project Structure
 
 The solution houses two projects. The application project(`BomberBot.csproj`) and the test project (`BomberBotTests.csproj`).
 
