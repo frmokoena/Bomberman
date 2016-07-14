@@ -19,15 +19,15 @@ namespace BomberBot.Business.Helpers
         /// Possible move Locations
         /// </summary>
         /// <param name="state"></param>
-        /// <param name="start"></param>
+        /// <param name="startLoc"></param>
         /// <param name="curLoc"></param>
         /// <returns>next posssible move Locations</returns>
-        public static List<Location> FindMoveLocations(GameState state, Location start, Location curLoc, bool stayClear = false)
+        public static List<Location> ExpandMoveBlocks(GameState state, Location startLoc, Location curLoc, bool stayClear = false)
         {
             Location loc;
             var movesLoc = new List<Location>();
 
-            if (curLoc.Equals(start))
+            if (curLoc.Equals(startLoc))
             {
                 List<Bomb> bombs;
                 loc = new Location(curLoc.X, curLoc.Y - 1);
@@ -116,43 +116,45 @@ namespace BomberBot.Business.Helpers
         /// <summary>
         /// Shortest route to target
         /// </summary>
-        /// <param name="start"></param>
-        /// <param name="target"></param>
+        /// <param name="startLoc"></param>
+        /// <param name="targetLoc"></param>
         /// <param name="state"></param>
         /// <returns></returns>
-        public static MapNode BuildPathToTarget(GameState state, Location start, Location target, bool stayClear = false)
+        public static MapNode BuildPathToTarget(GameState state, Location startLoc, Location targetLoc, bool stayClear = false)
         {
-            var openList = new List<MapNode> { new MapNode { Location = start } };
+            var openList = new List<MapNode> { new MapNode { Location = startLoc } };
             var closedList = new List<MapNode>();
+
             int gCost, hCost, fCost;
+            MapNode qMapNode;
 
             while (openList.Count != 0)
             {
-                var q = openList.OrderBy(node => node.FCost).First();
+                qMapNode = openList.OrderBy(node => node.FCost).First();
 
-                openList.Remove(q);
-                closedList.Add(q);
+                openList.Remove(qMapNode);
+                closedList.Add(qMapNode);
 
 
-                var childrenLoc = FindMoveLocations(state, start, q.Location, stayClear);
+                var childrenLoc = ExpandMoveBlocks(state, startLoc, qMapNode.Location, stayClear);
 
 
                 foreach (var loc in childrenLoc)
                 {
-                    gCost = q.GCost + 1;
-                    hCost = Math.Abs(loc.X - target.X) + Math.Abs(loc.Y - target.Y);
+                    gCost = qMapNode.GCost + 1;
+                    hCost = Math.Abs(loc.X - targetLoc.X) + Math.Abs(loc.Y - targetLoc.Y);
                     fCost = gCost + hCost;
 
                     var newChild = new MapNode
                     {
-                        Parent = q,
+                        Parent = qMapNode,
                         Location = loc,
                         GCost = gCost,
                         HCost = hCost,
                         FCost = fCost
                     };
 
-                    if (loc.Equals(target))
+                    if (loc.Equals(targetLoc))
                     {
                         return newChild;
                     }
@@ -175,19 +177,19 @@ namespace BomberBot.Business.Helpers
         /// <summary>
         /// Reconstruct the path to target
         /// </summary>
-        /// <param name="start"></param>
-        /// <param name="goal"></param>
+        /// <param name="startLoc"></param>
+        /// <param name="goalMapNode"></param>
         /// <returns>Next move Location towards target</returns>
-        public static Location RecontractPath(Location start, MapNode goal)
+        public static Location RecontractPath(Location startLoc, MapNode goalMapNode)
         {
-            if (goal == null) return null;
+            if (goalMapNode == null) return null;
 
-            var current = goal;
-            while (!current.Parent.Location.Equals(start))
+            var currentMapNode = goalMapNode;
+            while (!currentMapNode.Parent.Location.Equals(startLoc))
             {
-                current = current.Parent;
+                currentMapNode = currentMapNode.Parent;
             }
-            return new Location(current.Location.X, current.Location.Y);
+            return new Location(currentMapNode.Location.X, currentMapNode.Location.Y);
         }
 
         /// <summary>
@@ -198,25 +200,27 @@ namespace BomberBot.Business.Helpers
         /// <returns>List of bombs in LOS</returns>
         public static List<Bomb> FindBombsInLOS(GameState state, Location curLoc)
         {
-            var bombs = new List<Bomb>();
+            var bombsInLOS = new List<Bomb>();
 
             //Sitting on Bomb
             if (state.IsBomb(curLoc))
             {
                 var bomb = state.GetBlock(curLoc).Bomb;
-                bombs.Add(bomb);
+                bombsInLOS.Add(bomb);
             }
 
             //Continue to add others
             var openBlocks = new List<Location> { curLoc };
+            Location qLoc;
+            List<Location> blocksLoc;
 
             while (openBlocks.Count != 0)
             {
-                var qLoc = openBlocks.First();
+                qLoc = openBlocks.First();
 
                 openBlocks.Remove(qLoc);
 
-                var blocksLoc = ExpandBlocks(state, curLoc, qLoc);
+                blocksLoc = ExpandBombBlocks(state, curLoc, qLoc);
 
                 foreach (var bLoc in blocksLoc)
                 {
@@ -226,7 +230,7 @@ namespace BomberBot.Business.Helpers
                         var bombDistance = Math.Abs(curLoc.X - bLoc.X) + Math.Abs(curLoc.Y - bLoc.Y);
                         if (bomb.BombRadius > bombDistance - 1)
                         {
-                            bombs.Add(bomb);
+                            bombsInLOS.Add(bomb);
                         }
                     }
                     else
@@ -235,7 +239,7 @@ namespace BomberBot.Business.Helpers
                     }
                 }
             }
-            return bombs.Count == 0 ? null : bombs.OrderBy(b => b.BombTimer).ToList();
+            return bombsInLOS.Count == 0 ? null : bombsInLOS.OrderBy(b => b.BombTimer).ToList();
         }
 
         /// <summary>
@@ -246,7 +250,7 @@ namespace BomberBot.Business.Helpers
         /// <param name="blockLoc"></param>
         /// <returns></returns>
 
-        private static List<Location> ExpandBlocks(GameState state, Location curLoc, Location blockLoc)
+        private static List<Location> ExpandBombBlocks(GameState state, Location curLoc, Location blockLoc)
         {
             var blocksLoc = new List<Location>();
             Location loc;
@@ -259,7 +263,6 @@ namespace BomberBot.Business.Helpers
                 {
                     blocksLoc.Add(loc);
                 }
-
 
                 loc = new Location(curLoc.X + 1, curLoc.Y);
 
@@ -293,7 +296,7 @@ namespace BomberBot.Business.Helpers
                         blocksLoc.Add(loc);
                     }
                 }
-                else if (blockLoc.Y == curLoc.Y)
+                else
                 {
                     loc = new Location(blockLoc.X < curLoc.X ? blockLoc.X - 1 : blockLoc.X + 1, blockLoc.Y);
 
@@ -313,7 +316,7 @@ namespace BomberBot.Business.Helpers
         /// <param name="curLoc"></param>
         /// <param name="target"></param>
         /// <returns></returns>
-        public static List<Location> FindSafeLocations(GameState state, Location curLoc)
+        public static List<Location> ExpandSafeBlocks(GameState state, Location curLoc)
         {
             Location loc;
             var safeBlocks = new List<Location>();
@@ -358,24 +361,25 @@ namespace BomberBot.Business.Helpers
         /// <returns></returns>
         public static List<DestructibleWall> FindWallsInLOS(GameState state, Location curLoc, Player player)
         {
-            var walls = new List<DestructibleWall>();
+            var wallsInLOS = new List<DestructibleWall>();
 
             var openBlocks = new List<Location> { curLoc };
+            Location qLoc;
 
             while (openBlocks.Count != 0)
             {
-                var qLoc = openBlocks.First();
+                qLoc = openBlocks.First();
 
                 openBlocks.Remove(qLoc);
 
-                var blocksLoc = ExpandPlantBlocks(state, curLoc, qLoc, player.BombRadius);
+                var blocksLoc = ExpandWallBlocks(state, curLoc, qLoc, player.BombRadius);
 
                 foreach (var wLoc in blocksLoc)
                 {
                     if (state.IsDestructibleWall(wLoc))
                     {
                         var wall = (DestructibleWall)state.GetBlock(wLoc).Entity;
-                        walls.Add(wall);
+                        wallsInLOS.Add(wall);
                     }
                     else
                     {
@@ -383,7 +387,7 @@ namespace BomberBot.Business.Helpers
                     }
                 }
             }
-            return walls.Count == 0 ? null : walls;
+            return wallsInLOS.Count == 0 ? null : wallsInLOS;
         }
 
         /// <summary>
@@ -393,7 +397,7 @@ namespace BomberBot.Business.Helpers
         /// <param name="curLoc"></param>
         /// <param name="blockLoc"></param>
         /// <returns></returns>
-        private static List<Location> ExpandPlantBlocks(GameState state, Location curLoc, Location blockLoc, int bombRadius)
+        private static List<Location> ExpandWallBlocks(GameState state, Location curLoc, Location blockLoc, int bombRadius)
         {
             var blocksLoc = new List<Location>();
             Location loc;
@@ -444,7 +448,7 @@ namespace BomberBot.Business.Helpers
                         }
                     }
                 }
-                else if (blockLoc.Y == curLoc.Y)
+                else
                 {
                     loc = new Location(blockLoc.X < curLoc.X ? blockLoc.X - 1 : blockLoc.X + 1, blockLoc.Y);
 

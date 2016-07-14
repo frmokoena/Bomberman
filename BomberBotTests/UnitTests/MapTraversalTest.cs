@@ -29,7 +29,7 @@ namespace BomberBotTests.UnitTests
             };
 
             //Act
-            var actualLocs = BotHelper.FindMoveLocations(state, new Location(3, 3), new Location(3, 3));
+            var actualLocs = BotHelper.ExpandMoveBlocks(state, new Location(3, 3), new Location(3, 3));
 
             for (var i = 0; i < expectLocs.Count; i++)
             {

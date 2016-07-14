@@ -96,12 +96,10 @@ namespace BomberBot.Business.Strategy
                     if (bombPlantLocationOnMap != null)
                     {
                         var nextLocationToPlant = BotHelper.RecontractPath(homePlayerLocation, bombPlantLocationOnMap);
-                        if (nextLocationToPlant != null)
-                        {
-                            var move = GetMoveFromLocation(homePlayerLocation, nextLocationToPlant);
-                            GameService.WriteMove(move);
-                            return;
-                        }
+
+                        var move = GetMoveFromLocation(homePlayerLocation, nextLocationToPlant);
+                        GameService.WriteMove(move);
+                        return;
                     }
                 }
             }
@@ -109,21 +107,22 @@ namespace BomberBot.Business.Strategy
             GameService.WriteMove(Move.DoNothing);
         }
 
-        private Location FindBombPlacementBlock(GameState state, Location start, Player player)
+        private Location FindBombPlacementBlock(GameState state, Location startLoc, Player player)
         {
-            var openList = new List<Location>() { start };
+            var openList = new List<Location>() { startLoc };
             var closedList = new List<Location>();
             var visited = new List<Location>();
+            Location qLoc;
 
             while (openList.Count != 0)
             {
-                var q = openList.First();
-                openList.Remove(q);
-                closedList.Add(q);
+                qLoc = openList.First();
+                openList.Remove(qLoc);
+                closedList.Add(qLoc);
 
-                var possibleSpots = BotHelper.FindMoveLocations(state, start, q);
+                var possibleBlocksLoc = BotHelper.ExpandMoveBlocks(state, startLoc, qLoc);
 
-                foreach (var loc in possibleSpots)
+                foreach (var loc in possibleBlocksLoc)
                 {
                     if (!visited.Contains(loc))
                     {
@@ -171,37 +170,38 @@ namespace BomberBot.Business.Strategy
         /// <param name="state"></param>
         /// <param name="curLoc"></param>
         /// <returns>List of power ups on the map</returns>
-        public List<MapPowerUp> FindMapPowerUps(GameState state, Location start)
+        public List<MapPowerUp> FindMapPowerUps(GameState state, Location startLoc)
         {
             var mapPowerUps = new List<MapPowerUp>();
 
-            var openList = new List<Location> { start };//To be expanded
+            var openList = new List<Location> { startLoc };//To be expanded
             var closedList = new List<Location>();       //Expanded
             var visitedList = new List<Location>();      //checked
+            Location qLoc;
 
             while (openList.Count != 0)
             {
-                var q = openList.First();
-                openList.Remove(q);
-                closedList.Add(q);
+                qLoc = openList.First();
+                openList.Remove(qLoc);
+                closedList.Add(qLoc);
 
-                var possibleSpots = BotHelper.FindMoveLocations(state, start, q);
+                var possibleBlockLoc = BotHelper.ExpandMoveBlocks(state, startLoc, qLoc);
 
-                foreach (var spot in possibleSpots)
+                foreach (var loc in possibleBlockLoc)
                 {
-                    if (!visitedList.Contains(spot))
+                    if (!visitedList.Contains(loc))
                     {
-                        if (state.IsPowerUp(spot))
+                        if (state.IsPowerUp(loc))
                         {
-                            var mapNode = BotHelper.BuildPathToTarget(state, start, spot);
-                            mapPowerUps.Add(new MapPowerUp { Location = spot, Distance = mapNode == null ? 0 : mapNode.FCost, NextMove = BotHelper.RecontractPath(start, mapNode) });
+                            var mapNode = BotHelper.BuildPathToTarget(state, startLoc, loc);
+                            mapPowerUps.Add(new MapPowerUp { Location = loc, Distance = mapNode == null ? 0 : mapNode.FCost, NextMove = BotHelper.RecontractPath(startLoc, mapNode) });
                         }
-                        visitedList.Add(spot);
+                        visitedList.Add(loc);
                     }
 
-                    if (!closedList.Contains(spot))
+                    if (!closedList.Contains(loc))
                     {
-                        openList.Add(spot);
+                        openList.Add(loc);
                     }
                 }
             }
@@ -243,7 +243,6 @@ namespace BomberBot.Business.Strategy
                     return powerUp;
                 }
             }
-
             return null;
         }
 
@@ -260,9 +259,9 @@ namespace BomberBot.Business.Strategy
             var start = state.FindPlayerLocationOnMap(player.Key);
             if (start == null) return false;
 
-            var target = powerUp.Location;
+            var targetLoc = powerUp.Location;
 
-            var oponentTarget = BotHelper.BuildPathToTarget(state, start, target);
+            var oponentTarget = BotHelper.BuildPathToTarget(state, start, targetLoc);
 
             if (oponentTarget == null) return false;
 
@@ -286,33 +285,34 @@ namespace BomberBot.Business.Strategy
             var openList = new List<Location> { curLoc };//To be expanded
             var closedList = new List<Location>();       //Expanded
             var visitedList = new List<Location>();      //checked
+            Location qLoc;
 
             while (openList.Count != 0)
             {
-                var q = openList.First();
-                openList.Remove(q);
-                closedList.Add(q);
+                qLoc = openList.First();
+                openList.Remove(qLoc);
+                closedList.Add(qLoc);
 
-                var possibleSpots = BotHelper.FindSafeLocations(state, q);
+                var possibleBlockLos = BotHelper.ExpandSafeBlocks(state, qLoc);
 
-                foreach (var spot in possibleSpots)
+                foreach (var loc in possibleBlockLos)
                 {
-                    if (!visitedList.Contains(spot))
+                    if (!visitedList.Contains(loc))
                     {
-                        var bombsInLos = BotHelper.FindBombsInLOS(state, spot);
+                        var bombsInLos = BotHelper.FindBombsInLOS(state, loc);
 
                         if (bombsInLos == null)
                         {
                             // TODO: easier to plant???
-                            return spot;
+                            return loc;
                         }
 
-                        visitedList.Add(spot);
+                        visitedList.Add(loc);
                     }
 
-                    if (!closedList.Contains(spot))
+                    if (!closedList.Contains(loc))
                     {
-                        openList.Add(spot);
+                        openList.Add(loc);
                     }
                 }
             }
