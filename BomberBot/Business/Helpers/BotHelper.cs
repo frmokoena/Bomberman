@@ -11,8 +11,8 @@ namespace BomberBot.Business.Helpers
     {
         public static bool IsValidBlock(GameState state, Location loc)
         {
-            return (loc.X > 0 && loc.X < state.MapHeight - 1)
-                && (loc.Y > 0 && loc.Y < state.MapWidth - 1);
+            return (loc.X > 0 && loc.X < state.MapWidth - 1)
+                && (loc.Y > 0 && loc.Y < state.MapHeight - 1);
         }
 
         /// <summary>
