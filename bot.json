@@ -1,0 +1,9 @@
+{
+    "Author":"Rethabile Mokoena",
+    "Email":"fr.mokoena@gmail.com",
+    "NickName" :"Rethabile",
+    "BotType": "CSharp",
+    "ProjectLocation" : "",
+    "RunFile" : "BomberBot\\bin\\Debug\\BomberBot.exe",
+    "RunArgs" : ""
+}
