@@ -29,7 +29,7 @@ namespace BomberBotTests.UnitTests
             var expect = new Location(1, 2);
             //Act
 
-            var result = BotHelper.FindBombsInLOS(gameService.GameState, playerLoc);
+            var result = BotHelper.FindVisibleBombs(gameService.GameState, playerLoc);
 
             //Assert
             Assert.IsNotNull(gameService.GameState.GetBlock(expect).Bomb);
@@ -124,7 +124,7 @@ namespace BomberBotTests.UnitTests
         }
 
         [Test]
-        public void FindSaveBlockTest()
+        public void FindSafeBlocksTest()
         {
             //Arrange
             string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\Sample State Files\state8";
@@ -135,14 +135,18 @@ namespace BomberBotTests.UnitTests
 
             Location playerAloc = gameService.GameState.FindPlayerLocationOnMap(playerKey);
 
+            var player = gameService.GameState.Players.Find(p => p.Key == playerKey);
+
+            var bombs = BotHelper.FindVisibleBombs(gameService.GameState, playerAloc);
+
             var expect = new Location(4, 17);
 
             //Act
-            Location result = bot.FindSafeBlock(gameService.GameState, playerAloc);
+            var result = bot.FindSafeBlocks(gameService.GameState, player, playerAloc, bombs[0]);
 
             //Assert
-            Assert.AreEqual(expect.X, result.X);
-            Assert.AreEqual(expect.Y, result.Y);
+            Assert.AreEqual(expect.X, result[0].Location.X);
+            Assert.AreEqual(expect.Y, result[0].Location.Y);
         }
 
         [Test]
@@ -159,7 +163,7 @@ namespace BomberBotTests.UnitTests
 
 
             // Act
-            var result = BotHelper.FindWallsInLOS(gameService.GameState, curLoc, player);
+            var result = BotHelper.FindVisibleWalls(gameService.GameState, curLoc, player);
 
             //Assert
             Assert.IsNull(result);
@@ -180,7 +184,7 @@ namespace BomberBotTests.UnitTests
             var expect = 2;
 
             // Act
-            var result = BotHelper.FindWallsInLOS(gameService.GameState, curLoc, player);
+            var result = BotHelper.FindVisibleWalls(gameService.GameState, curLoc, player);
 
             //Assert
             Assert.AreEqual(expect, result.Count);

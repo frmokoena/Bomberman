@@ -34,11 +34,17 @@ namespace BomberBot.Business.Helpers
 
                 if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
                 {
-                    bombs = FindBombsInLOS(state, loc);
-
-                    if (bombs == null || stayClear)
+                    if (stayClear)
                     {
                         movesLoc.Add(loc);
+                    }
+                    else
+                    {
+                        bombs = FindVisibleBombs(state, loc);
+                        if (bombs == null)
+                        {
+                            movesLoc.Add(loc);
+                        }
                     }
                 }
 
@@ -47,11 +53,17 @@ namespace BomberBot.Business.Helpers
 
                 if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
                 {
-                    bombs = FindBombsInLOS(state, loc);
-
-                    if (bombs == null || stayClear)
+                    if (stayClear)
                     {
                         movesLoc.Add(loc);
+                    }
+                    else
+                    {
+                        bombs = FindVisibleBombs(state, loc);
+                        if (bombs == null)
+                        {
+                            movesLoc.Add(loc);
+                        }
                     }
                 }
 
@@ -59,11 +71,17 @@ namespace BomberBot.Business.Helpers
 
                 if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
                 {
-                    bombs = FindBombsInLOS(state, loc);
-
-                    if (bombs == null || stayClear)
+                    if (stayClear)
                     {
                         movesLoc.Add(loc);
+                    }
+                    else
+                    {
+                        bombs = FindVisibleBombs(state, loc);
+                        if (bombs == null)
+                        {
+                            movesLoc.Add(loc);
+                        }
                     }
                 }
 
@@ -71,14 +89,19 @@ namespace BomberBot.Business.Helpers
 
                 if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
                 {
-                    bombs = FindBombsInLOS(state, loc);
-
-                    if (bombs == null || stayClear)
+                    if (stayClear)
                     {
                         movesLoc.Add(loc);
                     }
+                    else
+                    {
+                        bombs = FindVisibleBombs(state, loc);
+                        if (bombs == null)
+                        {
+                            movesLoc.Add(loc);
+                        }
+                    }
                 }
-
             }
             else
             {
@@ -200,15 +223,15 @@ namespace BomberBot.Business.Helpers
         /// <param name="state"></param>
         /// <param name="curLoc"></param>
         /// <returns>List of bombs in LOS</returns>
-        public static List<Bomb> FindBombsInLOS(GameState state, Location curLoc)
+        public static List<Bomb> FindVisibleBombs(GameState state, Location curLoc)
         {
-            var bombsInLOS = new List<Bomb>();
+            var visibleBombs = new List<Bomb>();
 
             //Sitting on Bomb
             if (state.IsBomb(curLoc))
             {
                 var bomb = state.GetBlock(curLoc).Bomb;
-                bombsInLOS.Add(bomb);
+                visibleBombs.Add(bomb);
             }
 
             //Continue to add others
@@ -232,7 +255,7 @@ namespace BomberBot.Business.Helpers
                         var bombDistance = Math.Abs(curLoc.X - bLoc.X) + Math.Abs(curLoc.Y - bLoc.Y);
                         if (bomb.BombRadius > bombDistance - 1)
                         {
-                            bombsInLOS.Add(bomb);
+                            visibleBombs.Add(bomb);
                         }
                     }
                     else
@@ -241,7 +264,7 @@ namespace BomberBot.Business.Helpers
                     }
                 }
             }
-            return bombsInLOS.Count == 0 ? null : bombsInLOS.OrderBy(b => b.BombTimer).ToList();
+            return visibleBombs.Count == 0 ? null : visibleBombs.OrderBy(b => b.BombTimer).ToList();
         }
 
         /// <summary>
@@ -361,9 +384,9 @@ namespace BomberBot.Business.Helpers
         /// <param name="state"></param>
         /// <param name="curLoc"></param>
         /// <returns></returns>
-        public static List<DestructibleWall> FindWallsInLOS(GameState state, Location curLoc, Player player)
+        public static List<DestructibleWall> FindVisibleWalls(GameState state, Location curLoc, Player player)
         {
-            var wallsInLOS = new List<DestructibleWall>();
+            var visibleWalls = new List<DestructibleWall>();
 
             var openBlocks = new List<Location> { curLoc };
             Location qLoc;
@@ -381,7 +404,7 @@ namespace BomberBot.Business.Helpers
                     if (state.IsDestructibleWall(wLoc))
                     {
                         var wall = (DestructibleWall)state.GetBlock(wLoc).Entity;
-                        wallsInLOS.Add(wall);
+                        visibleWalls.Add(wall);
                     }
                     else
                     {
@@ -389,7 +412,7 @@ namespace BomberBot.Business.Helpers
                     }
                 }
             }
-            return wallsInLOS.Count == 0 ? null : wallsInLOS;
+            return visibleWalls.Count == 0 ? null : visibleWalls;
         }
 
         /// <summary>

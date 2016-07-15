@@ -2,10 +2,11 @@
 
 namespace BomberBot.Domain.Model
 {
-    public class MapPowerUp
+    public class MapBlock
     {
         public Location Location { get; set; }
         public int Distance { get; set; }
         public Location NextMove { get; set; }
+        public int VisibleWalls { get; set; }
     }
 }

@@ -54,7 +54,7 @@
     <Compile Include="Common\PowerUp.cs" />
     <Compile Include="Domain\Model\GameState.cs" />
     <Compile Include="Domain\Model\MapNode.cs" />
-    <Compile Include="Domain\Model\MapPowerUp.cs" />
+    <Compile Include="Domain\Model\MapBlock.cs" />
     <Compile Include="Domain\Objects\Block.cs" />
     <Compile Include="Domain\Objects\Bomb.cs" />
     <Compile Include="Domain\Objects\BombBagPowerUp.cs" />
