@@ -29,7 +29,7 @@ namespace BomberBot.Services
             WorkingDirectory = workingDirectory;
         }
 
-        public GameState LoadGameState()
+        private GameState LoadGameState()
         {
             var jsonText = ReadGameStateFile();
             var gameState = JsonConvert.DeserializeObject<GameState>(jsonText,

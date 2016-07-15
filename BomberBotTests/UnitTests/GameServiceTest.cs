@@ -235,9 +235,9 @@ namespace BomberBotTests.UnitTests
             var emptyBlock = state.Map[1][2];
 
             //Assert
-            Assert.IsFalse(notEmptyBlock.EntityInBlock == ObjectInBlock.EmptyBlock);
-            Assert.IsFalse(anotherNotsoEmpty.EntityInBlock == ObjectInBlock.EmptyBlock);
-            Assert.IsTrue(emptyBlock.EntityInBlock == ObjectInBlock.EmptyBlock);
+            Assert.IsFalse(notEmptyBlock.IsEmpty());
+            Assert.IsFalse(anotherNotsoEmpty.IsEmpty());
+            Assert.IsTrue(emptyBlock.IsEmpty());
         }
 
         [Test]
@@ -248,18 +248,15 @@ namespace BomberBotTests.UnitTests
             var playerKey = "A";
 
             var gameService = new GameService(playerKey, workingDirectory);
-
-
-            var expectEntityOccupiedBlock = ObjectInBlock.BombExploding;
+                        
 
             //Act
             var map = gameService.GameState.Map;
 
-            var block = map[17][17];
+            var block = map[17][17];           
 
-            var actualEntityOccupiedBlock = block.EntityInBlock;
-
-            Assert.AreEqual(expectEntityOccupiedBlock, actualEntityOccupiedBlock);
+            //Assert
+            Assert.IsTrue(block.IsBombExploding());            
         }
 
         [Test]

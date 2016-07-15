@@ -4,6 +4,7 @@ using BomberBot.Enums;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 namespace BomberBot.Domain.Model
 {
@@ -39,26 +40,6 @@ namespace BomberBot.Domain.Model
             return new Location(player.Location.X - 1, player.Location.Y - 1);
         }
 
-        public bool IsEmptyBlock(Location loc)
-        {
-            return GetBlock(loc).EntityInBlock == ObjectInBlock.EmptyBlock;
-        }
-
-        public bool IsBombExploding(Location loc)
-        {
-            return GetBlock(loc).EntityInBlock == ObjectInBlock.BombExploding;
-        }
-
-        public bool IsPlayer(Location loc)
-        {
-            return GetBlock(loc).EntityInBlock == ObjectInBlock.Player;
-        }
-
-        public bool IsPlayerSittingOnBomb(Location loc)
-        {
-            return GetBlock(loc).EntityInBlock == ObjectInBlock.PlayerSittingOnBomb;
-        }
-
         public List<Bomb> GetPlayerBombs(string playerKey)
         {
             var bombs = new List<Bomb>();
@@ -84,99 +65,64 @@ namespace BomberBot.Domain.Model
             return bombs.Count == 0 ? null : bombs.OrderBy(b => b.BombTimer).ToList();
         }
 
-        public bool IsDestructibleWall(Location loc)
-        {
-            return GetBlock(loc).EntityInBlock == ObjectInBlock.DestructibleWall;
-        }
-
-        public bool IsBomb(Location loc)
-        {
-            var entity = GetBlock(loc).EntityInBlock;
-            return entity == ObjectInBlock.Bomb || entity == ObjectInBlock.PlayerSittingOnBomb;
-        }
-
-        public bool IsSuperPowerUp(Location loc)
-        {
-            return GetBlock(loc).EntityInBlock == ObjectInBlock.SuperPowerUp;
-        }
-
-        public bool IsBombRadiusPowerUp(Location loc)
-        {
-            return GetBlock(loc).EntityInBlock == ObjectInBlock.BombRadiusPowerUp;
-        }
-
-        public bool IsBombBagPowerUp(Location loc)
-        {
-            return GetBlock(loc).EntityInBlock == ObjectInBlock.BombBagPowerUp;
-        }
-
-        public bool IsPowerUp(Location loc)
-        {
-            var entity = GetBlock(loc).PowerUp;
-            return entity != null;
-        }
-
-        //private bool IsValidBlock(Location loc)
-        //{
-        //    if((loc.X > 0 && loc.X < MapHeight - 1)
-        //        && (loc.Y > 0 && loc.Y < MapWidth - 1))
-        //    {
-        //        var entity = GetBlock(loc).EntityInBlock;
-        //        if(entity != ObjectInBlock.IndestructibleWall)
-        //        {
-        //            return true;
-        //        }
-        //    }
-        //    return false;
-        //}
-
         public bool IsBlockClear(Location loc)
         {
             var block = GetBlock(loc);
-            var entity = block.EntityInBlock;
 
-            return (entity == ObjectInBlock.EmptyBlock
-                || entity == ObjectInBlock.BombExploding
-                || entity == ObjectInBlock.Player
-                || block.PowerUp != null);
+            return block.IsEmpty()
+                || block.IsBombExploding()
+                || block.IsPlayer()
+                || block.IsPowerUp();
         }
 
         public bool IsBlockBombClear(Location loc)
         {
-            var block = GetBlock(loc);
-            var entity = block.EntityInBlock;
+            var block = GetBlock(loc);           
 
-            return (entity == ObjectInBlock.EmptyBlock
-                || entity == ObjectInBlock.BombExploding
-                || entity == ObjectInBlock.Player
-                || entity == ObjectInBlock.PlayerSittingOnBomb
-                || entity == ObjectInBlock.Bomb
-                || block.PowerUp != null);
+            return block.IsEmpty()
+                || block.IsBombExploding()
+                || block.IsPlayer()
+                || block.IsPlayerSittingOnBomb()
+                || block.IsBomb()
+                || block.IsPowerUp();
         }
 
         // Open to move to
         public bool IsBlockSafe(Location loc)
         {
             var block = GetBlock(loc);
-            var entity = block.EntityInBlock;
 
-            return (entity == ObjectInBlock.EmptyBlock
-                || entity == ObjectInBlock.BombExploding
-                || block.PowerUp != null);
+            return block.IsEmpty()
+                || block.IsBombExploding()
+                || block.IsPowerUp();
         }
 
         //plant clear
         public bool IsBlockPlantClear(Location loc)
         {
             var block = GetBlock(loc);
-            var entity = block.EntityInBlock;
 
-            return (entity == ObjectInBlock.EmptyBlock
-                || entity == ObjectInBlock.DestructibleWall
-                || entity == ObjectInBlock.BombExploding
-                || entity == ObjectInBlock.Player
-                || entity == ObjectInBlock.PlayerSittingOnBomb
-                || block.PowerUp != null);
+            return block.IsEmpty()
+                || block.IsBombExploding()
+                || block.IsPlayer()
+                || block.IsPlayerSittingOnBomb()
+                || block.IsDestructibleWall()
+                || block.IsPowerUp();
+        }
+
+        public bool IsBomb(Location loc)
+        {
+            return GetBlock(loc).IsBomb();
+        }
+
+        public bool IsDestructibleWall(Location loc)
+        {
+            return GetBlock(loc).IsDestructibleWall();
+        }
+
+        public bool IsPowerUp(Location loc)
+        {
+            return GetBlock(loc).IsPowerUp();
         }
     }
 }

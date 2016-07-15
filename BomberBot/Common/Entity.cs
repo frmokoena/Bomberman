@@ -15,7 +15,7 @@ namespace BomberBot.Common
         {
             get
             {
-                return _jsonType != null ? GameService.GetEntityType(_jsonType) : EntityType.PlayerEntity;
+                return _jsonType == null ?  EntityType.PlayerEntity : GameService.GetEntityType(_jsonType);
             }
         }
     }

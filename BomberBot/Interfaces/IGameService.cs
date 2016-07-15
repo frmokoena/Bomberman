@@ -6,7 +6,6 @@ namespace BomberBot.Interfaces
     {
         string HomeKey { get; set; }
         T GameState { get; }
-        T LoadGameState();
         void WriteMove(Move move);
     }
 }

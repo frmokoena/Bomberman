@@ -292,9 +292,9 @@ namespace BomberBot.Business.Strategy
                 openList.Remove(qLoc);
                 closedList.Add(qLoc);
 
-                var possibleBlockLos = BotHelper.ExpandSafeBlocks(state, qLoc);
+                var possibleBlockLoc = BotHelper.ExpandSafeBlocks(state, qLoc);
 
-                foreach (var loc in possibleBlockLos)
+                foreach (var loc in possibleBlockLoc)
                 {
                     if (!visitedList.Contains(loc))
                     {

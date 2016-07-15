@@ -65,7 +65,6 @@
     <Compile Include="Domain\Objects\SuperPowerUp.cs" />
     <Compile Include="Enums\EntityType.cs" />
     <Compile Include="Enums\Move.cs" />
-    <Compile Include="Enums\ObjectInBlock.cs" />
     <Compile Include="Interfaces\IGameService.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

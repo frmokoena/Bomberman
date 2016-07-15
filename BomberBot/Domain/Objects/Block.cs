@@ -11,33 +11,72 @@ namespace BomberBot.Domain.Objects
         public bool Exploding { get; set; }     
         public Location Location { get; set; }
 
-        public ObjectInBlock EntityInBlock
+        public bool IsEmpty()
         {
-            get
+            return Entity == null 
+                && Bomb == null 
+                && PowerUp == null 
+                && !Exploding;
+        }
+
+        public bool IsBombExploding()
+        {
+            return Exploding;
+        }
+
+        public bool IsPlayer()
+        {
+            if (Entity is Player)
             {
-                if (Entity != null)
-                {
-                    if (Entity is IndestructibleWall) return ObjectInBlock.IndestructibleWall;
-                    if (Entity is DestructibleWall) return ObjectInBlock.DestructibleWall;
-                    if (Entity is Player)
-                    {
-                        if (Bomb != null) return ObjectInBlock.PlayerSittingOnBomb;
-                        return ObjectInBlock.Player;
-                    }
-                }
-
-                if (Exploding) return ObjectInBlock.BombExploding;
-
-                if (Bomb != null) return ObjectInBlock.Bomb;
-
-                if (PowerUp != null)
-                {
-                    if (PowerUp is BombBagPowerUp) return ObjectInBlock.BombBagPowerUp;
-                    if (PowerUp is BombRadiusPowerUp) return ObjectInBlock.BombRadiusPowerUp;
-                    if (PowerUp is SuperPowerUp) return ObjectInBlock.SuperPowerUp;
-                }
-                return ObjectInBlock.EmptyBlock;
+                if (Bomb != null) return false;
+                return true;                
             }
+            return false;
+        }
+
+        public bool IsPlayerSittingOnBomb()
+        {
+            if (Entity is Player)
+            {
+                if (Bomb != null) return true;
+                return false;
+            }
+            return false;
+        }
+
+        public bool IsIndestructibleWall()
+        {
+            return Entity is IndestructibleWall;
+        }
+
+        public bool IsDestructibleWall()
+        {
+            return Entity is DestructibleWall;
+        }
+
+        public bool IsBomb()
+        {
+            return Bomb != null;
+        }
+
+        public bool IsPowerUp()
+        {
+            return PowerUp != null;
+        }
+
+        public bool IsSuperPowerUp()
+        {
+            return PowerUp is SuperPowerUp;
+        }
+
+        public bool IsBombRadiusPowerUp()
+        {
+            return PowerUp is BombRadiusPowerUp;
+        }
+
+        public bool IsBombBagPowerUp()
+        {
+            return PowerUp is BombBagPowerUp;
         }
     }
 }
