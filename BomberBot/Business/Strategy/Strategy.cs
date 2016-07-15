@@ -74,9 +74,6 @@ namespace BomberBot.Business.Strategy
 
 
             // Place bomb
-
-            //if (playerBombs == null || playerBombs.Count < playerBombs[0].Owner.BombBag)
-            //{
             var walls = BotHelper.FindWallsInLOS(state, homePlayerLocation, homePlayer);
 
             if (walls != null)
@@ -105,7 +102,6 @@ namespace BomberBot.Business.Strategy
                     return;
                 }
             }
-            //}
 
             GameService.WriteMove(Move.DoNothing);
         }
