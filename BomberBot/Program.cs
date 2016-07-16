@@ -16,7 +16,8 @@ namespace BomberBot
 
             RunBot(args);
 
-            stopwatch.Stop();            
+            stopwatch.Stop();
+            var elaps = stopwatch.ElapsedMilliseconds;         
             Console.WriteLine("[BOT]\tBot finished in {0} ms.", stopwatch.ElapsedMilliseconds);
 
         }

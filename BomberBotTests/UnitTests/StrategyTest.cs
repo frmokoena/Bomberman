@@ -78,15 +78,18 @@ namespace BomberBotTests.UnitTests
 
             Strategy bot = new Strategy(gameService);
 
+            var state = gameService.GameState;
             var playerAloc = new Location(5, 11);
 
             var expectLoc = new Location(6, 15);
             var expectDistance = 5;
             var expectMove = new Location(5, 12);
+            var maxBombBlast = state.MapWidth > state.MapHeight ? state.MapWidth - 3:state.MapHeight - 3;
+            var player = state.Players.Find(p => p.Key == playerKey);
 
             //Act
             var mapPowerUps = bot.FindMapPowerUps(gameService.GameState, playerAloc);
-            var result = bot.FindNearByPowerUp(gameService.GameState, playerAloc);
+            var result = bot.FindNearByPowerUp(gameService.GameState,player, playerAloc,maxBombBlast);
 
             //Assert
             Assert.IsNotNull(result);
@@ -139,7 +142,7 @@ namespace BomberBotTests.UnitTests
 
             var bombs = BotHelper.FindVisibleBombs(gameService.GameState, playerAloc);
 
-            var expect = new Location(4, 17);
+            var expect = new Location(5, 17);
 
             //Act
             var result = bot.FindSafeBlocks(gameService.GameState, player, playerAloc, bombs[0]);

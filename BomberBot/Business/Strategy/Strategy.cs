@@ -27,6 +27,7 @@ namespace BomberBot.Business.Strategy
             var homePlayerKey = GameService.HomeKey;
             var homePlayer = state.Players.Find(p => p.Key == homePlayerKey);
             var homePlayerLocation = state.FindPlayerLocationOnMap(homePlayerKey);
+            var maxBombBlast = state.MapWidth > state.MapHeight ? state.MapWidth - 3 : state.MapHeight - 3;
 
             //Player killed
             if (homePlayerLocation == null) return;
@@ -48,7 +49,7 @@ namespace BomberBot.Business.Strategy
             }
 
             // Chase power up
-            var nearByPowerUp = FindNearByPowerUp(state, homePlayerLocation);
+            var nearByPowerUp = FindNearByPowerUp(state, homePlayer, homePlayerLocation, maxBombBlast);
 
             if (nearByPowerUp != null && nearByPowerUp.NextMove != null)
             {
@@ -210,7 +211,7 @@ namespace BomberBot.Business.Strategy
         /// <param name="curLoc"></param>
         /// <param name="state"></param>
         /// <returns>Power up to my advantage</returns>
-        public MapBlock FindNearByPowerUp(GameState state, Location curLoc)
+        public MapBlock FindNearByPowerUp(GameState state, Player player, Location curLoc, int maxBombBlast)
         {
             var mapPowerUps = FindMapPowerUps(state, curLoc);
 
@@ -221,6 +222,15 @@ namespace BomberBot.Business.Strategy
 
             foreach (var powerUp in mapPowerUps)
             {
+                var powerUpKind = state.GetBlock(powerUp.Location);
+
+                var isBombRad = powerUpKind.IsBombRadiusPowerUp();
+
+                if (powerUpKind.IsBombRadiusPowerUp())
+                {
+                    if (player.BombRadius >= maxBombBlast) continue;
+                }
+                 
                 foundPowerUp = true;
 
                 foreach (var oponent in oponents)
@@ -230,7 +240,6 @@ namespace BomberBot.Business.Strategy
                         foundPowerUp = false;
                         break;
                     }
-
                 }
 
                 if (foundPowerUp)
@@ -297,7 +306,7 @@ namespace BomberBot.Business.Strategy
                     if (!visitedList.Contains(loc))
                     {
                         MapNode safeNode = BotHelper.BuildPathToTarget(state, curLoc, loc, stayClear: true);
-                        var bombTimer = bomb.BombTimer > 3 ? 3 : bomb.BombTimer;
+                        var bombTimer = bomb.BombTimer > 3 ? 4 : bomb.BombTimer;
 
                         if(safeNode!=null && safeNode.FCost < bombTimer)
                         {
