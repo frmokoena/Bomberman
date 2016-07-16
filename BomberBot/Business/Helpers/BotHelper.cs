@@ -107,28 +107,28 @@ namespace BomberBot.Business.Helpers
             {
                 loc = new Location(curLoc.X, curLoc.Y - 1);
 
-                if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
+                if (IsValidBlock(state, loc) && (state.IsBlockClear(loc)||state.IsPlayer(loc)))
                 {
                     movesLoc.Add(loc);
                 }
 
                 loc = new Location(curLoc.X + 1, curLoc.Y);
 
-                if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
+                if (IsValidBlock(state, loc) && (state.IsBlockClear(loc) || state.IsPlayer(loc)))
                 {
                     movesLoc.Add(loc);
                 }
 
                 loc = new Location(curLoc.X, curLoc.Y + 1);
 
-                if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
+                if (IsValidBlock(state, loc) && (state.IsBlockClear(loc) || state.IsPlayer(loc)))
                 {
                     movesLoc.Add(loc);
                 }
 
                 loc = new Location(curLoc.X - 1, curLoc.Y);
 
-                if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
+                if (IsValidBlock(state, loc) && (state.IsBlockClear(loc) || state.IsPlayer(loc)))
                 {
                     movesLoc.Add(loc);
                 }

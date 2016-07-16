@@ -71,7 +71,6 @@ namespace BomberBot.Domain.Model
 
             return block.IsEmpty()
                 || block.IsBombExploding()
-                || block.IsPlayer()
                 || block.IsPowerUp();
         }
 
@@ -123,6 +122,11 @@ namespace BomberBot.Domain.Model
         public bool IsPowerUp(Location loc)
         {
             return GetBlock(loc).IsPowerUp();
+        }
+
+        public bool IsPlayer(Location loc)
+        {
+            return GetBlock(loc).IsPlayer();
         }
     }
 }
