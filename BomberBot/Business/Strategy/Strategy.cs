@@ -49,7 +49,7 @@ namespace BomberBot.Business.Strategy
             {
                 var bombToDodge = visibleBombs[0];
 
-                var safeBlocks = FindSafeBlocks(state, homePlayer, homePlayerLocation, bombToDodge).OrderByDescending(b=>b.VisibleWalls)
+                var safeBlocks = FindSafeBlocks(state, homePlayer, homePlayerLocation, bombToDodge).OrderByDescending(b => b.VisibleWalls)
                                                                                                    .ToList();
 
                 if (safeBlocks != null)
@@ -74,7 +74,7 @@ namespace BomberBot.Business.Strategy
 
                             var opponentBombs = state.GetPlayerBombs(bombToDodge.Owner.Key);
 
-                            if(bombToDodge.BombTimer > opponentBombs[0].BombTimer)
+                            if (bombToDodge.BombTimer > opponentBombs[0].BombTimer)
                             {
                                 var move = GetMoveFromLocation(homePlayerLocation, safeBlock.NextMove);
                                 GameService.WriteMove(move);
@@ -84,19 +84,23 @@ namespace BomberBot.Business.Strategy
                             var opponentVisibleBombs = BotHelper.FindVisibleBombs(state, opponentLocation);
 
                             // Need rework here, otherwise we might get stranded
-                            if(opponentVisibleBombs != null)
+                            if (opponentVisibleBombs != null)
                             {
                                 var opponentBombToDodge = opponentVisibleBombs[0];
 
                                 var opponentSafeBlocks = FindSafeBlocks(state, bombToDodge.Owner, opponentLocation, opponentBombToDodge);
 
-                                //if op will take longer to reach the safe block
-                                if(opponentSafeBlocks==null|| opponentSafeBlocks[0].Distance > safeBlock.Distance)
+                                //if we can reach our safe block before op
+                                if (opponentSafeBlocks == null || safeBlock.Distance <= opponentSafeBlocks[0].Distance)
                                 {
                                     var move = GetMoveFromLocation(homePlayerLocation, safeBlock.NextMove);
                                     GameService.WriteMove(move);
                                     return;
                                 }
+
+                                // TODO: we might clear away from dangerous bomb well in time
+
+
                             }
                         }
                     }
@@ -391,7 +395,8 @@ namespace BomberBot.Business.Strategy
                                         Location = loc,
                                         Distance = safeNode.FCost,
                                         NextMove = BotHelper.RecontractPath(curLoc, safeNode),
-                                        VisibleWalls = visibleWalls == null ? 0 : visibleWalls.Count
+                                        VisibleWalls = visibleWalls == null ? 0 : visibleWalls.Count,
+                                        MapNode = safeNode
                                     };
                                     safeBlocks.Add(mapBlock);
                                 }
@@ -406,6 +411,20 @@ namespace BomberBot.Business.Strategy
                 }
             }
             return safeBlocks.Count == 0 ? null : safeBlocks;
+        }
+
+        private List<Location> GetRouteLocations(MapNode mapNode)
+        {
+            var routeLocations = new List<Location>();
+
+            var currentNode = mapNode;
+
+            while (currentNode.Parent != null)
+            {
+                routeLocations.Insert(0, currentNode.Location);
+                currentNode = currentNode.Parent;
+            }
+            return routeLocations.Count == 0 ? null : routeLocations;
         }
     }
 }

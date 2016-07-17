@@ -8,5 +8,6 @@ namespace BomberBot.Domain.Model
         public int Distance { get; set; }
         public Location NextMove { get; set; }
         public int VisibleWalls { get; set; }
+        public MapNode MapNode { get; set; }
     }
 }
