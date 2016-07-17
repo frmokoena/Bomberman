@@ -8,7 +8,7 @@ This is my entry to the 2016 Entelect AI Challenge. The challenge details can be
 
 **Language:** C#
 
-**Editor:** Visual Studio 2015 Community Edition
+**Editor:** Visual Studio Community 2015
 
 **Unit-testing Framework:** NUnit Framework 
 
@@ -55,6 +55,15 @@ To run the tests, you will need the `NUnit Framework`, and the steps are:
 ### Strategy
 
 I use lot of DIY hacks for my bot with A* strategy for path finding.
+
+Update procedure:
+
+ 1. Stay clear of bombs
+ 2. Trigger the bomb
+ 3. Chase power up if near than 3 blocks
+ 4. Plant bomb
+ 5. chase afetr power up
+ 6. Search for next bomb placement spot
 		   
 ### Project Structure
 
