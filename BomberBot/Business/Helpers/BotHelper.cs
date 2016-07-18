@@ -34,14 +34,15 @@ namespace BomberBot.Business.Helpers
 
                 if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
                 {
-                    if (stayClear)
+                    bombs = FindVisibleBombs(state, loc);
+
+                    if (bombs == null)
                     {
                         movesLoc.Add(loc);
                     }
                     else
                     {
-                        bombs = FindVisibleBombs(state, loc);
-                        if (bombs == null)
+                        if (stayClear && bombs[0].BombTimer > 1)
                         {
                             movesLoc.Add(loc);
                         }
@@ -53,14 +54,15 @@ namespace BomberBot.Business.Helpers
 
                 if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
                 {
-                    if (stayClear)
+                    bombs = FindVisibleBombs(state, loc);
+
+                    if (bombs == null)
                     {
                         movesLoc.Add(loc);
                     }
                     else
                     {
-                        bombs = FindVisibleBombs(state, loc);
-                        if (bombs == null)
+                        if (stayClear && bombs[0].BombTimer > 1)
                         {
                             movesLoc.Add(loc);
                         }
@@ -71,14 +73,15 @@ namespace BomberBot.Business.Helpers
 
                 if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
                 {
-                    if (stayClear)
+                    bombs = FindVisibleBombs(state, loc);
+
+                    if (bombs == null)
                     {
                         movesLoc.Add(loc);
                     }
                     else
                     {
-                        bombs = FindVisibleBombs(state, loc);
-                        if (bombs == null)
+                        if (stayClear && bombs[0].BombTimer > 1)
                         {
                             movesLoc.Add(loc);
                         }
@@ -89,14 +92,15 @@ namespace BomberBot.Business.Helpers
 
                 if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
                 {
-                    if (stayClear)
+                    bombs = FindVisibleBombs(state, loc);
+
+                    if (bombs == null)
                     {
                         movesLoc.Add(loc);
                     }
                     else
                     {
-                        bombs = FindVisibleBombs(state, loc);
-                        if (bombs == null)
+                        if (stayClear && bombs[0].BombTimer > 1)
                         {
                             movesLoc.Add(loc);
                         }
@@ -107,7 +111,7 @@ namespace BomberBot.Business.Helpers
             {
                 loc = new Location(curLoc.X, curLoc.Y - 1);
 
-                if (IsValidBlock(state, loc) && (state.IsBlockClear(loc)||state.IsPlayer(loc)))
+                if (IsValidBlock(state, loc) && (state.IsBlockClear(loc) || state.IsPlayer(loc)))
                 {
                     movesLoc.Add(loc);
                 }
@@ -203,18 +207,21 @@ namespace BomberBot.Business.Helpers
         /// <param name="startLoc"></param>
         /// <param name="goalMapNode"></param>
         /// <returns>Next move Location towards target</returns>
-        public static Location RecontractPath(Location startLoc, MapNode goalMapNode)
+        public static Location RecontractPath(MapNode goalMapNode)
         {
             if (goalMapNode == null) return null;
 
-            if (goalMapNode.Location.Equals(startLoc)) return startLoc;
+            if (goalMapNode.Parent == null) return goalMapNode.Location;
+
+            //if (goalMapNode.Location.Equals(startLoc)) return startLoc;
 
             var currentMapNode = goalMapNode;
-            while (!currentMapNode.Parent.Location.Equals(startLoc))
+            //while (!currentMapNode.Parent.Location.Equals(startLoc))
+            while (currentMapNode.Parent.Parent != null)
             {
                 currentMapNode = currentMapNode.Parent;
             }
-            return new Location(currentMapNode.Location.X, currentMapNode.Location.Y);
+            return currentMapNode.Location;
         }
 
         /// <summary>
@@ -377,6 +384,8 @@ namespace BomberBot.Business.Helpers
 
             return safeBlocks;
         }
+
+
 
         /// <summary>
         /// Destructible walls in LOS
