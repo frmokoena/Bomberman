@@ -49,7 +49,6 @@ namespace BomberBot.Business.Helpers
                     }
                 }
 
-
                 loc = new Location(curLoc.X + 1, curLoc.Y);
 
                 if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
@@ -111,28 +110,28 @@ namespace BomberBot.Business.Helpers
             {
                 loc = new Location(curLoc.X, curLoc.Y - 1);
 
-                if (IsValidBlock(state, loc) && (state.IsBlockClear(loc) || state.IsPlayer(loc)))
+                if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
                 {
                     movesLoc.Add(loc);
                 }
 
                 loc = new Location(curLoc.X + 1, curLoc.Y);
 
-                if (IsValidBlock(state, loc) && (state.IsBlockClear(loc) || state.IsPlayer(loc)))
+                if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
                 {
                     movesLoc.Add(loc);
                 }
 
                 loc = new Location(curLoc.X, curLoc.Y + 1);
 
-                if (IsValidBlock(state, loc) && (state.IsBlockClear(loc) || state.IsPlayer(loc)))
+                if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
                 {
                     movesLoc.Add(loc);
                 }
 
                 loc = new Location(curLoc.X - 1, curLoc.Y);
 
-                if (IsValidBlock(state, loc) && (state.IsBlockClear(loc) || state.IsPlayer(loc)))
+                if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
                 {
                     movesLoc.Add(loc);
                 }
@@ -230,12 +229,12 @@ namespace BomberBot.Business.Helpers
         /// <param name="state"></param>
         /// <param name="curLoc"></param>
         /// <returns>List of bombs in LOS</returns>
-        public static List<Bomb> FindVisibleBombs(GameState state, Location curLoc)
+        public static List<Bomb> FindVisibleBombs(GameState state, Location curLoc, bool chaining=false)
         {
             var visibleBombs = new List<Bomb>();
 
             //Sitting on Bomb
-            if (state.IsPlayerSittingOnBomb(curLoc))
+            if (state.IsBomb(curLoc) && !chaining)
             {
                 var bomb = state.GetBlock(curLoc).Bomb;
                 visibleBombs.Add(bomb);
@@ -341,6 +340,7 @@ namespace BomberBot.Business.Helpers
             return blocksLoc;
         }
 
+        /*
         /// <summary>
         /// Expand safe blocks
         /// </summary>
@@ -384,6 +384,137 @@ namespace BomberBot.Business.Helpers
 
             return safeBlocks;
         }
+
+        */
+
+
+        /// <summary>
+        /// Expand safe bloks
+        /// </summary>
+        /// <param name="state"></param>
+        /// <param name="startLoc"></param>
+        /// <param name="curLoc"></param>
+        /// <returns></returns>
+        public static List<Location> ExpandSafeBlocks(GameState state, Location startLoc, Location curLoc)
+        {
+            Location loc;
+            var safeBlocks = new List<Location>();
+
+            if (curLoc.Equals(startLoc))
+            {
+                List<Bomb> bombs;
+                loc = new Location(curLoc.X, curLoc.Y - 1);
+
+                if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
+                {
+                    bombs = FindVisibleBombs(state, loc);
+
+                    if (bombs == null)
+                    {
+                        safeBlocks.Add(loc);
+                    }
+                    else
+                    {
+                        if (bombs[0].BombTimer > 1)
+                        {
+                            safeBlocks.Add(loc);
+                        }
+                    }
+                }
+
+                loc = new Location(curLoc.X + 1, curLoc.Y);
+
+                if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
+                {
+                    bombs = FindVisibleBombs(state, loc);
+
+                    if (bombs == null)
+                    {
+                        safeBlocks.Add(loc);
+                    }
+                    else
+                    {
+                        if (bombs[0].BombTimer > 1)
+                        {
+                            safeBlocks.Add(loc);
+                        }
+                    }
+                }
+
+                loc = new Location(curLoc.X, curLoc.Y + 1);
+
+                if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
+                {
+                    bombs = FindVisibleBombs(state, loc);
+
+                    if (bombs == null)
+                    {
+                        safeBlocks.Add(loc);
+                    }
+                    else
+                    {
+                        if (bombs[0].BombTimer > 1)
+                        {
+                            safeBlocks.Add(loc);
+                        }
+                    }
+                }
+
+                loc = new Location(curLoc.X - 1, curLoc.Y);
+
+                if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
+                {
+                    bombs = FindVisibleBombs(state, loc);
+
+                    if (bombs == null)
+                    {
+                        safeBlocks.Add(loc);
+                    }
+                    else
+                    {
+                        if (bombs[0].BombTimer > 1)
+                        {
+                            safeBlocks.Add(loc);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                loc = new Location(curLoc.X, curLoc.Y - 1);
+
+                if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
+                {
+                    safeBlocks.Add(loc);
+                }
+
+                loc = new Location(curLoc.X + 1, curLoc.Y);
+
+                if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
+                {
+                    safeBlocks.Add(loc);
+                }
+
+                loc = new Location(curLoc.X, curLoc.Y + 1);
+
+                if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
+                {
+                    safeBlocks.Add(loc);
+                }
+
+                loc = new Location(curLoc.X - 1, curLoc.Y);
+
+                if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
+                {
+                    safeBlocks.Add(loc);
+                }
+            }
+            return safeBlocks;
+        }
+
+        
+
+
 
 
 

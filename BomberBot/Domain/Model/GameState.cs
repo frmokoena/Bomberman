@@ -86,6 +86,7 @@ namespace BomberBot.Domain.Model
                 || block.IsPowerUp();
         }
 
+        /*
         // Open to move to
         public bool IsBlockSafe(Location loc)
         {
@@ -95,6 +96,7 @@ namespace BomberBot.Domain.Model
                 || block.IsBombExploding()
                 || block.IsPowerUp();
         }
+        */
 
         //plant clear
         public bool IsBlockPlantClear(Location loc)
