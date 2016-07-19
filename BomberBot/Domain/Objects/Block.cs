@@ -36,11 +36,7 @@ namespace BomberBot.Domain.Objects
 
         public bool IsPlayerSittingOnBomb()
         {
-            if (Entity is Player)
-            {
-                if (Bomb != null) return true;
-                return false;
-            }
+            if (Entity is Player && Bomb != null) return true;
             return false;
         }
 

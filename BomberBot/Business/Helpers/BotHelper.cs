@@ -235,7 +235,7 @@ namespace BomberBot.Business.Helpers
             var visibleBombs = new List<Bomb>();
 
             //Sitting on Bomb
-            if (state.IsBomb(curLoc))
+            if (state.IsPlayerSittingOnBomb(curLoc))
             {
                 var bomb = state.GetBlock(curLoc).Bomb;
                 visibleBombs.Add(bomb);

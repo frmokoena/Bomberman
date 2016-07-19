@@ -128,5 +128,10 @@ namespace BomberBot.Domain.Model
         {
             return GetBlock(loc).IsPlayer();
         }
+
+        public bool IsPlayerSittingOnBomb(Location loc)
+        {
+            return GetBlock(loc).IsPlayerSittingOnBomb();
+        }
     }
 }
