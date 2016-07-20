@@ -131,10 +131,10 @@ namespace BomberBot.Business.Strategy
             }
 
             // Trigger bomb
-            var playerBombs = state.GetPlayerBombs(homePlayerKey);
+            var homePlayerBombs = state.GetPlayerBombs(homePlayerKey);
             if (visibleBombs == null
-                && playerBombs != null
-                && playerBombs[0].BombTimer > 2)
+                && homePlayerBombs != null
+                && homePlayerBombs[0].BombTimer > 2)
             {
                 var move = Move.TriggerBomb;
                 GameService.WriteMove(move);
@@ -161,11 +161,10 @@ namespace BomberBot.Business.Strategy
 
             var walls = BotHelper.FindVisibleWalls(state, homePlayerLocation, homePlayer);
 
-            if (walls != null)
+            if (homePlayerBombs == null || homePlayerBombs.Count < homePlayer.BombBag)
             {
                 Move move;
-
-                if (playerBombs == null || playerBombs.Count < playerBombs[0].Owner.BombBag)
+                if (walls != null)
                 {
                     if (walls.Count == 1)
                     {
@@ -173,7 +172,7 @@ namespace BomberBot.Business.Strategy
                         bombPlacementBlocks = FindBombPlacementBlocks(state, homePlayerLocation, homePlayer);
 
                         // if a better location in 2 blocks of nearer
-                        if (bombPlacementBlocks[0].VisibleWalls > 1)
+                        if (bombPlacementBlocks != null && bombPlacementBlocks[0].VisibleWalls > 1)
                         {
                             var bombPlacementBlock = bombPlacementBlocks.Where(b => b.VisibleWalls > 1)
                                                                         .FirstOrDefault(b => b.Distance < 2);
@@ -187,12 +186,17 @@ namespace BomberBot.Business.Strategy
                         }
                     }
 
-                    // Plant anyway
-                    move = Move.PlaceBomb;
-                    GameService.WriteMove(move);
-                    return;
+                    // Plant if we can find hide block after planting the bomb
+                    if (CanFindSafeBlock(state, homePlayer, homePlayerLocation))
+                    {
+                        move = Move.PlaceBomb;
+                        GameService.WriteMove(move);
+                        return;
+                    }
+
                 }
             }
+
 
             // Chase power up
             if (nearByPowerUp != null)
@@ -205,6 +209,23 @@ namespace BomberBot.Business.Strategy
             // search for placement block
             bombPlacementBlocks = computeBombPlacementBlocks ? FindBombPlacementBlocks(state, homePlayerLocation, homePlayer) : bombPlacementBlocks;
 
+            if (walls != null && walls.Count == 1)
+            {
+                // if a better location in 2 blocks of nearer
+                if (bombPlacementBlocks != null && bombPlacementBlocks[0].VisibleWalls > 1)
+                {
+                    var bombPlacementBlock = bombPlacementBlocks.Where(b => b.VisibleWalls > 1)
+                                                                .FirstOrDefault(b => b.Distance < 2);
+
+                    if (bombPlacementBlock != null)
+                    {
+                        var move = GetMoveFromLocation(homePlayerLocation, bombPlacementBlock.NextMove);
+                        GameService.WriteMove(move);
+                        return;
+                    }
+                }
+            }
+
             if (walls == null && bombPlacementBlocks != null)
             {
                 var move = GetMoveFromLocation(homePlayerLocation, bombPlacementBlocks[0].NextMove);
@@ -213,6 +234,14 @@ namespace BomberBot.Business.Strategy
             }
 
             GameService.WriteMove(Move.DoNothing);
+        }
+
+        private bool CanFindSafeBlock(GameState state, Player player, Location startLoc)
+        {
+            var blastRadius = player.BombRadius;
+            var bombTimer = Math.Min(9, (player.BombBag * 3)) + 1;
+
+            return true;
         }
 
         private List<MapBlock> FindBombPlacementBlocks(GameState state, Location startLoc, Player player)
@@ -261,7 +290,7 @@ namespace BomberBot.Business.Strategy
                     }
                 }
             }
-            return bombPlacementBlocks.Count == 0 ? null : bombPlacementBlocks.OrderByDescending(b => b.Distance)
+            return bombPlacementBlocks.Count == 0 ? null : bombPlacementBlocks.OrderByDescending(b => b.VisibleWalls)
                                                                       .ToList();
         }
 
