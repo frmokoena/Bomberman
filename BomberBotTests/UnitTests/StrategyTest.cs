@@ -9,6 +9,7 @@ using NUnit.Framework;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 
 namespace BomberBotTests.UnitTests
 {
@@ -53,19 +54,11 @@ namespace BomberBotTests.UnitTests
 
             var playerAloc = new Location(5, 3);
 
-            var expectLoc = new Location(6, 15);
-            var expectDistance = 13;
-            var expectMove = new Location(5, 4);
-
             //Act
             var result = bot.FindMapPowerUps(gameService.GameState, playerAloc);
 
             //Assert
-            Assert.AreEqual(1, result.Count);
-
-            Assert.AreEqual(expectLoc, result[0].Location);
-            Assert.AreEqual(expectDistance, result[0].Distance);
-            Assert.AreEqual(expectMove, result[0].NextMove);
+            Assert.IsNull(result);
         }
 
         [Test]
@@ -145,7 +138,10 @@ namespace BomberBotTests.UnitTests
             var expect = new Location(5, 17);
 
             //Act
-            var result = bot.FindSafeBlocks(gameService.GameState, player, playerAloc, bombs[0]);
+            var safeBlocks = bot.FindSafeBlocks(gameService.GameState, player, playerAloc, bombs[0]);
+
+            var result = safeBlocks.OrderByDescending(b => b.VisibleWalls).ToList();
+                             
 
             //Assert
             Assert.AreEqual(expect.X, result[0].Location.X);
@@ -291,7 +287,7 @@ namespace BomberBotTests.UnitTests
 
 
 
-            var expect = Move.MoveRight;
+            var expect = Move.MoveLeft;
 
             // Act
             bot.Execute();
