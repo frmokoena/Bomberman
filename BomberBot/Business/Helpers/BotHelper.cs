@@ -700,5 +700,40 @@ namespace BomberBot.Business.Helpers
             }
             return blocksLoc;
         }
+
+        public static bool IsAnyPlayerVisible(GameState state, Player player, Location startLoc)
+        {            
+            var openBlocks = new List<Location> { startLoc };
+
+            Location qLoc;
+            List<Location> blocksLoc;
+
+            while (openBlocks.Count != 0)
+            {
+                qLoc = openBlocks[0];
+
+                openBlocks.RemoveAt(0);
+
+                blocksLoc = ExpandPlayerBlocks(state, startLoc, qLoc, player.BombRadius);
+
+                foreach (var bLoc in blocksLoc)
+                {
+                    var entity = state.GetBlock(bLoc).Entity;
+
+                    if (entity is Player)
+                    {
+                        var opponent = (Player)entity;
+
+                        if (opponent.Key != player.Key) return true;
+                        openBlocks.Add(bLoc);
+                    }
+                    else
+                    {
+                        openBlocks.Add(bLoc);
+                    }
+                }
+            }
+            return false;
+        }
     }
 }

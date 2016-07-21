@@ -129,7 +129,7 @@ namespace BomberBot.Domain.Model
             return GetBlock(loc).IsPlayerSittingOnBomb();
         }
 
-        internal bool IsBlockPlayerClear(Location loc)
+        public bool IsBlockPlayerClear(Location loc)
         {
             var block = GetBlock(loc);
 
@@ -138,6 +138,18 @@ namespace BomberBot.Domain.Model
                 || block.IsPlayer()
                 || block.IsPlayerSittingOnBomb()
                 || block.IsPowerUp();
+        }
+
+        public bool WallExhausted()
+        {
+            for (var x = 1; x < MapWidth; x++)
+            {
+                for (var y = 1; y < MapHeight; y++)
+                {
+                    if (GetBlock(x, y).IsDestructibleWall()) return false;
+                }
+            }
+            return true;
         }
     }
 }

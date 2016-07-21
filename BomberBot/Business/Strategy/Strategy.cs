@@ -33,6 +33,9 @@ namespace BomberBot.Business.Strategy
             //Player killed
             if (homePlayerLocation == null) return;
 
+
+            //var test = state.WallExhausted();
+
             // Update procedure
             // 1. Stay clear of bombs
             // 2. Triger bomb
@@ -214,7 +217,7 @@ namespace BomberBot.Business.Strategy
 
             // search for placement block
             bombPlacementBlocks = computeBombPlacementBlocks ? FindBombPlacementBlocks(state, homePlayerLocation, homePlayer) : bombPlacementBlocks;
-
+                        
             if (walls != null && walls.Count == 1)
             {
                 // if a better location in 2 blocks of nearer
@@ -238,6 +241,8 @@ namespace BomberBot.Business.Strategy
                 GameService.WriteMove(move);
                 return;
             }
+
+            
 
             GameService.WriteMove(Move.DoNothing);
         }
@@ -301,6 +306,14 @@ namespace BomberBot.Business.Strategy
 
             while (openList.Count != 0)
             {
+                // Limit placements to 50(Arbitrary), as going beyond sometimes takes ages.
+                if(bombPlacementBlocks.Count > 50)
+                {
+                    return bombPlacementBlocks.OrderByDescending(b => b.VisibleWalls)
+                                              .ThenBy(b=>b.Distance)
+                                              .ToList();
+                }
+
                 qLoc = openList[0];
                 openList.RemoveAt(0);
                 closedList.Add(qLoc);
@@ -325,8 +338,7 @@ namespace BomberBot.Business.Strategy
                                 NextMove = BotHelper.RecontractPath(mapNode),
                                 VisibleWalls = walls.Count
                             };
-
-                            //return loc;
+                                                       
                             bombPlacementBlocks.Add(mapBlock);
                         }
 
@@ -338,7 +350,8 @@ namespace BomberBot.Business.Strategy
                 }
             }
             return bombPlacementBlocks.Count == 0 ? null : bombPlacementBlocks.OrderByDescending(b => b.VisibleWalls)
-                                                                      .ToList();
+                                                                              .ThenBy(b=>b.Distance)                                
+                                                                              .ToList();
         }
 
         private Move GetMoveFromLocation(Location playerLoc, Location loc)
@@ -555,6 +568,53 @@ namespace BomberBot.Business.Strategy
                 currentNode = currentNode.Parent;
             }
             return routeLocations.Count == 0 ? null : routeLocations;
+        }
+
+        private MapBlock FindPlacementBlockToDestroyPlayer(GameState state, Player player, Location startLoc)
+        {
+            var openList = new List<Location> { startLoc };
+            var closedList = new List<Location>();
+            var visitedList = new List<Location>();
+
+            Location qLoc;
+
+
+            while(openList.Count != 0)
+            {
+                qLoc = openList[0];
+                openList.RemoveAt(0);
+                closedList.Add(qLoc);
+
+                var possibleBlocksLoc = BotHelper.ExpandMoveBlocks(state, startLoc, qLoc);
+
+                foreach(var loc in possibleBlocksLoc)
+                {
+                    if (!visitedList.Contains(loc))
+                    {
+                        if (BotHelper.IsAnyPlayerVisible(state, player, startLoc))
+                        {
+                            var mapNode = BotHelper.BuildPathToTarget(state, startLoc, loc);
+
+                            if (mapNode != null)
+                            {
+                                return new MapBlock
+                                {
+                                    Location = loc,
+                                    NextMove = BotHelper.RecontractPath(mapNode)
+                                };
+                            }
+                        }
+
+                        visitedList.Add(loc);
+
+                        if (!closedList.Contains(loc))
+                        {
+                            openList.Add(loc);
+                        }
+                    }
+                }
+            }
+            return null;
         }
     }
 }
