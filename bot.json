@@ -4,6 +4,6 @@
     "NickName" :"Rethabile",
     "BotType": "CSharp",
     "ProjectLocation" : "",
-    "RunFile" : "BomberBot\\bin\\Debug\\BomberBot.exe",
+	"RunFile" : "BomberBot\\bin\\Release\\BomberBot.exe",
     "RunArgs" : ""
 }
