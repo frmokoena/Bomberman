@@ -91,18 +91,6 @@ namespace BomberBot.Domain.Model
                 || block.IsPowerUp();
         }
 
-        /*
-        // Open to move to
-        public bool IsBlockSafe(Location loc)
-        {
-            var block = GetBlock(loc);
-
-            return block.IsEmpty()
-                || block.IsBombExploding()
-                || block.IsPowerUp();
-        }
-        */
-
         //plant clear
         public bool IsBlockPlantClear(Location loc)
         {
@@ -139,6 +127,17 @@ namespace BomberBot.Domain.Model
         public bool IsPlayerSittingOnBomb(Location loc)
         {
             return GetBlock(loc).IsPlayerSittingOnBomb();
+        }
+
+        internal bool IsBlockPlayerClear(Location loc)
+        {
+            var block = GetBlock(loc);
+
+            return block.IsEmpty()
+                || block.IsBombExploding()
+                || block.IsPlayer()
+                || block.IsPlayerSittingOnBomb()
+                || block.IsPowerUp();
         }
     }
 }

@@ -10,7 +10,7 @@ using System.Linq;
 
 namespace BomberBot.Business.Strategy
 {
-    public class Strategy
+    public class Strategy : IStrategy
     {
         protected readonly IGameService<GameState> GameService;
 
@@ -49,14 +49,20 @@ namespace BomberBot.Business.Strategy
             {
                 var bombToDodge = visibleBombs[0];
 
+                var ownBomb = visibleBombs.Find(bomb => bomb.Owner.Key == homePlayerKey);
+
+                bool playerVisible = ownBomb == null ? false : BotHelper.IsAnyPlayerVisible(state, ownBomb);
+
                 var safeBlocks = FindSafeBlocks(state, homePlayer, homePlayerLocation, bombToDodge);
 
                 if (safeBlocks != null)
                 {
                     var chainBombs = BotHelper.FindVisibleBombs(state, new Location(bombToDodge.Location.X - 1, bombToDodge.Location.Y - 1), chaining: true);
 
-                    var safeBlocksInPriority = chainBombs == null ? safeBlocks.OrderByDescending(block => block.VisibleWalls)
-                                                         .ThenBy(block => block.Distance).ToList() : safeBlocks;
+                    var findNearestHiding = chainBombs != null || playerVisible;
+
+                    var safeBlocksInPriority = findNearestHiding ? safeBlocks : safeBlocks.OrderByDescending(block => block.VisibleWalls)
+                                                         .ThenBy(block => block.Distance).ToList();
 
                     var opponentLocation = state.FindPlayerLocationOnMap(bombToDodge.Owner.Key);
                     List<Bomb> opponentBombs = null;
@@ -237,7 +243,7 @@ namespace BomberBot.Business.Strategy
         }
 
         public bool CanFindHidingBlock(GameState state, Player player, Location startLoc)
-        {            
+        {
             var blastRadius = player.BombRadius;
             var bombTimer = Math.Min(9, (player.BombBag * 3)) + 1;
 
@@ -255,7 +261,7 @@ namespace BomberBot.Business.Strategy
                 var possibleBlocks = BotHelper.ExpandMoveBlocks(state, startLoc, qLoc);
 
 
-                foreach(var loc in possibleBlocks)
+                foreach (var loc in possibleBlocks)
                 {
                     if (!visitedList.Contains(loc))
                     {
@@ -533,7 +539,7 @@ namespace BomberBot.Business.Strategy
                     }
                 }
             }
-            return safeBlocks.Count == 0 ? null : safeBlocks;
+            return safeBlocks.Count == 0 ? null : safeBlocks.OrderBy(block => block.Distance).ToList();
         }
 
 
