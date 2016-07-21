@@ -26,7 +26,7 @@ namespace BomberBot.Business.Strategy
         {
             GameState state = GameService.GameState;
             string homePlayerKey = GameService.HomeKey;
-            Player homePlayer = state.Players.Find(p => p.Key == homePlayerKey);
+            Player homePlayer = state.GetPlayer(homePlayerKey);
             Location homePlayerLocation = state.FindPlayerLocationOnMap(homePlayerKey);
             int maxBombBlast = state.MapWidth > state.MapHeight ? state.MapWidth - 3 : state.MapHeight - 3;
 
@@ -187,7 +187,7 @@ namespace BomberBot.Business.Strategy
                     }
 
                     // Plant if we can find hide block after planting the bomb
-                    if (CanFindSafeBlock(state, homePlayer, homePlayerLocation))
+                    if (CanFindHidingBlock(state, homePlayer, homePlayerLocation))
                     {
                         move = Move.PlaceBomb;
                         GameService.WriteMove(move);
@@ -236,12 +236,53 @@ namespace BomberBot.Business.Strategy
             GameService.WriteMove(Move.DoNothing);
         }
 
-        private bool CanFindSafeBlock(GameState state, Player player, Location startLoc)
-        {
+        public bool CanFindHidingBlock(GameState state, Player player, Location startLoc)
+        {            
             var blastRadius = player.BombRadius;
             var bombTimer = Math.Min(9, (player.BombBag * 3)) + 1;
 
-            return true;
+            var openList = new List<Location> { startLoc };
+            var closeList = new List<Location>();
+            var visitedList = new List<Location>();
+
+
+            while (openList.Count != 0)
+            {
+                var qLoc = openList[0];
+                openList.RemoveAt(0);
+                closeList.Add(qLoc);
+
+                var possibleBlocks = BotHelper.ExpandMoveBlocks(state, startLoc, qLoc);
+
+
+                foreach(var loc in possibleBlocks)
+                {
+                    if (!visitedList.Contains(loc))
+                    {
+                        var safeNode = BotHelper.BuildPathToTarget(state, startLoc, loc);
+
+                        if (safeNode != null && safeNode.FCost < bombTimer)
+                        {
+                            var visibleBombs = BotHelper.FindVisibleBombs(state, loc);
+
+                            if (visibleBombs == null)
+                            {
+                                if (loc.X != startLoc.X && loc.Y != startLoc.Y) return true;
+
+                                var blockDistance = loc.X == startLoc.X ? Math.Abs(loc.Y - startLoc.Y) : Math.Abs(qLoc.X - startLoc.X);
+
+                                if (blockDistance > blastRadius) return true;
+
+                                if (!closeList.Contains(loc))
+                                {
+                                    openList.Add(loc);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return false;
         }
 
         private List<MapBlock> FindBombPlacementBlocks(GameState state, Location startLoc, Player player)
@@ -255,7 +296,7 @@ namespace BomberBot.Business.Strategy
             while (openList.Count != 0)
             {
                 qLoc = openList[0];
-                openList.Remove(qLoc);
+                openList.RemoveAt(0);
                 closedList.Add(qLoc);
 
                 var possibleBlocksLoc = BotHelper.ExpandMoveBlocks(state, startLoc, qLoc);
@@ -332,7 +373,7 @@ namespace BomberBot.Business.Strategy
             while (openList.Count != 0)
             {
                 qLoc = openList[0];
-                openList.Remove(qLoc);
+                openList.RemoveAt(0);
                 closedList.Add(qLoc);
 
                 var possibleBlockLoc = BotHelper.ExpandMoveBlocks(state, startLoc, qLoc);
@@ -450,7 +491,7 @@ namespace BomberBot.Business.Strategy
             while (openList.Count != 0)
             {
                 qLoc = openList[0];
-                openList.Remove(qLoc);
+                openList.RemoveAt(0);
                 closedList.Add(qLoc);
 
                 var possibleBlockLoc = BotHelper.ExpandSafeBlocks(state, startLoc, qLoc);

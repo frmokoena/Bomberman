@@ -156,14 +156,16 @@ namespace BomberBot.Business.Helpers
 
             while (openList.Count != 0)
             {
-                qMapNode = openList.OrderBy(node => node.FCost).First();
+                openList = openList.OrderBy(node => node.FCost).ToList();
+
+                qMapNode = openList[0];
 
                 if (qMapNode.Location.Equals(targetLoc))
                 {
                     return qMapNode;
                 }
 
-                openList.Remove(qMapNode);
+                openList.RemoveAt(0);
                 closedList.Add(qMapNode);
 
 
@@ -247,9 +249,9 @@ namespace BomberBot.Business.Helpers
 
             while (openBlocks.Count != 0)
             {
-                qLoc = openBlocks.First();
+                qLoc = openBlocks[0];
 
-                openBlocks.Remove(qLoc);
+                openBlocks.RemoveAt(0);
 
                 blocksLoc = ExpandBombBlocks(state, curLoc, qLoc);
 
@@ -533,9 +535,9 @@ namespace BomberBot.Business.Helpers
 
             while (openBlocks.Count != 0)
             {
-                qLoc = openBlocks.First();
+                qLoc = openBlocks[0];
 
-                openBlocks.Remove(qLoc);
+                openBlocks.RemoveAt(0);
 
                 var blocksLoc = ExpandWallBlocks(state, curLoc, qLoc, player.BombRadius);
 

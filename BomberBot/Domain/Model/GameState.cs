@@ -33,6 +33,11 @@ namespace BomberBot.Domain.Model
             return Map[x][y];
         }
 
+        public Player GetPlayer(string key)
+        {
+            return Players.Find(p => p.Key == key);
+        }
+
         public Location FindPlayerLocationOnMap(string playerKey)
         {
             var player = Players.Find(p => p.Key == playerKey);

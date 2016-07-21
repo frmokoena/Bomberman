@@ -302,6 +302,49 @@ namespace BomberBotTests.UnitTests
             Assert.AreEqual((int)expect, result);
         }
 
+
+        [Test]
+        public void CanFindHidingBlockPriorPlantIfCantPlantTest()
+        {
+            //Arrange
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\Sample State Files\state16";
+            string playerKey = "D";
+            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
+
+            Strategy bot = new Strategy(gameService);
+            var state = gameService.GameState;
+            var player = state.GetPlayer(playerKey);
+            var startLoc = state.FindPlayerLocationOnMap(playerKey);
+
+            // Act
+            var result = bot.CanFindHidingBlock(state, player, startLoc);
+
+            //Assert
+            Assert.IsFalse(result);            
+        }
+
+        [Test]
+        public void CanFindHidingBlockPriorPlantIfCanPlantTest()
+        {
+            //Arrange
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\Sample State Files\state17";
+            string playerKey = "D";
+            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
+
+            Strategy bot = new Strategy(gameService);
+            var state = gameService.GameState;
+            var player = state.GetPlayer(playerKey);
+            var startLoc = state.FindPlayerLocationOnMap(playerKey);
+
+            // Act
+            var result = bot.CanFindHidingBlock(state, player, startLoc);
+
+            //Assert
+            Assert.IsTrue(result);
+        }
+
+
+
         //Read file
         private string ReadMoveFile(string workingDirectory)
         {
