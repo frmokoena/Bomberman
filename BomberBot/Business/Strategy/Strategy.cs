@@ -507,6 +507,9 @@ namespace BomberBot.Business.Strategy
             var openList = new List<Location> { startLoc }; //To be expanded
             var closedList = new List<Location>();          //Expanded
             var visitedList = new List<Location>();         //checked
+
+            List<List<DestructibleWall>> destroyedWalls = new List<List<DestructibleWall>>();
+
             Location qLoc;
 
             while (openList.Count != 0)
@@ -533,16 +536,21 @@ namespace BomberBot.Business.Strategy
                             {
                                 var visibleWalls = BotHelper.FindVisibleWalls(state, loc, player);
 
-                                //add block
-                                var mapBlock = new MapBlock
+                                if(visibleWalls == null || !WallsDestroyed(destroyedWalls, visibleWalls))
                                 {
-                                    Location = loc,
-                                    Distance = safeNode.FCost,
-                                    NextMove = BotHelper.RecontractPath(safeNode),
-                                    VisibleWalls = visibleWalls == null ? 0 : visibleWalls.Count,
-                                    MapNode = safeNode
-                                };
-                                safeBlocks.Add(mapBlock);
+                                    if (visibleWalls != null) destroyedWalls.Add(visibleWalls);
+
+                                    //add block
+                                    var mapBlock = new MapBlock
+                                    {
+                                        Location = loc,
+                                        Distance = safeNode.FCost,
+                                        NextMove = BotHelper.RecontractPath(safeNode),
+                                        VisibleWalls = visibleWalls == null ? 0 : visibleWalls.Count,
+                                        MapNode = safeNode
+                                    };
+                                    safeBlocks.Add(mapBlock);
+                                }                                
                             }
 
 
