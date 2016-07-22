@@ -324,7 +324,7 @@ namespace BomberBot.Business.Strategy
 
                         if (visibleWalls != null)
                         {
-                            if (!WallsDestroyed(destroyedWalls,visibleWalls))
+                            if (!WallsDestroyed(destroyedWalls, visibleWalls))
                             {
                                 destroyedWalls.Add(visibleWalls);
 
@@ -508,7 +508,6 @@ namespace BomberBot.Business.Strategy
             var closedList = new List<Location>();          //Expanded
             var visitedList = new List<Location>();         //checked
 
-            List<List<DestructibleWall>> destroyedWalls = new List<List<DestructibleWall>>();
 
             Location qLoc;
 
@@ -536,21 +535,17 @@ namespace BomberBot.Business.Strategy
                             {
                                 var visibleWalls = BotHelper.FindVisibleWalls(state, loc, player);
 
-                                if(visibleWalls == null || !WallsDestroyed(destroyedWalls, visibleWalls))
+                                //add block
+                                var mapBlock = new MapBlock
                                 {
-                                    if (visibleWalls != null) destroyedWalls.Add(visibleWalls);
+                                    Location = loc,
+                                    Distance = safeNode.FCost,
+                                    NextMove = BotHelper.RecontractPath(safeNode),
+                                    VisibleWalls = visibleWalls == null ? 0 : visibleWalls.Count,
+                                    MapNode = safeNode
+                                };
+                                safeBlocks.Add(mapBlock);
 
-                                    //add block
-                                    var mapBlock = new MapBlock
-                                    {
-                                        Location = loc,
-                                        Distance = safeNode.FCost,
-                                        NextMove = BotHelper.RecontractPath(safeNode),
-                                        VisibleWalls = visibleWalls == null ? 0 : visibleWalls.Count,
-                                        MapNode = safeNode
-                                    };
-                                    safeBlocks.Add(mapBlock);
-                                }                                
                             }
 
 
