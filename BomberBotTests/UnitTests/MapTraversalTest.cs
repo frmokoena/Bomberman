@@ -13,7 +13,7 @@ namespace BomberBotTests.UnitTests
         public void ReturnAvailableLocationsAroundAPlayerTest()
         {
             //Arrange
-            var workingDirectory = TestContext.CurrentContext.TestDirectory + @"\Sample State Files\state2";
+            var workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\state2";
             var playerKey = "A";
 
             var gameService = new GameService(playerKey, workingDirectory);
@@ -41,7 +41,7 @@ namespace BomberBotTests.UnitTests
         public void SelectSimpleRouteToPowerUpTest()
         {
             //Arrange
-            var workingDirectory = TestContext.CurrentContext.TestDirectory + @"\Sample State Files\state2";
+            var workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\state2";
             var playerKey = "C";
 
             var gameService = new GameService(playerKey, workingDirectory);
@@ -62,7 +62,7 @@ namespace BomberBotTests.UnitTests
         public void CanReturnBombsInLOS()
         {
             //Arrange
-            var workingDirectory = TestContext.CurrentContext.TestDirectory + @"\Sample State Files\state4";
+            var workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\state4";
             var playerKey = "A";
 
             var gameService = new GameService(playerKey, workingDirectory);

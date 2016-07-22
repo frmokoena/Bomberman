@@ -20,7 +20,7 @@ namespace BomberBotTests.UnitTests
         public void FindBombsInLOS()
         {
             //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\Sample State Files\state6";
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\state6";
             string playerKey = "A";
             IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
 
@@ -46,7 +46,7 @@ namespace BomberBotTests.UnitTests
         public void FindMapPowerUpsTest()
         {
             //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\Sample State Files\state7";
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\state7";
             string playerKey = "A";
             IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
 
@@ -65,7 +65,7 @@ namespace BomberBotTests.UnitTests
         public void FindNearByPowerUpTest()
         {
             //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\Sample State Files\state7";
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\state7";
             string playerKey = "C";
             IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
 
@@ -96,7 +96,7 @@ namespace BomberBotTests.UnitTests
         public void NextMoveToNearByPowerUpTest()
         {
             //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\Sample State Files\state12";
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\state12";
             string playerKey = "D";
             IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
 
@@ -123,7 +123,7 @@ namespace BomberBotTests.UnitTests
         public void FindSafeBlocksTest()
         {
             //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\Sample State Files\state8";
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\state8";
             string playerKey = "C";
             IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
 
@@ -152,7 +152,7 @@ namespace BomberBotTests.UnitTests
         public void WallsInLOSNotTest()
         {
             //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\Sample State Files\state9";
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\state9";
             string playerKey = "A";
             IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
 
@@ -172,7 +172,7 @@ namespace BomberBotTests.UnitTests
         public void WallsInLOSTest()
         {
             //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\Sample State Files\state10";
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\state10";
             string playerKey = "C";
             IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
 
@@ -200,7 +200,7 @@ namespace BomberBotTests.UnitTests
         public void NextMoveInStayClearTest()
         {
             //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\Sample State Files\state11";
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\state11";
             string playerKey = "B";
             IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
 
@@ -225,7 +225,7 @@ namespace BomberBotTests.UnitTests
         public void TriggerBombTest()
         {
             //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\Sample State Files\state13";
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\state13";
             string playerKey = "B";
             IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
 
@@ -252,7 +252,7 @@ namespace BomberBotTests.UnitTests
         public void PlaceBombNowTest()
         {
             //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\Sample State Files\state14";
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\state14";
             string playerKey = "B";
             IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
 
@@ -279,7 +279,7 @@ namespace BomberBotTests.UnitTests
         public void NextMoveToPlaceBombTest()
         {
             //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\Sample State Files\state15";
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\state15";
             string playerKey = "D";
             IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
 
@@ -307,7 +307,7 @@ namespace BomberBotTests.UnitTests
         public void CanFindHidingBlockPriorPlantIfCantPlantTest()
         {
             //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\Sample State Files\state16";
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\state16";
             string playerKey = "D";
             IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
 
@@ -327,7 +327,7 @@ namespace BomberBotTests.UnitTests
         public void CanFindHidingBlockPriorPlantIfCanPlantTest()
         {
             //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\Sample State Files\state17";
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\state17";
             string playerKey = "D";
             IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
 

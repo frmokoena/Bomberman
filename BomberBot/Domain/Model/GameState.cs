@@ -1,10 +1,8 @@
 ﻿using BomberBot.Common;
 using BomberBot.Domain.Objects;
-using BomberBot.Enums;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Linq;
-using System;
 
 namespace BomberBot.Domain.Model
 {
