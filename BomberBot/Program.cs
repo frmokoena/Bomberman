@@ -57,9 +57,9 @@ namespace BomberBot
 
         private static void PrintUsage()
         {
-            Console.WriteLine("Bomberman Game AI usage: Bomberman.GameAI.exe <PlayerKey> <WorkingDirectoryFilename>");
+            Console.WriteLine("Bomberman bot usage: BomberBot.exe <PlayerKey> <WorkingDirectoryFilename>");
             Console.WriteLine();
-            Console.WriteLine("\tPlayerKey\tThe key assigned to your bot.");
+            Console.WriteLine("\tPlayerKey\tThe key assigned to the bomberman bot.");
             Console.WriteLine("\tWorkingDirectoryFilename\tThe working directory folder where the match runner will output map and state files and look for the move file.");
         }
     }
