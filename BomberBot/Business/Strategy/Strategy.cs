@@ -217,7 +217,7 @@ namespace BomberBot.Business.Strategy
 
             // search for placement block
             bombPlacementBlocks = computeBombPlacementBlocks ? FindBombPlacementBlocks(state, homePlayerLocation, homePlayer) : bombPlacementBlocks;
-                        
+
             if (walls != null && walls.Count == 1)
             {
                 // if a better location in 2 blocks of nearer
@@ -242,7 +242,7 @@ namespace BomberBot.Business.Strategy
                 return;
             }
 
-            
+
 
             GameService.WriteMove(Move.DoNothing);
         }
@@ -301,19 +301,13 @@ namespace BomberBot.Business.Strategy
             var openList = new List<Location>() { startLoc };
             var closedList = new List<Location>();
             var visitedList = new List<Location>();
+            List<List<DestructibleWall>> destroyedWalls = new List<List<DestructibleWall>>();
+
             var bombPlacementBlocks = new List<MapBlock>();
             Location qLoc;
 
             while (openList.Count != 0)
             {
-                // Limit placements to 50(Arbitrary), as going beyond sometimes takes ages.
-                if(bombPlacementBlocks.Count > 50)
-                {
-                    return bombPlacementBlocks.OrderByDescending(b => b.VisibleWalls)
-                                              .ThenBy(b=>b.Distance)
-                                              .ToList();
-                }
-
                 qLoc = openList[0];
                 openList.RemoveAt(0);
                 closedList.Add(qLoc);
@@ -326,20 +320,28 @@ namespace BomberBot.Business.Strategy
                     {
                         visitedList.Add(loc);
 
-                        var walls = BotHelper.FindVisibleWalls(state, loc, player);
+                        var visibleWalls = BotHelper.FindVisibleWalls(state, loc, player);
 
-                        if (walls != null)
+                        if (visibleWalls != null)
                         {
-                            var mapNode = BotHelper.BuildPathToTarget(state, startLoc, loc);
-                            var mapBlock = new MapBlock
+                            if (!WallsDestroyed(destroyedWalls,visibleWalls))
                             {
-                                Location = loc,
-                                Distance = mapNode == null ? Int32.MaxValue : mapNode.FCost,
-                                NextMove = BotHelper.RecontractPath(mapNode),
-                                VisibleWalls = walls.Count
-                            };
-                                                       
-                            bombPlacementBlocks.Add(mapBlock);
+                                destroyedWalls.Add(visibleWalls);
+
+                                var mapNode = BotHelper.BuildPathToTarget(state, startLoc, loc);
+                                if (mapNode != null)
+                                {
+                                    var mapBlock = new MapBlock
+                                    {
+                                        Location = loc,
+                                        Distance = mapNode.FCost,
+                                        NextMove = BotHelper.RecontractPath(mapNode),
+                                        VisibleWalls = visibleWalls.Count
+                                    };
+
+                                    bombPlacementBlocks.Add(mapBlock);
+                                }
+                            }
                         }
 
                         if (!closedList.Contains(loc))
@@ -350,7 +352,7 @@ namespace BomberBot.Business.Strategy
                 }
             }
             return bombPlacementBlocks.Count == 0 ? null : bombPlacementBlocks.OrderByDescending(b => b.VisibleWalls)
-                                                                              .ThenBy(b=>b.Distance)                                
+                                                                              .ThenBy(b => b.Distance)
                                                                               .ToList();
         }
 
@@ -579,7 +581,7 @@ namespace BomberBot.Business.Strategy
             Location qLoc;
 
 
-            while(openList.Count != 0)
+            while (openList.Count != 0)
             {
                 qLoc = openList[0];
                 openList.RemoveAt(0);
@@ -587,7 +589,7 @@ namespace BomberBot.Business.Strategy
 
                 var possibleBlocksLoc = BotHelper.ExpandMoveBlocks(state, startLoc, qLoc);
 
-                foreach(var loc in possibleBlocksLoc)
+                foreach (var loc in possibleBlocksLoc)
                 {
                     if (!visitedList.Contains(loc))
                     {
@@ -615,6 +617,17 @@ namespace BomberBot.Business.Strategy
                 }
             }
             return null;
+        }
+
+        private bool WallsDestroyed(List<List<DestructibleWall>> destroyedWalls, List<DestructibleWall> walls)
+        {
+            var curWalls = new HashSet<DestructibleWall>(walls);
+
+            for (var i = 0; i < destroyedWalls.Count; i++)
+            {
+                if (curWalls.SetEquals(destroyedWalls[i])) return true;
+            }
+            return false;
         }
     }
 }
