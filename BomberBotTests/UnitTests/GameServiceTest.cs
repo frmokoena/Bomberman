@@ -6,7 +6,6 @@ using NUnit.Framework;
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 
 namespace BomberBotTests.UnitTests
 {
@@ -24,7 +23,7 @@ namespace BomberBotTests.UnitTests
         public void ActualSimpleVariablesReturnedTest()
         {
             //Arrange
-            var workingDirectory = TestContext.CurrentContext.TestDirectory + @"\Sample State Files\state1";
+            var workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\state1";
             var playerKey = "A";
 
             var gameService = new GameService(playerKey, workingDirectory);
@@ -47,7 +46,7 @@ namespace BomberBotTests.UnitTests
         public void ReadRegisteredPlayerEntitiesTest()
         {
             //Arrange
-            var workingDirectory = TestContext.CurrentContext.TestDirectory + @"\Sample State Files\state1";
+            var workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\state1";
             var playerKey = "A";
 
             var gameService = new GameService(playerKey, workingDirectory);
@@ -82,7 +81,7 @@ namespace BomberBotTests.UnitTests
         public void ReadTheFirstGameBlockTest()
         {
             //Arrange
-            var workingDirectory = TestContext.CurrentContext.TestDirectory + @"\Sample State Files\state1";
+            var workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\state1";
             var playerKey = "A";
 
             var gameService = new GameService(playerKey, workingDirectory);
@@ -109,7 +108,7 @@ namespace BomberBotTests.UnitTests
         public void ReturnCorrectTypeTest()
         {
             //Arrange
-            var workingDirectory = TestContext.CurrentContext.TestDirectory + @"\Sample State Files\state1";
+            var workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\state1";
             var playerKey = "A";
 
             var gameService = new GameService(playerKey, workingDirectory);
@@ -130,7 +129,7 @@ namespace BomberBotTests.UnitTests
         public void GetPlayerSittingOnBombTest()
         {
             //Arrange
-            var workingDirectory = TestContext.CurrentContext.TestDirectory + @"\Sample State Files\state2";
+            var workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\state2";
             var playerKey = "A";
 
             var gameService = new GameService(playerKey, workingDirectory);
@@ -160,7 +159,7 @@ namespace BomberBotTests.UnitTests
         public void ReturnExplodingBombTest()
         {
             //Arrange
-            var workingDirectory = TestContext.CurrentContext.TestDirectory + @"\Sample State Files\state1";
+            var workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\state1";
             var playerKey = "A";
 
             var gameService = new GameService(playerKey, workingDirectory);
@@ -179,7 +178,7 @@ namespace BomberBotTests.UnitTests
         public void ReturnPlantedBombTest()
         {
             //Arrange
-            var workingDirectory = TestContext.CurrentContext.TestDirectory + @"\Sample State Files\state1";
+            var workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\state1";
             var playerKey = "A";
 
             var gameService = new GameService(playerKey, workingDirectory);
@@ -220,7 +219,7 @@ namespace BomberBotTests.UnitTests
         public void SpotIfBlockEmptyTest()
         {
             //Arrange
-            var workingDirectory = TestContext.CurrentContext.TestDirectory + @"\Sample State Files\state1";
+            var workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\state1";
             var playerKey = "A";
 
             var gameService = new GameService(playerKey, workingDirectory);
@@ -244,7 +243,7 @@ namespace BomberBotTests.UnitTests
         public void GetEntityOccupyingTheBlockTest()
         {
             //Arrange
-            var workingDirectory = TestContext.CurrentContext.TestDirectory + @"\Sample State Files\state1";
+            var workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\state1";
             var playerKey = "A";
 
             var gameService = new GameService(playerKey, workingDirectory);
@@ -263,7 +262,7 @@ namespace BomberBotTests.UnitTests
         public void WriteMoveTest()
         {
             //Arrange
-            var workingDirectory = TestContext.CurrentContext.TestDirectory + @"\Sample State Files\stateMove";
+            var workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\stateMove";
             var playerKey = "A";
 
             var gameService = new GameService(playerKey, workingDirectory);
