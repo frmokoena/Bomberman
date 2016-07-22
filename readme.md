@@ -18,17 +18,17 @@ This is my entry to the 2016 Entelect AI Challenge. The challenge details can be
 
 Either of the following two methods will do the job.
 
-#### Method I
+#### Method I: Command Line
 
   1. First, ensure that `MSBuild` is installed on your system, and the path to `MSbuild` is set in Environment Variables. If not follow the steps in [SO answer](http://stackoverflow.com/a/12608705/852243).
   2. Then a package restore is needed before a build can be made. A standalone `nuget.exe` can be found here [here](http://docs.nuget.org/consume/Command-Line-Reference#Restore-command).
   3. The standalone `nuget.exe` can be stored at the root directory of the solution.
   4. Start the Command Prompt.
-  5. Change to the root directory of the solution (i.e. where `Bomberman.sln` is).
+  5. Change to the root directory of the solution (i.e. where `Bomberman.sln` is located).
   6. Run package restore as explained [here](http://docs.nuget.org/consume/package-restore#command-line-package-restore)
-  7. Run this command: `msbuild Bomberman.sln /p:Configuration=Debug /p:Platform="Any CPU" /t:Clean,Build`
+  7. Run this command: `msbuild Bomberman.sln /p:Configuration=Release /p:Platform="Any CPU" /t:Clean,Build`
 
-#### Method II
+#### Method II: Visual Studio
 
    1. Open the solution (`Bomberman.sln`) in Visual Studio and select `Build -> Build Solution` from the menus.
 
@@ -39,7 +39,7 @@ I have written a number of automated tests (`BomberBotTests.csproj`) to ensure t
 To run the tests, you will need the `NUnit Framework`, and the steps are:
 
   1. Build the solution in Visual Studio to discover the tests.
-  2. Copy the `Sample Data Files` folder from the project `root` folder to the `bin` directory of the test project.
+  2. Copy the `states` folder from the project `root` folder to the `Debug` directory of the test project.
   3. I use `Test Explorer` in Visual Studio to run my tests.
    
   
@@ -54,21 +54,21 @@ To run the tests, you will need the `NUnit Framework`, and the steps are:
 
 ### Strategy
 
-I use lot of DIY hacks for my bot with A* strategy for path finding.
+I use DIY hacks for my bot with A* search for path finding.
 
 Update procedure:
 
  1. Stay clear of bombs
- 2. Trigger the bomb
+ 2. Trigger the bomb with the lowest timer if timer is greater than 2
  3. Chase power up if near than 3 blocks
- 4. Plant bomb
- 5. chase afetr power up
+ 4. Plant bomb if we have some in our bomb bag and can find hiding.
+ 5. Chase after power up
  6. Search for next bomb placement spot
 		   
 ### Project Structure
 
 The solution houses two projects. The application project(`BomberBot.csproj`) and the test project (`BomberBotTests.csproj`).
 
-At the core of the application project is bot (`Bot.cs`) and bot helper (`BotHelper.cs`). Reading of the state file and preparing of the game state is delegated to the game service (IGameService.cs).
+At the core of the application project is bot strategy class (`Strategy.cs`) and bot helper class (`BotHelper.cs`). Reading of the state file and preparing of the game state is delegated to the game service (`GameService.cs`).
 
-All the bot decision is carried out by the bot (`Bot.cs`). Bot helper contains some of helper methods used in decision making.
+All the move decisions are carried out by the bot (`Strategy.cs`). Bot helper contains some of helper methods used in decision making.
