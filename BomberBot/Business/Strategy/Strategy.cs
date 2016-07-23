@@ -168,42 +168,41 @@ namespace BomberBot.Business.Strategy
             List<MapBlock> bombPlacementBlocks = null;
             bool computeBombPlacementBlocks = true;
 
-            var walls = BotHelper.FindVisibleWalls(state, homePlayerLocation, homePlayer);
+            var visibleWalls = BotHelper.FindVisibleWalls(state, homePlayerLocation, homePlayer);
 
-            if (homePlayerBombs == null || homePlayerBombs.Count < homePlayer.BombBag)
+            if (homePlayerBombs == null || (homePlayerBombs.Count < homePlayer.BombBag && visibleWalls != null))
             {
                 Move move;
-                if (walls != null)
+
+                if (visibleWalls.Count == 1)
                 {
-                    if (walls.Count == 1)
+                    computeBombPlacementBlocks = false;
+                    bombPlacementBlocks = FindBombPlacementBlocks(state, homePlayerLocation, homePlayer);
+
+                    // if a better location in 2 blocks of nearer
+                    if (bombPlacementBlocks != null && bombPlacementBlocks[0].VisibleWalls > 1)
                     {
-                        computeBombPlacementBlocks = false;
-                        bombPlacementBlocks = FindBombPlacementBlocks(state, homePlayerLocation, homePlayer);
+                        var bombPlacementBlock = bombPlacementBlocks.Where(b => b.VisibleWalls > 1)
+                                                                    .FirstOrDefault(b => b.Distance < 2);
 
-                        // if a better location in 2 blocks of nearer
-                        if (bombPlacementBlocks != null && bombPlacementBlocks[0].VisibleWalls > 1)
+                        if (bombPlacementBlock != null)
                         {
-                            var bombPlacementBlock = bombPlacementBlocks.Where(b => b.VisibleWalls > 1)
-                                                                        .FirstOrDefault(b => b.Distance < 2);
-
-                            if (bombPlacementBlock != null)
-                            {
-                                move = GetMoveFromLocation(homePlayerLocation, bombPlacementBlock.NextMove);
-                                GameService.WriteMove(move);
-                                return;
-                            }
+                            move = GetMoveFromLocation(homePlayerLocation, bombPlacementBlock.NextMove);
+                            GameService.WriteMove(move);
+                            return;
                         }
                     }
-
-                    // Plant if we can find hide block after planting the bomb
-                    if (CanFindHidingBlock(state, homePlayer, homePlayerLocation))
-                    {
-                        move = Move.PlaceBomb;
-                        GameService.WriteMove(move);
-                        return;
-                    }
-
                 }
+
+                // Plant if we can find hide block after planting the bomb
+                if (CanFindHidingBlock(state, homePlayer, homePlayerLocation))
+                {
+                    move = Move.PlaceBomb;
+                    GameService.WriteMove(move);
+                    return;
+                }
+
+
             }
 
 
@@ -218,7 +217,7 @@ namespace BomberBot.Business.Strategy
             // search for placement block
             bombPlacementBlocks = computeBombPlacementBlocks ? FindBombPlacementBlocks(state, homePlayerLocation, homePlayer) : bombPlacementBlocks;
 
-            if (walls != null && walls.Count == 1)
+            if (visibleWalls != null && visibleWalls.Count == 1)
             {
                 // if a better location in 2 blocks of nearer
                 if (bombPlacementBlocks != null && bombPlacementBlocks[0].VisibleWalls > 1)
@@ -235,7 +234,7 @@ namespace BomberBot.Business.Strategy
                 }
             }
 
-            if (walls == null && bombPlacementBlocks != null)
+            if (visibleWalls == null && bombPlacementBlocks != null)
             {
                 var move = GetMoveFromLocation(homePlayerLocation, bombPlacementBlocks[0].NextMove);
                 GameService.WriteMove(move);
