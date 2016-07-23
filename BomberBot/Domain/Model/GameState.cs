@@ -19,15 +19,28 @@ namespace BomberBot.Domain.Model
         [JsonProperty("GameBlocks")]
         public Block[][] Map { get; set; }
 
+        public bool WallExhausted
+        {
+            get
+            {
+                for (var x = 1; x < MapWidth; x++)
+                {
+                    for (var y = 1; y < MapHeight; y++)
+                    {
+                        if (GetBlock(x, y).IsDestructibleWall()) return false;
+                    }
+                }
+                return true;
+            }
+        }
+
         public Block GetBlock(Location loc)
         {
-
             return Map[loc.X][loc.Y];
         }
 
         public Block GetBlock(int x, int y)
         {
-
             return Map[x][y];
         }
 
@@ -136,18 +149,6 @@ namespace BomberBot.Domain.Model
                 || block.IsPlayer()
                 || block.IsPlayerSittingOnBomb()
                 || block.IsPowerUp();
-        }
-
-        public bool WallExhausted()
-        {
-            for (var x = 1; x < MapWidth; x++)
-            {
-                for (var y = 1; y < MapHeight; y++)
-                {
-                    if (GetBlock(x, y).IsDestructibleWall()) return false;
-                }
-            }
-            return true;
         }
     }
 }

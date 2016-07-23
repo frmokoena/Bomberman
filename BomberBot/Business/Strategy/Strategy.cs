@@ -32,10 +32,7 @@ namespace BomberBot.Business.Strategy
 
             //Player killed
             if (homePlayerLocation == null) return;
-
-
-            //var test = state.WallExhausted();
-
+            
             // Update procedure
             // 1. Stay clear of bombs
             // 2. Triger bomb
@@ -43,7 +40,7 @@ namespace BomberBot.Business.Strategy
             // 4. Plant plant bomb
             // 5. Chase after power up
             // 6. Search for the placementbomb or plant bomb
-            //
+            
 
             // Stay clear
             var visibleBombs = BotHelper.FindVisibleBombs(state, homePlayerLocation);
@@ -162,16 +159,23 @@ namespace BomberBot.Business.Strategy
                     return;
                 }
 
-                //if bomb radius power up or super power up
-                if((nearByPowerUp.PowerUP is BombRadiusPowerUp || nearByPowerUp.PowerUP is SuperPowerUp) && nearByPowerUp.Distance < 16)
+                //if bomb radius power up
+                if(nearByPowerUp.PowerUP is BombRadiusPowerUp && nearByPowerUp.Distance < 16)
+                {
+                    var move = GetMoveFromLocation(homePlayerLocation, nearByPowerUp.NextMove);
+                    GameService.WriteMove(move);
+                    return;
+                }
+
+                //if bomb is super power up
+                if(nearByPowerUp.PowerUP is SuperPowerUp)
                 {
                     var move = GetMoveFromLocation(homePlayerLocation, nearByPowerUp.NextMove);
                     GameService.WriteMove(move);
                     return;
                 }
             }
-
-
+            
             // Place bomb       
             List<MapBombPlacementBlock> bombPlacementBlocks = null;
             bool computeBombPlacementBlocks = true;
@@ -203,17 +207,14 @@ namespace BomberBot.Business.Strategy
                 }
 
                 // Plant if we can find hide block after planting the bomb
-                if (CanFindHidingBlock(state, homePlayer, homePlayerLocation))
+                if (visibleBombs == null && CanFindHidingBlock(state, homePlayer, homePlayerLocation))
                 {
                     move = Move.PlaceBomb;
                     GameService.WriteMove(move);
                     return;
                 }
-
-
             }
-
-
+            
             // Chase power up
             if (nearByPowerUp != null)
             {
@@ -251,8 +252,33 @@ namespace BomberBot.Business.Strategy
                 return;
             }
 
+            if (state.WallExhausted)
+            {
+                if (BotHelper.IsAnyPlayerVisible(state, homePlayer, homePlayerLocation))
+                {
+                    if ((homePlayerBombs == null || homePlayerBombs.Count < homePlayer.BombBag) && visibleWalls != null)
+                    {
+                        // Plant if we can find hide block after planting the bomb
+                        if (visibleBombs == null && CanFindHidingBlock(state, homePlayer, homePlayerLocation))
+                        {
+                            var move = Move.PlaceBomb;
+                            GameService.WriteMove(move);
+                            return;
+                        }
+                    }
+                }
 
+                var visiblePlayerBlock = FindPlacementBlockToDestroyPlayer(state, homePlayer, homePlayerLocation);
 
+                if (visiblePlayerBlock != null)
+                {
+                    var move = GetMoveFromLocation(homePlayerLocation, visiblePlayerBlock.NextMove);
+                    GameService.WriteMove(move);
+                    return;
+                }
+            }
+
+            //well, we didn't get any good decision
             GameService.WriteMove(Move.DoNothing);
         }
 
