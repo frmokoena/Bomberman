@@ -53,8 +53,11 @@
     <Compile Include="Common\Location.cs" />
     <Compile Include="Common\PowerUp.cs" />
     <Compile Include="Domain\Model\GameState.cs" />
+    <Compile Include="Domain\Model\MapBombPlacementBlock.cs" />
     <Compile Include="Domain\Model\MapNode.cs" />
     <Compile Include="Domain\Model\MapBlock.cs" />
+    <Compile Include="Domain\Model\MapPowerUpBlock.cs" />
+    <Compile Include="Domain\Model\MapSafeBlock.cs" />
     <Compile Include="Domain\Objects\Block.cs" />
     <Compile Include="Domain\Objects\Bomb.cs" />
     <Compile Include="Domain\Objects\BombBagPowerUp.cs" />
