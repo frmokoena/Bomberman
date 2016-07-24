@@ -124,6 +124,15 @@ namespace BomberBot.Domain.Model
                 || block.IsPowerUp();
         }
 
+
+        //actual super
+        public bool IsBlockSuperClear(Location loc)
+        {
+            var block = GetBlock(loc);
+            return block.IsEmpty()
+                || !block.IsIndestructibleWall();
+        }
+
         public bool IsBomb(Location loc)
         {
             return GetBlock(loc).IsBomb();

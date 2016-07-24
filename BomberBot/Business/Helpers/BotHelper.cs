@@ -23,7 +23,7 @@ namespace BomberBot.Business.Helpers
         /// <param name="targetLoc"></param>
         /// <param name="state"></param>
         /// <returns></returns>
-        public static MapNode BuildPathToTarget(GameState state, Location startLoc, Location targetLoc, bool stayClear = false)
+        public static MapNode BuildPathToTarget(GameState state, Location startLoc, Location targetLoc, bool stayClear = false, bool super = false)
         {
             var openList = new List<MapNode> { new MapNode { Location = startLoc } };
             var closedList = new List<MapNode>();
@@ -46,7 +46,7 @@ namespace BomberBot.Business.Helpers
                 closedList.Add(qMapNode);
 
 
-                var childrenLoc = ExpandMoveBlocks(state, startLoc, qMapNode.Location, stayClear);
+                var childrenLoc = super ? ExpandSuperBlocks(state, qMapNode.Location) : ExpandMoveBlocks(state, startLoc, qMapNode.Location, stayClear);
 
 
                 foreach (var loc in childrenLoc)
@@ -702,7 +702,7 @@ namespace BomberBot.Business.Helpers
         }
 
         public static bool IsAnyPlayerVisible(GameState state, Player player, Location startLoc)
-        {            
+        {
             var openBlocks = new List<Location> { startLoc };
 
             Location qLoc;
@@ -734,6 +734,48 @@ namespace BomberBot.Business.Helpers
                 }
             }
             return false;
+        }
+
+        /// <summary>
+        /// Expand super moves
+        /// </summary>
+        /// <param name="state"></param>
+        /// <param name="curLoc"></param>
+        /// <returns></returns>
+        public static List<Location> ExpandSuperBlocks(GameState state, Location curLoc)
+        {
+            Location loc;
+            var movesLoc = new List<Location>();
+
+            loc = new Location(curLoc.X, curLoc.Y - 1);
+
+            if (IsValidBlock(state, loc) && state.IsBlockSuperClear(loc))
+            {
+                movesLoc.Add(loc);
+            }
+
+            loc = new Location(curLoc.X + 1, curLoc.Y);
+
+            if (IsValidBlock(state, loc) && state.IsBlockSuperClear(loc))
+            {
+                movesLoc.Add(loc);
+            }
+
+            loc = new Location(curLoc.X, curLoc.Y + 1);
+
+            if (IsValidBlock(state, loc) && state.IsBlockSuperClear(loc))
+            {
+                movesLoc.Add(loc);
+            }
+
+            loc = new Location(curLoc.X - 1, curLoc.Y);
+
+            if (IsValidBlock(state, loc) && state.IsBlockSuperClear(loc))
+            {
+                movesLoc.Add(loc);
+            }
+
+            return movesLoc;
         }
     }
 }
