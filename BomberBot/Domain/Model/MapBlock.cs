@@ -6,6 +6,6 @@ namespace BomberBot.Domain.Model
     {
         public Location Location { get; set; }
         public int Distance { get; set; }
-        public Location NextMove { get; set; }
+        public Location LocationToBlock { get; set; }
     }
 }

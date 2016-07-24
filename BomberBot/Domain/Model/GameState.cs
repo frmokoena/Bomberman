@@ -19,7 +19,16 @@ namespace BomberBot.Domain.Model
         [JsonProperty("GameBlocks")]
         public Block[][] Map { get; set; }
 
-        public bool WallExhausted
+        public Location SuperLocation
+        {
+            get
+            {
+                var superLocation = new Location(MapWidth / 2, MapHeight / 2);
+                return GetBlock(superLocation).PowerUp != null ? superLocation : null;
+            }
+        }
+
+        public bool WallsExhausted
         {
             get
             {
@@ -92,7 +101,7 @@ namespace BomberBot.Domain.Model
 
         public bool IsBlockBombClear(Location loc)
         {
-            var block = GetBlock(loc);           
+            var block = GetBlock(loc);
 
             return block.IsEmpty()
                 || block.IsBombExploding()
