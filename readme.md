@@ -20,7 +20,7 @@ Either of the following two methods will do the job.
 
 #### Method I: Command Line
 
-  1. First, ensure that `MSBuild` is installed on your system, and the path to `MSbuild` is set in Environment Variables. If not follow the steps in [SO answer](http://stackoverflow.com/a/12608705/852243).
+  1. First, ensure that `MSBuild` is installed on your system, and the path to `MSbuild` is set in Environment Variables. If not follow the steps in this [SO answer](http://stackoverflow.com/a/12608705/852243).
   2. Then a package restore is needed before a build can be made. A standalone `nuget.exe` can be found here [here](http://docs.nuget.org/consume/Command-Line-Reference#Restore-command).
   3. The standalone `nuget.exe` can be stored at the root directory of the solution.
   4. Start the Command Prompt.
