@@ -20,13 +20,13 @@ Either of the following two methods will do the job.
 
 #### Method I: Command Line
 
-  1. First, ensure that `MSBuild` is installed on your system, and the path to `MSbuild` is set in Environment Variables. If not follow the steps in [SO answer](http://stackoverflow.com/a/12608705/852243).
+  1. First, ensure that `MSBuild` is installed on your system, and the path to `MSbuild` is set in `Environment Variables`. If the path is not set, follow the steps in this [SO answer](http://stackoverflow.com/a/12608705/852243).
   2. Then a package restore is needed before a build can be made. A standalone `nuget.exe` can be found here [here](http://docs.nuget.org/consume/Command-Line-Reference#Restore-command).
   3. The standalone `nuget.exe` can be stored at the root directory of the solution.
   4. Start the Command Prompt.
   5. Change to the root directory of the solution (i.e. where `Bomberman.sln` is located).
-  6. Run package restore as explained [here](http://docs.nuget.org/consume/package-restore#command-line-package-restore)
-  7. Run this command: `msbuild Bomberman.sln /p:Configuration=Release /p:Platform="Any CPU" /t:Clean,Build`
+  6. Perform the package restore by running this commonad: `nuget.exe restore Bomberman.sln`
+  7. Build the solution by running this command: `msbuild Bomberman.sln /p:Configuration=Release /p:Platform="Any CPU" /t:Clean,Build`
 
 #### Method II: Visual Studio
 
@@ -45,8 +45,9 @@ To run the tests, you will need the `NUnit Framework`, and the steps are:
   
 ### Running the application
 
-  1. Download the latest release of the Test Harness from here [https://github.com/EntelectChallenge/2016-Bomberman/releases](https://github.com/EntelectChallenge/2016-Bomberman/releases) and extract it into a location of your choice.
-  2. Navigate to the root directory of the Game Engine, and replace one of the bot directories with this bot directory.
+  1. Download the latest release of the Game Engine from here [https://github.com/EntelectChallenge/2016-Bomberman/releases](https://github.com/EntelectChallenge/2016-Bomberman/releases) and extract it into a location of your choice.
+  2. Navigate to the root directory of the Game Engine (`Game Engine/`), and open the `Run.bat` file.
+  3. Replace one of the bot directories from the `Run.bat` file with the root directory of this bot.
   2. Open the Command Prompt and change to the root directory of the Game Engine.
   3. Execute the application by running the following command: `Run.bat`
 
@@ -56,19 +57,24 @@ To run the tests, you will need the `NUnit Framework`, and the steps are:
 
 I use DIY hacks for my bot with A* search for path finding.
 
-Update procedure:
+During each round, any one of the following actions can happen:
 
  1. Stay clear of bombs
- 2. Trigger the bomb with the lowest timer if timer is greater than 2
- 3. Chase power up if near than 3 blocks
- 4. Plant bomb if we have some in our bomb bag and can find hiding.
+ 2. Trigger the bomb if the timer it's not already 2.
+ 3. Chase nearby power ups based on thier importance.
+ 4. Plant bomb if we can score and find hiding block.
  5. Chase after power up
- 6. Search for next bomb placement spot
+ 6. Search for next bomb placement block
+ 7. Chase opponent if all walls have been destroyed
+ 8. Do nothing if we can't do anything fruitful.
 		   
 ### Project Structure
 
-The solution houses two projects. The application project(`BomberBot.csproj`) and the test project (`BomberBotTests.csproj`).
+The solution houses two projects. The application project (`BomberBot.csproj`) and the test project (`BomberBotTests.csproj`).
 
-At the core of the application project is bot strategy class (`Strategy.cs`) and bot helper class (`BotHelper.cs`). Reading of the state file and preparing of the game state is delegated to the game service (`GameService.cs`).
 
-All the move decisions are carried out by the bot (`Strategy.cs`). Bot helper contains some of helper methods used in decision making.
+At the core of the application project is bot strategy interface (`IStrategy.cs`). All the move decisions are carried out by the bot strategy class (`Strategy.cs` which implements `IStrategy`). Bot helper class (`BotHelper.cs`) contains some of helper methods used by strategy class.
+
+
+Reading of the state file and preparing of the game state is delegated to the game service (`IGameService.cs`).
+
