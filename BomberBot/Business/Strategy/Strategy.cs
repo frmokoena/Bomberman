@@ -28,7 +28,6 @@ namespace BomberBot.Business.Strategy
             string homePlayerKey = GameService.HomeKey;
             Player homePlayer = state.GetPlayer(homePlayerKey);
             Location homePlayerLocation = state.FindPlayerLocationOnMap(homePlayerKey);
-            int maxBombBlast = state.MapWidth > state.MapHeight ? state.MapWidth - 3 : state.MapHeight - 3;
 
             //Player killed
             if (homePlayerLocation == null) return;
@@ -62,10 +61,10 @@ namespace BomberBot.Business.Strategy
 
                     var findNearestHiding = chainBombs != null || playerVisible;
 
-                    var safeBlocksInPriority = findNearestHiding ? safeBlocks : safeBlocks.OrderBy(block => block.SuperDistance)
-                                                                                          .ThenByDescending(block => block.VisibleWalls)                                                                                          
-                                                                                          .ThenBy(block => block.Distance)
-                                                                                          .ToList();
+                    var prioritySafeBlocks = findNearestHiding ? safeBlocks : safeBlocks.OrderBy(block => block.SuperDistance)
+                                                                                        .ThenByDescending(block => block.VisibleWalls)
+                                                                                        .ThenBy(block => block.Distance)
+                                                                                        .ToList();
 
                     var opponentLocation = state.FindPlayerLocationOnMap(bombToDodge.Owner.Key);
                     List<Bomb> opponentBombs = null;
@@ -83,7 +82,7 @@ namespace BomberBot.Business.Strategy
                         }
                     }
 
-                    foreach (var safeBlock in safeBlocksInPriority)
+                    foreach (var safeBlock in prioritySafeBlocks)
                     {
                         if (bombToDodge.Owner.Key == homePlayerKey)
                         {
@@ -107,7 +106,7 @@ namespace BomberBot.Business.Strategy
                                 return;
                             }
 
-                            
+
                             if (opponentVisibleBombs != null)
                             {
 
@@ -133,6 +132,22 @@ namespace BomberBot.Business.Strategy
                                         return;
                                     }
                                 }
+
+                                // This might be all we need, but I can't reproduce problem solved by the above routine
+                                // so, I'll just leave it. [distance to move to safety + 1 move to trigger]
+                                if (safeBlock.Distance <= opponentSafeBlocks[0].Distance + 1)
+                                {
+                                    var move = GetMoveFromLocation(homePlayerLocation, safeBlock.LocationToBlock);
+                                    GameService.WriteMove(move);
+                                    return;
+                                }
+                            }
+                            else
+                            {
+                                // else just take the closet safe block
+                                var move = GetMoveFromLocation(homePlayerLocation, safeBlocks[0].LocationToBlock);
+                                GameService.WriteMove(move);
+                                return;
                             }
                         }
                     }
@@ -150,8 +165,8 @@ namespace BomberBot.Business.Strategy
                 return;
             }
 
-            
-            var nearByPowerUp = FindNearByPowerUp(state, homePlayer, homePlayerLocation, maxBombBlast);
+
+            var nearByPowerUp = FindNearByMapPowerUpBlock(state, homePlayer, homePlayerLocation);
 
             if (nearByPowerUp != null)
             {
@@ -182,7 +197,7 @@ namespace BomberBot.Business.Strategy
 
             // Place bomb       
             List<MapBombPlacementBlock> bombPlacementBlocks = null;
-            
+
             var visibleWalls = BotHelper.FindVisibleWalls(state, homePlayerLocation, homePlayer);
 
             if ((homePlayerBombs == null || homePlayerBombs.Count < homePlayer.BombBag) && visibleWalls != null)
@@ -193,7 +208,7 @@ namespace BomberBot.Business.Strategy
 
                 //if we can score 4
                 if (visibleWalls.Count == 3)
-                {                  
+                {
                     // if a better location in next block
                     if (bombPlacementBlocks != null)
                     {
@@ -211,7 +226,7 @@ namespace BomberBot.Business.Strategy
 
                 // if we can score 3
                 if (visibleWalls.Count == 2)
-                {                  
+                {
                     // if a better location in next block
                     if (bombPlacementBlocks != null)
                     {
@@ -229,7 +244,7 @@ namespace BomberBot.Business.Strategy
 
                 // if we can score 2
                 if (visibleWalls.Count == 1)
-                {  
+                {
                     // if a better location in next block
                     if (bombPlacementBlocks != null)
                     {
@@ -460,8 +475,8 @@ namespace BomberBot.Business.Strategy
                                         Distance = mapNode.FCost,
                                         LocationToBlock = BotHelper.RecontractPath(mapNode),
                                         VisibleWalls = visibleWalls.Count,
-                                        SuperDistance = state.SuperLocation == null ? 0 : BotHelper.BuildPathToTarget(state,loc,state.SuperLocation,super:true).FCost
-                                     };
+                                        SuperDistance = state.SuperLocation == null ? 0 : BotHelper.BuildPathToTarget(state, loc, state.SuperLocation, super: true).FCost
+                                    };
 
                                     bombPlacementBlocks.Add(mapBlock);
                                 }
@@ -476,7 +491,7 @@ namespace BomberBot.Business.Strategy
                 }
             }
             return bombPlacementBlocks.Count == 0 ? null : bombPlacementBlocks.OrderBy(b => b.SuperDistance)
-                                                                              .ThenByDescending(b => b.VisibleWalls)                                                                              
+                                                                              .ThenByDescending(b => b.VisibleWalls)
                                                                               .ThenBy(b => b.Distance)
                                                                               .ToList();
         }
@@ -507,7 +522,7 @@ namespace BomberBot.Business.Strategy
         /// <param name="state"></param>
         /// <param name="curLoc"></param>
         /// <returns>List of power ups on the map</returns>
-        private List<MapPowerUpBlock> FindMapPowerUps(GameState state, Location startLoc)
+        private List<MapPowerUpBlock> FindMapPowerUpBlocks(GameState state, Location startLoc)
         {
             var mapPowerUps = new List<MapPowerUpBlock>();
 
@@ -559,40 +574,43 @@ namespace BomberBot.Business.Strategy
         /// <param name="curLoc"></param>
         /// <param name="state"></param>
         /// <returns>Power up to my advantage</returns>
-        private MapPowerUpBlock FindNearByPowerUp(GameState state, Player player, Location curLoc, int maxBombBlast)
+        private MapPowerUpBlock FindNearByMapPowerUpBlock(GameState state, Player player, Location curLoc)
         {
-            var mapPowerUps = FindMapPowerUps(state, curLoc);
+            var mapPowerUpBlocks = FindMapPowerUpBlocks(state, curLoc);
 
-            if (mapPowerUps == null) return null;
+            if (mapPowerUpBlocks == null) return null;
 
-            bool foundPowerUp;
-            var oponents = state.Players.Where(p => p.Key != GameService.HomeKey && !p.Killed).ToList();
+            bool foundMapPowerUpBlock;
+            var opponents = state.Players.Where(p => p.Key != GameService.HomeKey && !p.Killed).ToList();
 
-            foreach (var powerUp in mapPowerUps)
+            foreach (var mapPowerUpBlock in mapPowerUpBlocks)
             {
-                var blockPowerUp = state.GetBlock(powerUp.Location);
+                var powerUp = state.GetBlock(mapPowerUpBlock.Location).PowerUp;
 
-                var isBombRadiusPowerUP = blockPowerUp.IsBombRadiusPowerUp();
+                foundMapPowerUpBlock = true;
 
-                if (isBombRadiusPowerUP)
+                foreach (var opponent in opponents)
                 {
-                    if (player.BombRadius >= maxBombBlast) continue;
-                }
+                    var opponentMapPowerUpBlocks = FindMapPowerUpBlocks(state, new Location(opponent.Location.X - 1, opponent.Location.Y - 1));
 
-                foundPowerUp = true;
+                    var opponentMapPowerUpBlock = opponentMapPowerUpBlocks == null ? null : opponentMapPowerUpBlocks.Find(p => p.PowerUP == mapPowerUpBlock.PowerUP);
 
-                foreach (var oponent in oponents)
-                {
-                    if (PlayerCanReachPowerUp(oponent, powerUp, state))
+                    if (opponentMapPowerUpBlock != null && opponentMapPowerUpBlock.Distance < mapPowerUpBlock.Distance)
                     {
-                        foundPowerUp = false;
+                        foundMapPowerUpBlock = false;
                         break;
                     }
+
+                    //if (PlayerCanReachPowerUp(oponent, powerUp, state))
+                    //{
+                    //    foundPowerUp = false;
+                    //    break;
+                    //}
                 }
 
-                if (foundPowerUp)
+                if (foundMapPowerUpBlock)
                 {
-                    return powerUp;
+                    return mapPowerUpBlock;
                 }
             }
             return null;
@@ -606,24 +624,24 @@ namespace BomberBot.Business.Strategy
         /// <param name="powerUp"></param>
         /// <param name="state"></param>
         /// <returns>(true or false) Can opponent reach the power up before me</returns>
-        private bool PlayerCanReachPowerUp(Player player, MapPowerUpBlock powerUp, GameState state)
-        {
-            var start = state.FindPlayerLocationOnMap(player.Key);
-            if (start == null) return false;
+        //private bool PlayerCanReachPowerUp(Player player, MapPowerUpBlock powerUp, GameState state)
+        //{
+        //    var start = state.FindPlayerLocationOnMap(player.Key);
+        //    if (start == null) return false;
 
-            var targetLoc = powerUp.Location;
+        //    var targetLoc = powerUp.Location;
 
-            var oponentTarget = BotHelper.BuildPathToTarget(state, start, targetLoc);
+        //    var oponentTarget = BotHelper.BuildPathToTarget(state, start, targetLoc);
 
-            if (oponentTarget == null) return false;
+        //    if (oponentTarget == null) return false;
 
-            if (oponentTarget.FCost < powerUp.Distance)
-            {
-                return true;
-            }
+        //    if (oponentTarget.FCost < powerUp.Distance)
+        //    {
+        //        return true;
+        //    }
 
-            return false;
-        }
+        //    return false;
+        //}
 
 
         /// <summary>
