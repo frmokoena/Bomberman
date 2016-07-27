@@ -24,7 +24,7 @@ namespace BomberBot.Domain.Model
             get
             {
                 var superLocation = new Location(MapWidth / 2, MapHeight / 2);
-                return GetBlock(superLocation).PowerUp != null ? superLocation : null;
+                return GetBlockAtLocation(superLocation).PowerUp != null ? superLocation : null;
             }
         }
 
@@ -36,19 +36,19 @@ namespace BomberBot.Domain.Model
                 {
                     for (var y = 1; y < MapHeight; y++)
                     {
-                        if (GetBlock(x, y).IsDestructibleWall()) return false;
+                        if (GetBlockAtLocation(x, y).IsDestructibleWall()) return false;
                     }
                 }
                 return true;
             }
         }
 
-        public Block GetBlock(Location loc)
+        public Block GetBlockAtLocation(Location loc)
         {
             return Map[loc.X][loc.Y];
         }
 
-        public Block GetBlock(int x, int y)
+        public Block GetBlockAtLocation(int x, int y)
         {
             return Map[x][y];
         }
@@ -58,7 +58,7 @@ namespace BomberBot.Domain.Model
             return Players.Find(p => p.Key == key);
         }
 
-        public Location FindPlayerLocationOnMap(string playerKey)
+        public Location GetPlayerLocationOnMap(string playerKey)
         {
             var player = Players.Find(p => p.Key == playerKey);
             if (player.Killed) return null;
@@ -73,7 +73,7 @@ namespace BomberBot.Domain.Model
             {
                 for (var y = 1; y < MapHeight; y++)
                 {
-                    var bomb = GetBlock(x, y).Bomb;
+                    var bomb = GetBlockAtLocation(x, y).Bomb;
 
                     if (bomb == null)
                     {
@@ -92,7 +92,7 @@ namespace BomberBot.Domain.Model
 
         public bool IsBlockClear(Location loc)
         {
-            var block = GetBlock(loc);
+            var block = GetBlockAtLocation(loc);
 
             return block.IsEmpty()
                 || block.IsBombExploding()
@@ -101,7 +101,7 @@ namespace BomberBot.Domain.Model
 
         public bool IsBlockBombClear(Location loc)
         {
-            var block = GetBlock(loc);
+            var block = GetBlockAtLocation(loc);
 
             return block.IsEmpty()
                 || block.IsBombExploding()
@@ -114,7 +114,7 @@ namespace BomberBot.Domain.Model
         //plant clear
         public bool IsBlockPlantClear(Location loc)
         {
-            var block = GetBlock(loc);
+            var block = GetBlockAtLocation(loc);
 
             return block.IsEmpty()
                 || block.IsBombExploding()
@@ -128,39 +128,39 @@ namespace BomberBot.Domain.Model
         //actual super
         public bool IsBlockSuperClear(Location loc)
         {
-            var block = GetBlock(loc);
+            var block = GetBlockAtLocation(loc);
             return block.IsEmpty()
                 || !block.IsIndestructibleWall();
         }
 
         public bool IsBomb(Location loc)
         {
-            return GetBlock(loc).IsBomb();
+            return GetBlockAtLocation(loc).IsBomb();
         }
 
         public bool IsDestructibleWall(Location loc)
         {
-            return GetBlock(loc).IsDestructibleWall();
+            return GetBlockAtLocation(loc).IsDestructibleWall();
         }
 
         public bool IsPowerUp(Location loc)
         {
-            return GetBlock(loc).IsPowerUp();
+            return GetBlockAtLocation(loc).IsPowerUp();
         }
 
         public bool IsPlayer(Location loc)
         {
-            return GetBlock(loc).IsPlayer();
+            return GetBlockAtLocation(loc).IsPlayer();
         }
 
         public bool IsPlayerSittingOnBomb(Location loc)
         {
-            return GetBlock(loc).IsPlayerSittingOnBomb();
+            return GetBlockAtLocation(loc).IsPlayerSittingOnBomb();
         }
 
         public bool IsBlockPlayerClear(Location loc)
         {
-            var block = GetBlock(loc);
+            var block = GetBlockAtLocation(loc);
 
             return block.IsEmpty()
                 || block.IsBombExploding()

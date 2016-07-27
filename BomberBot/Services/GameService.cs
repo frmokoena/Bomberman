@@ -82,7 +82,7 @@ namespace BomberBot.Services
                     file.WriteLine(moveInt);
                 }
 
-                Log("Command: " + moveInt);
+                Log("Command: " + move);
             }
             catch (IOException e)
             {

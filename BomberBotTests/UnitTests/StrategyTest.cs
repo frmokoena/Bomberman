@@ -33,9 +33,9 @@ namespace BomberBotTests.UnitTests
             var result = BotHelper.FindVisibleBombs(gameService.GameState, playerLoc);
 
             //Assert
-            Assert.IsNotNull(gameService.GameState.GetBlock(expect).Bomb);
-            Assert.AreEqual(expect.X, gameService.GameState.GetBlock(expect).Bomb.Location.X - 1);
-            Assert.AreEqual(expect.Y, gameService.GameState.GetBlock(expect).Bomb.Location.Y - 1);
+            Assert.IsNotNull(gameService.GameState.GetBlockAtLocation(expect).Bomb);
+            Assert.AreEqual(expect.X, gameService.GameState.GetBlockAtLocation(expect).Bomb.Location.X - 1);
+            Assert.AreEqual(expect.Y, gameService.GameState.GetBlockAtLocation(expect).Bomb.Location.Y - 1);
 
             Assert.AreEqual(1, result.Count);
             Assert.AreEqual(expect.X, result[0].Location.X - 1);
@@ -129,7 +129,7 @@ namespace BomberBotTests.UnitTests
 
             Strategy bot = new Strategy(gameService);
 
-            Location playerAloc = gameService.GameState.FindPlayerLocationOnMap(playerKey);
+            Location playerAloc = gameService.GameState.GetPlayerLocationOnMap(playerKey);
 
             var player = gameService.GameState.Players.Find(p => p.Key == playerKey);
 
@@ -156,7 +156,7 @@ namespace BomberBotTests.UnitTests
             string playerKey = "A";
             IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
 
-            var curLoc = gameService.GameState.FindPlayerLocationOnMap(playerKey);
+            var curLoc = gameService.GameState.GetPlayerLocationOnMap(playerKey);
 
             var player = gameService.GameState.Players.Find(p => p.Key == playerKey);
 
@@ -176,7 +176,7 @@ namespace BomberBotTests.UnitTests
             string playerKey = "C";
             IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
 
-            var curLoc = gameService.GameState.FindPlayerLocationOnMap(playerKey);
+            var curLoc = gameService.GameState.GetPlayerLocationOnMap(playerKey);
 
             var player = gameService.GameState.Players.Find(p => p.Key == playerKey);
 
@@ -314,7 +314,7 @@ namespace BomberBotTests.UnitTests
             Strategy bot = new Strategy(gameService);
             var state = gameService.GameState;
             var player = state.GetPlayer(playerKey);
-            var startLoc = state.FindPlayerLocationOnMap(playerKey);
+            var startLoc = state.GetPlayerLocationOnMap(playerKey);
 
             // Act
             //var result = bot.CanFindHidingBlock(state, player, startLoc);
@@ -334,7 +334,7 @@ namespace BomberBotTests.UnitTests
             Strategy bot = new Strategy(gameService);
             var state = gameService.GameState;
             var player = state.GetPlayer(playerKey);
-            var startLoc = state.FindPlayerLocationOnMap(playerKey);
+            var startLoc = state.GetPlayerLocationOnMap(playerKey);
 
             // Act
             //var result = bot.CanFindHidingBlock(state, player, startLoc);

@@ -23,7 +23,7 @@ namespace BomberBot.Business.Helpers
         /// <param name="targetLoc"></param>
         /// <param name="state"></param>
         /// <returns></returns>
-        public static MapNode BuildPathToTarget(GameState state, Location startLoc, Location targetLoc, bool stayClear = false, bool super = false)
+        public static MapNode BuildPathToTarget(GameState state, Location startLoc, Location targetLoc, List<Bomb> bombsToDodge = null, bool super = false)
         {
             var openList = new List<MapNode> { new MapNode { Location = startLoc } };
             var closedList = new List<MapNode>();
@@ -46,7 +46,7 @@ namespace BomberBot.Business.Helpers
                 closedList.Add(qMapNode);
 
 
-                var childrenLoc = super ? ExpandSuperBlocks(state, qMapNode.Location) : ExpandMoveBlocks(state, startLoc, qMapNode.Location, stayClear);
+                var childrenLoc = super ? ExpandSuperBlocks(state, qMapNode.Location) : ExpandMoveBlocks(state, startLoc, qMapNode.Location, bombsToDodge);
 
 
                 foreach (var loc in childrenLoc)
@@ -85,7 +85,7 @@ namespace BomberBot.Business.Helpers
         /// <param name="startLoc"></param>
         /// <param name="goalMapNode"></param>
         /// <returns>Next move Location towards target</returns>
-        public static Location RecontractPath(MapNode goalMapNode)
+        public static Location ReconstructPath(MapNode goalMapNode)
         {
             if (goalMapNode == null) return null;
 
@@ -109,7 +109,7 @@ namespace BomberBot.Business.Helpers
         /// <param name="startLoc"></param>
         /// <param name="curLoc"></param>
         /// <returns>next posssible move Locations</returns>
-        public static List<Location> ExpandMoveBlocks(GameState state, Location startLoc, Location curLoc, bool stayClear = false)
+        public static List<Location> ExpandMoveBlocks(GameState state, Location startLoc, Location curLoc, List<Bomb> bombsToDodge = null)
         {
             Location loc;
             var movesLoc = new List<Location>();
@@ -129,7 +129,9 @@ namespace BomberBot.Business.Helpers
                     }
                     else
                     {
-                        if (stayClear && bombs[0].BombTimer > 1)
+                        var anyNewBomb = bombsToDodge == null ? true : bombs.Except(bombsToDodge).Any();
+
+                        if (!anyNewBomb)
                         {
                             movesLoc.Add(loc);
                         }
@@ -148,7 +150,9 @@ namespace BomberBot.Business.Helpers
                     }
                     else
                     {
-                        if (stayClear && bombs[0].BombTimer > 1)
+                        var anyNewBomb = bombsToDodge == null ? true : bombs.Except(bombsToDodge).Any();
+
+                        if (!anyNewBomb)
                         {
                             movesLoc.Add(loc);
                         }
@@ -167,7 +171,9 @@ namespace BomberBot.Business.Helpers
                     }
                     else
                     {
-                        if (stayClear && bombs[0].BombTimer > 1)
+                        var anyNewBomb = bombsToDodge == null ? true : bombs.Except(bombsToDodge).Any();
+
+                        if (!anyNewBomb)
                         {
                             movesLoc.Add(loc);
                         }
@@ -186,7 +192,9 @@ namespace BomberBot.Business.Helpers
                     }
                     else
                     {
-                        if (stayClear && bombs[0].BombTimer > 1)
+                        var anyNewBomb = bombsToDodge == null ? true : bombs.Except(bombsToDodge).Any();
+
+                        if (!anyNewBomb)
                         {
                             movesLoc.Add(loc);
                         }
@@ -250,7 +258,7 @@ namespace BomberBot.Business.Helpers
 
                 foreach (var bLoc in blocksLoc)
                 {
-                    var entity = state.GetBlock(bLoc).Entity;
+                    var entity = state.GetBlockAtLocation(bLoc).Entity;
 
                     if (entity is Player)
                     {
@@ -358,7 +366,7 @@ namespace BomberBot.Business.Helpers
             //Sitting on Bomb
             if (state.IsBomb(curLoc) && !chaining)
             {
-                var bomb = state.GetBlock(curLoc).Bomb;
+                var bomb = state.GetBlockAtLocation(curLoc).Bomb;
                 visibleBombs.Add(bomb);
             }
 
@@ -379,7 +387,7 @@ namespace BomberBot.Business.Helpers
                 {
                     if (state.IsBomb(bLoc))
                     {
-                        var bomb = state.GetBlock(bLoc).Bomb;
+                        var bomb = state.GetBlockAtLocation(bLoc).Bomb;
                         var bombDistance = Math.Abs(curLoc.X - bLoc.X) + Math.Abs(curLoc.Y - bLoc.Y);
                         if (bomb.BombRadius > bombDistance - 1)
                         {
@@ -470,7 +478,7 @@ namespace BomberBot.Business.Helpers
         /// <param name="startLoc"></param>
         /// <param name="curLoc"></param>
         /// <returns></returns>
-        public static List<Location> ExpandSafeBlocks(GameState state, Location startLoc, Location curLoc)
+        public static List<Location> ExpandSafeBlocks(GameState state, Location startLoc, Location curLoc, List<Bomb> bombsToDodge)
         {
             Location loc;
             var safeBlocks = new List<Location>();
@@ -490,7 +498,9 @@ namespace BomberBot.Business.Helpers
                     }
                     else
                     {
-                        if (bombs[0].BombTimer > 1)
+                        var anyNewBomb = bombs.Except(bombsToDodge).Any();
+
+                        if (!anyNewBomb)
                         {
                             safeBlocks.Add(loc);
                         }
@@ -509,7 +519,9 @@ namespace BomberBot.Business.Helpers
                     }
                     else
                     {
-                        if (bombs[0].BombTimer > 1)
+                        var anyNewBomb = bombs.Except(bombsToDodge).Any();
+
+                        if (!anyNewBomb)
                         {
                             safeBlocks.Add(loc);
                         }
@@ -528,7 +540,9 @@ namespace BomberBot.Business.Helpers
                     }
                     else
                     {
-                        if (bombs[0].BombTimer > 1)
+                        var anyNewBomb = bombs.Except(bombsToDodge).Any();
+
+                        if (!anyNewBomb)
                         {
                             safeBlocks.Add(loc);
                         }
@@ -547,7 +561,9 @@ namespace BomberBot.Business.Helpers
                     }
                     else
                     {
-                        if (bombs[0].BombTimer > 1)
+                        var anyNewBomb = bombs.Except(bombsToDodge).Any();
+
+                        if (!anyNewBomb)
                         {
                             safeBlocks.Add(loc);
                         }
@@ -614,7 +630,7 @@ namespace BomberBot.Business.Helpers
                 {
                     if (state.IsDestructibleWall(wLoc))
                     {
-                        var wall = (DestructibleWall)state.GetBlock(wLoc).Entity;
+                        var wall = (DestructibleWall)state.GetBlockAtLocation(wLoc).Entity;
                         visibleWalls.Add(wall);
                     }
                     else
@@ -718,7 +734,7 @@ namespace BomberBot.Business.Helpers
 
                 foreach (var bLoc in blocksLoc)
                 {
-                    var entity = state.GetBlock(bLoc).Entity;
+                    var entity = state.GetBlockAtLocation(bLoc).Entity;
 
                     if (entity is Player)
                     {
@@ -745,37 +761,37 @@ namespace BomberBot.Business.Helpers
         public static List<Location> ExpandSuperBlocks(GameState state, Location curLoc)
         {
             Location loc;
-            var movesLoc = new List<Location>();
+            var superMovesLoc = new List<Location>();
 
             loc = new Location(curLoc.X, curLoc.Y - 1);
 
             if (IsValidBlock(state, loc) && state.IsBlockSuperClear(loc))
             {
-                movesLoc.Add(loc);
+                superMovesLoc.Add(loc);
             }
 
             loc = new Location(curLoc.X + 1, curLoc.Y);
 
             if (IsValidBlock(state, loc) && state.IsBlockSuperClear(loc))
             {
-                movesLoc.Add(loc);
+                superMovesLoc.Add(loc);
             }
 
             loc = new Location(curLoc.X, curLoc.Y + 1);
 
             if (IsValidBlock(state, loc) && state.IsBlockSuperClear(loc))
             {
-                movesLoc.Add(loc);
+                superMovesLoc.Add(loc);
             }
 
             loc = new Location(curLoc.X - 1, curLoc.Y);
 
             if (IsValidBlock(state, loc) && state.IsBlockSuperClear(loc))
             {
-                movesLoc.Add(loc);
+                superMovesLoc.Add(loc);
             }
 
-            return movesLoc;
+            return superMovesLoc;
         }
     }
 }

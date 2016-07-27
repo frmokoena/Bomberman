@@ -27,7 +27,7 @@ namespace BomberBot.Business.Strategy
             GameState state = GameService.GameState;
             string homePlayerKey = GameService.HomeKey;
             Player homePlayer = state.GetPlayer(homePlayerKey);
-            Location homePlayerLocation = state.FindPlayerLocationOnMap(homePlayerKey);
+            Location homePlayerLocation = state.GetPlayerLocationOnMap(homePlayerKey);
 
             //Player killed
             if (homePlayerLocation == null) return;
@@ -48,7 +48,31 @@ namespace BomberBot.Business.Strategy
             {
                 var bombToDodge = visibleBombs[0];
 
-                var safeBlocks = FindSafeBlocks(state, homePlayer, homePlayerLocation, bombToDodge);
+
+                Location opponentLocation = null;
+                List<Bomb> opponentBombs = null;
+                List<Bomb> opponentVisibleBombs = null;
+                List<MapSafeBlock> opponentSafeBlocks = null;
+
+
+                // if not own bomb
+
+                if (bombToDodge.Owner.Key != homePlayerKey)
+                {
+                    opponentLocation = state.GetPlayerLocationOnMap(bombToDodge.Owner.Key);
+                    if (opponentLocation != null)
+                    {
+                        opponentBombs = state.GetPlayerBombs(bombToDodge.Owner.Key);
+                        opponentVisibleBombs = BotHelper.FindVisibleBombs(state, opponentLocation);
+
+                        if (opponentVisibleBombs != null)
+                        {
+                            opponentSafeBlocks = FindSafeBlocks(state, bombToDodge.Owner, opponentLocation, opponentVisibleBombs);
+                        }
+                    }
+                }
+
+                var safeBlocks = FindSafeBlocks(state, homePlayer, homePlayerLocation, visibleBombs);
 
                 if (safeBlocks != null)
                 {
@@ -65,22 +89,6 @@ namespace BomberBot.Business.Strategy
                                                                                         .ThenByDescending(block => block.VisibleWalls)
                                                                                         .ThenBy(block => block.Distance)
                                                                                         .ToList();
-
-                    var opponentLocation = state.FindPlayerLocationOnMap(bombToDodge.Owner.Key);
-                    List<Bomb> opponentBombs = null;
-                    List<Bomb> opponentVisibleBombs = null;
-                    List<MapSafeBlock> opponentSafeBlocks = null;
-
-                    if (opponentLocation != null)
-                    {
-                        opponentBombs = state.GetPlayerBombs(bombToDodge.Owner.Key);
-                        opponentVisibleBombs = BotHelper.FindVisibleBombs(state, opponentLocation);
-
-                        if (opponentVisibleBombs != null)
-                        {
-                            opponentSafeBlocks = FindSafeBlocks(state, bombToDodge.Owner, opponentLocation, opponentVisibleBombs[0]);
-                        }
-                    }
 
                     foreach (var safeBlock in prioritySafeBlocks)
                     {
@@ -109,7 +117,6 @@ namespace BomberBot.Business.Strategy
 
                             if (opponentVisibleBombs != null)
                             {
-
                                 //if we can reach our safe block before op
                                 if (opponentSafeBlocks == null || safeBlock.Distance <= opponentSafeBlocks[0].Distance)
                                 {
@@ -146,6 +153,34 @@ namespace BomberBot.Business.Strategy
                             {
                                 // else just take the closet safe block
                                 var move = GetMoveFromLocation(homePlayerLocation, safeBlocks[0].LocationToBlock);
+                                GameService.WriteMove(move);
+                                return;
+                            }
+                        }
+                    }
+                }
+
+                // op bomb 
+                if (bombToDodge.Owner.Key != homePlayerKey)
+                {
+                    var mapSafeBlock = FindSafeBlockFromPlayer(state, homePlayerLocation, visibleBombs);
+
+                    if (mapSafeBlock != null)
+                    {
+                        if (opponentSafeBlocks != null)
+                        {
+                            if (mapSafeBlock.Distance <= opponentSafeBlocks[0].Distance + 1)
+                            {
+                                // grab the location
+                                var move = GetMoveFromLocation(homePlayerLocation, mapSafeBlock.LocationToBlock);
+                                GameService.WriteMove(move);
+                                return;
+                            }
+
+                            if (mapSafeBlock.Distance < 2)
+                            {
+                                // grab the location
+                                var move = GetMoveFromLocation(homePlayerLocation, mapSafeBlock.LocationToBlock);
                                 GameService.WriteMove(move);
                                 return;
                             }
@@ -473,7 +508,7 @@ namespace BomberBot.Business.Strategy
                                     {
                                         Location = loc,
                                         Distance = mapNode.FCost,
-                                        LocationToBlock = BotHelper.RecontractPath(mapNode),
+                                        LocationToBlock = BotHelper.ReconstructPath(mapNode),
                                         VisibleWalls = visibleWalls.Count,
                                         SuperDistance = state.SuperLocation == null ? 0 : BotHelper.BuildPathToTarget(state, loc, state.SuperLocation, super: true).FCost
                                     };
@@ -545,7 +580,7 @@ namespace BomberBot.Business.Strategy
                     {
                         visitedList.Add(loc);
 
-                        var mapEntity = state.GetBlock(loc).PowerUp;
+                        var mapEntity = state.GetBlockAtLocation(loc).PowerUp;
 
 
                         if (mapEntity != null)
@@ -553,7 +588,7 @@ namespace BomberBot.Business.Strategy
                             var mapNode = BotHelper.BuildPathToTarget(state, startLoc, loc);
                             if (mapNode != null)
                             {
-                                mapPowerUps.Add(new MapPowerUpBlock { Location = loc, Distance = mapNode.FCost, LocationToBlock = BotHelper.RecontractPath(mapNode), PowerUP = mapEntity });
+                                mapPowerUps.Add(new MapPowerUpBlock { Location = loc, Distance = mapNode.FCost, LocationToBlock = BotHelper.ReconstructPath(mapNode), PowerUP = mapEntity });
                             }
                         }
 
@@ -585,7 +620,7 @@ namespace BomberBot.Business.Strategy
 
             foreach (var mapPowerUpBlock in mapPowerUpBlocks)
             {
-                var powerUp = state.GetBlock(mapPowerUpBlock.Location).PowerUp;
+                var powerUp = state.GetBlockAtLocation(mapPowerUpBlock.Location).PowerUp;
 
                 foundMapPowerUpBlock = true;
 
@@ -600,12 +635,6 @@ namespace BomberBot.Business.Strategy
                         foundMapPowerUpBlock = false;
                         break;
                     }
-
-                    //if (PlayerCanReachPowerUp(oponent, powerUp, state))
-                    //{
-                    //    foundPowerUp = false;
-                    //    break;
-                    //}
                 }
 
                 if (foundMapPowerUpBlock)
@@ -616,41 +645,13 @@ namespace BomberBot.Business.Strategy
             return null;
         }
 
-
-        /// <summary>
-        /// Find if certain player can reach power up before home player
-        /// </summary>
-        /// <param name="player"></param>
-        /// <param name="powerUp"></param>
-        /// <param name="state"></param>
-        /// <returns>(true or false) Can opponent reach the power up before me</returns>
-        //private bool PlayerCanReachPowerUp(Player player, MapPowerUpBlock powerUp, GameState state)
-        //{
-        //    var start = state.FindPlayerLocationOnMap(player.Key);
-        //    if (start == null) return false;
-
-        //    var targetLoc = powerUp.Location;
-
-        //    var oponentTarget = BotHelper.BuildPathToTarget(state, start, targetLoc);
-
-        //    if (oponentTarget == null) return false;
-
-        //    if (oponentTarget.FCost < powerUp.Distance)
-        //    {
-        //        return true;
-        //    }
-
-        //    return false;
-        //}
-
-
         /// <summary>
         /// Find safe block, running away from danger
         /// </summary>
         /// <param name="state"></param>
         /// <param name="startLoc"></param>
         /// <returns>Block which is bomb clear</returns>
-        private List<MapSafeBlock> FindSafeBlocks(GameState state, Player player, Location startLoc, Bomb bomb)
+        private List<MapSafeBlock> FindSafeBlocks(GameState state, Player player, Location startLoc, List<Bomb> bombsToDodge)
         {
             var safeBlocks = new List<MapSafeBlock>();
 
@@ -667,16 +668,17 @@ namespace BomberBot.Business.Strategy
                 openList.RemoveAt(0);
                 closedList.Add(qLoc);
 
-                var possibleBlockLoc = BotHelper.ExpandSafeBlocks(state, startLoc, qLoc);
+                var possibleBlockLoc = BotHelper.ExpandSafeBlocks(state, startLoc, qLoc, bombsToDodge );
 
                 foreach (var loc in possibleBlockLoc)
                 {
                     if (!visitedList.Contains(loc))
                     {
                         visitedList.Add(loc);
-                        MapNode safeNode = BotHelper.BuildPathToTarget(state, startLoc, loc, stayClear: true);
+                        MapNode safeNode = BotHelper.BuildPathToTarget(state, startLoc, loc, bombsToDodge);
 
                         //if we can reach this location, and in time
+                        var bomb = bombsToDodge[0];
                         if (safeNode != null && safeNode.FCost < bomb.BombTimer)
                         {
                             var visibleBombs = BotHelper.FindVisibleBombs(state, loc);
@@ -690,7 +692,7 @@ namespace BomberBot.Business.Strategy
                                 {
                                     Location = loc,
                                     Distance = safeNode.FCost,
-                                    LocationToBlock = BotHelper.RecontractPath(safeNode),
+                                    LocationToBlock = BotHelper.ReconstructPath(safeNode),
                                     VisibleWalls = visibleWalls == null ? 0 : visibleWalls.Count,
                                     SuperDistance = state.SuperLocation == null ? 0 : state.SuperLocation == null ? 0 : BotHelper.BuildPathToTarget(state, loc, state.SuperLocation, super: true).FCost,
                                     MapNode = safeNode
@@ -698,7 +700,6 @@ namespace BomberBot.Business.Strategy
                                 safeBlocks.Add(mapBlock);
 
                             }
-
 
                             if (!closedList.Contains(loc))
                             {
@@ -756,7 +757,7 @@ namespace BomberBot.Business.Strategy
                                 return new MapBombPlacementBlock
                                 {
                                     Location = loc,
-                                    LocationToBlock = BotHelper.RecontractPath(mapNode)
+                                    LocationToBlock = BotHelper.ReconstructPath(mapNode)
                                 };
                             }
                         }
@@ -782,6 +783,69 @@ namespace BomberBot.Business.Strategy
                 if (curWalls.SetEquals(destroyedWalls[i])) return true;
             }
             return false;
+        }
+
+        private MapSafeBlock FindSafeBlockFromPlayer(GameState state, Location startLoc, List<Bomb> bombsToDodge)
+        {
+            var openList = new List<Location> { startLoc };
+            var closedList = new List<Location>();
+            var visitedList = new List<Location>();
+
+            while (openList.Count != 0)
+            {
+                var qLoc = openList[0];
+                openList.RemoveAt(0);
+                closedList.Add(qLoc);
+
+                var possibleMoveLocations = BotHelper.ExpandSafeBlocks(state, startLoc, qLoc, bombsToDodge);
+
+                foreach (var loc in possibleMoveLocations)
+                {
+                    if (!visitedList.Contains(loc))
+                    {
+                        visitedList.Add(loc);
+
+                        MapNode safeNode = BotHelper.BuildPathToTarget(state, startLoc, loc, bombsToDodge);
+
+                        var bomb = bombsToDodge[0];
+                        if (safeNode != null && safeNode.FCost < bomb.BombTimer)
+                        {
+                            var visibleBombs = BotHelper.FindVisibleBombs(state, loc);
+
+                            if (visibleBombs == null)
+                            {
+                                return new MapSafeBlock
+                                {
+                                    Location = loc,
+                                    Distance = safeNode.FCost,
+                                    LocationToBlock = BotHelper.ReconstructPath(safeNode),
+                                    MapNode = safeNode
+                                };
+                            }
+
+                            var bombToDodge = visibleBombs.Find(b => b == bomb);
+
+                            if (bombToDodge == null)
+                            {
+
+                                return new MapSafeBlock
+                                {
+                                    Location = loc,
+                                    Distance = safeNode.FCost,
+                                    LocationToBlock = BotHelper.ReconstructPath(safeNode),
+                                    MapNode = safeNode
+                                };
+                            }
+
+                            if (!closedList.Contains(loc))
+                            {
+                                openList.Add(loc);
+                            }
+                        }
+                    }
+                }
+            }
+            return null;
         }
     }
 }
