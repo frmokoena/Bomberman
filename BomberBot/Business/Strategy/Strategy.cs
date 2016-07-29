@@ -163,7 +163,7 @@ namespace BomberBot.Business.Strategy
                 // op bomb 
                 if (bombToDodge.Owner.Key != homePlayerKey)
                 {
-                    var mapSafeBlock = FindSafeBlockFromPlayer(state, homePlayerLocation, visibleBombs);
+                    var mapSafeBlock = FindSafeBlockFromPlayer(state, homePlayer, homePlayerLocation, visibleBombs);
 
                     if (mapSafeBlock != null)
                     {
@@ -239,7 +239,7 @@ namespace BomberBot.Business.Strategy
             {
                 Move move;
 
-                bombPlacementBlocks = FindBombPlacementBlocks(state, homePlayerLocation, homePlayer, 5);
+                bombPlacementBlocks = FindBombPlacementBlocks(state, homePlayer, homePlayerLocation, 5);
 
                 //if we can score 4
                 if (visibleWalls.Count == 3)
@@ -315,7 +315,7 @@ namespace BomberBot.Business.Strategy
             // search for placement block
             var r = new Random();
             var maxPlacementBlocks = r.Next(5, 20);
-            bombPlacementBlocks = FindBombPlacementBlocks(state, homePlayerLocation, homePlayer, maxPlacementBlocks);
+            bombPlacementBlocks = FindBombPlacementBlocks(state, homePlayer, homePlayerLocation, maxPlacementBlocks);
 
             if (visibleWalls != null)
             {
@@ -460,7 +460,7 @@ namespace BomberBot.Business.Strategy
             return false;
         }
 
-        private List<MapBombPlacementBlock> FindBombPlacementBlocks(GameState state, Location startLoc, Player player, int maxPlacementBlocks)
+        private List<MapBombPlacementBlock> FindBombPlacementBlocks(GameState state, Player player, Location startLoc, int maxPlacementBlocks)
         {
             var openList = new List<Location>() { startLoc };
             var closedList = new List<Location>();
@@ -668,14 +668,14 @@ namespace BomberBot.Business.Strategy
                 openList.RemoveAt(0);
                 closedList.Add(qLoc);
 
-                var possibleBlockLoc = BotHelper.ExpandSafeBlocks(state, startLoc, qLoc, bombsToDodge );
+                var possibleBlockLoc = BotHelper.ExpandMoveBlocks(state, startLoc, qLoc, player, bombsToDodge, stayClear: true);
 
                 foreach (var loc in possibleBlockLoc)
                 {
                     if (!visitedList.Contains(loc))
                     {
                         visitedList.Add(loc);
-                        MapNode safeNode = BotHelper.BuildPathToTarget(state, startLoc, loc, bombsToDodge);
+                        MapNode safeNode = BotHelper.BuildPathToTarget(state, startLoc, loc, player, bombsToDodge, stayClear: true);
 
                         //if we can reach this location, and in time
                         var bomb = bombsToDodge[0];
@@ -785,7 +785,7 @@ namespace BomberBot.Business.Strategy
             return false;
         }
 
-        private MapSafeBlock FindSafeBlockFromPlayer(GameState state, Location startLoc, List<Bomb> bombsToDodge)
+        private MapSafeBlock FindSafeBlockFromPlayer(GameState state, Player player, Location startLoc, List<Bomb> bombsToDodge)
         {
             var openList = new List<Location> { startLoc };
             var closedList = new List<Location>();
@@ -797,7 +797,7 @@ namespace BomberBot.Business.Strategy
                 openList.RemoveAt(0);
                 closedList.Add(qLoc);
 
-                var possibleMoveLocations = BotHelper.ExpandSafeBlocks(state, startLoc, qLoc, bombsToDodge);
+                var possibleMoveLocations = BotHelper.ExpandMoveBlocks(state, startLoc, qLoc, player, bombsToDodge, stayClear: true);
 
                 foreach (var loc in possibleMoveLocations)
                 {
@@ -805,7 +805,7 @@ namespace BomberBot.Business.Strategy
                     {
                         visitedList.Add(loc);
 
-                        MapNode safeNode = BotHelper.BuildPathToTarget(state, startLoc, loc, bombsToDodge);
+                        MapNode safeNode = BotHelper.BuildPathToTarget(state, startLoc, loc, player, bombsToDodge, stayClear: true);
 
                         var bomb = bombsToDodge[0];
                         if (safeNode != null && safeNode.FCost < bomb.BombTimer)

@@ -10,5 +10,10 @@ namespace BomberBot.Domain.Objects
         public bool Killed { get; set; }
         public int BombBag { get; set; }
         public int BombRadius { get; set; }
+
+        public bool IsBombOwner(Bomb bomb)
+        {
+            return bomb.Owner.Key == Key;
+        }
     }
 }

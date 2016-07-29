@@ -23,7 +23,7 @@ namespace BomberBot.Business.Helpers
         /// <param name="targetLoc"></param>
         /// <param name="state"></param>
         /// <returns></returns>
-        public static MapNode BuildPathToTarget(GameState state, Location startLoc, Location targetLoc, List<Bomb> bombsToDodge = null, bool super = false)
+        public static MapNode BuildPathToTarget(GameState state, Location startLoc, Location targetLoc, Player player = null, List<Bomb> bombsToDodge = null, bool stayClear = false,bool super = false)
         {
             var openList = new List<MapNode> { new MapNode { Location = startLoc } };
             var closedList = new List<MapNode>();
@@ -46,7 +46,7 @@ namespace BomberBot.Business.Helpers
                 closedList.Add(qMapNode);
 
 
-                var childrenLoc = super ? ExpandSuperBlocks(state, qMapNode.Location) : ExpandMoveBlocks(state, startLoc, qMapNode.Location, bombsToDodge);
+                var childrenLoc = super ? ExpandSuperBlocks(state, qMapNode.Location) : ExpandMoveBlocks(state,startLoc,qMapNode.Location,player,bombsToDodge,stayClear);
 
 
                 foreach (var loc in childrenLoc)
@@ -109,7 +109,7 @@ namespace BomberBot.Business.Helpers
         /// <param name="startLoc"></param>
         /// <param name="curLoc"></param>
         /// <returns>next posssible move Locations</returns>
-        public static List<Location> ExpandMoveBlocks(GameState state, Location startLoc, Location curLoc, List<Bomb> bombsToDodge = null)
+        public static List<Location> ExpandMoveBlocks(GameState state, Location startLoc, Location curLoc, Player player = null, List<Bomb> bombsToDodge = null, bool stayClear = false)
         {
             Location loc;
             var movesLoc = new List<Location>();
@@ -129,11 +129,21 @@ namespace BomberBot.Business.Helpers
                     }
                     else
                     {
-                        var anyNewBomb = bombsToDodge == null ? true : bombs.Except(bombsToDodge).Any();
+                        var newBombs = bombsToDodge == null ? bombs : bombs.Except(bombsToDodge);                        
 
-                        if (!anyNewBomb)
+                        if (!newBombs.Any())
                         {
                             movesLoc.Add(loc);
+                        }
+                        else if (stayClear)
+                        {
+                            var test = newBombs.Any(b => player.IsBombOwner(b));
+                            if (newBombs.Count() == 1 
+                                && newBombs.Any(b => player.IsBombOwner(b))
+                                && newBombs.First().BombTimer > 2)
+                            {
+                                movesLoc.Add(loc);
+                            }
                         }
                     }
                 }
@@ -150,11 +160,21 @@ namespace BomberBot.Business.Helpers
                     }
                     else
                     {
-                        var anyNewBomb = bombsToDodge == null ? true : bombs.Except(bombsToDodge).Any();
+                        var newBombs = bombsToDodge == null ? bombs : bombs.Except(bombsToDodge);
 
-                        if (!anyNewBomb)
+                        if (!newBombs.Any())
                         {
                             movesLoc.Add(loc);
+                        }
+                        else if (stayClear)
+                        {
+                            var test = newBombs.Any(b => player.IsBombOwner(b));
+                            if (newBombs.Count() == 1
+                                && newBombs.Any(b => player.IsBombOwner(b))
+                                && newBombs.First().BombTimer > 2)
+                            {
+                                movesLoc.Add(loc);
+                            }
                         }
                     }
                 }
@@ -171,11 +191,21 @@ namespace BomberBot.Business.Helpers
                     }
                     else
                     {
-                        var anyNewBomb = bombsToDodge == null ? true : bombs.Except(bombsToDodge).Any();
+                        var newBombs = bombsToDodge == null ? bombs : bombs.Except(bombsToDodge);
 
-                        if (!anyNewBomb)
+                        if (!newBombs.Any())
                         {
                             movesLoc.Add(loc);
+                        }
+                        else if (stayClear)
+                        {
+                            var test = newBombs.Any(b => player.IsBombOwner(b));
+                            if (newBombs.Count() == 1
+                                && newBombs.Any(b => player.IsBombOwner(b))
+                                && newBombs.First().BombTimer > 2)
+                            {
+                                movesLoc.Add(loc);
+                            }
                         }
                     }
                 }
@@ -192,11 +222,21 @@ namespace BomberBot.Business.Helpers
                     }
                     else
                     {
-                        var anyNewBomb = bombsToDodge == null ? true : bombs.Except(bombsToDodge).Any();
+                        var newBombs = bombsToDodge == null ? bombs : bombs.Except(bombsToDodge);
 
-                        if (!anyNewBomb)
+                        if (!newBombs.Any())
                         {
                             movesLoc.Add(loc);
+                        }
+                        else if (stayClear)
+                        {
+                            var test = newBombs.Any(b => player.IsBombOwner(b));
+                            if (newBombs.Count() == 1
+                                && newBombs.Any(b => player.IsBombOwner(b))
+                                && newBombs.First().BombTimer > 2)
+                            {
+                                movesLoc.Add(loc);
+                            }
                         }
                     }
                 }
@@ -478,130 +518,130 @@ namespace BomberBot.Business.Helpers
         /// <param name="startLoc"></param>
         /// <param name="curLoc"></param>
         /// <returns></returns>
-        public static List<Location> ExpandSafeBlocks(GameState state, Location startLoc, Location curLoc, List<Bomb> bombsToDodge)
-        {
-            Location loc;
-            var safeBlocks = new List<Location>();
+        //public static List<Location> ExpandSafeBlocks(GameState state, Location startLoc, Location curLoc, List<Bomb> bombsToDodge)
+        //{
+        //    Location loc;
+        //    var safeBlocks = new List<Location>();
 
-            if (curLoc.Equals(startLoc))
-            {
-                List<Bomb> bombs;
-                loc = new Location(curLoc.X, curLoc.Y - 1);
+        //    if (curLoc.Equals(startLoc))
+        //    {
+        //        List<Bomb> bombs;
+        //        loc = new Location(curLoc.X, curLoc.Y - 1);
 
-                if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
-                {
-                    bombs = FindVisibleBombs(state, loc);
+        //        if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
+        //        {
+        //            bombs = FindVisibleBombs(state, loc);
 
-                    if (bombs == null)
-                    {
-                        safeBlocks.Add(loc);
-                    }
-                    else
-                    {
-                        var anyNewBomb = bombs.Except(bombsToDodge).Any();
+        //            if (bombs == null)
+        //            {
+        //                safeBlocks.Add(loc);
+        //            }
+        //            else
+        //            {
+        //                var anyNewBomb = bombs.Except(bombsToDodge).Any();
 
-                        if (!anyNewBomb)
-                        {
-                            safeBlocks.Add(loc);
-                        }
-                    }
-                }
+        //                if (!anyNewBomb)
+        //                {
+        //                    safeBlocks.Add(loc);
+        //                }
+        //            }
+        //        }
 
-                loc = new Location(curLoc.X + 1, curLoc.Y);
+        //        loc = new Location(curLoc.X + 1, curLoc.Y);
 
-                if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
-                {
-                    bombs = FindVisibleBombs(state, loc);
+        //        if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
+        //        {
+        //            bombs = FindVisibleBombs(state, loc);
 
-                    if (bombs == null)
-                    {
-                        safeBlocks.Add(loc);
-                    }
-                    else
-                    {
-                        var anyNewBomb = bombs.Except(bombsToDodge).Any();
+        //            if (bombs == null)
+        //            {
+        //                safeBlocks.Add(loc);
+        //            }
+        //            else
+        //            {
+        //                var anyNewBomb = bombs.Except(bombsToDodge).Any();
 
-                        if (!anyNewBomb)
-                        {
-                            safeBlocks.Add(loc);
-                        }
-                    }
-                }
+        //                if (!anyNewBomb)
+        //                {
+        //                    safeBlocks.Add(loc);
+        //                }
+        //            }
+        //        }
 
-                loc = new Location(curLoc.X, curLoc.Y + 1);
+        //        loc = new Location(curLoc.X, curLoc.Y + 1);
 
-                if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
-                {
-                    bombs = FindVisibleBombs(state, loc);
+        //        if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
+        //        {
+        //            bombs = FindVisibleBombs(state, loc);
 
-                    if (bombs == null)
-                    {
-                        safeBlocks.Add(loc);
-                    }
-                    else
-                    {
-                        var anyNewBomb = bombs.Except(bombsToDodge).Any();
+        //            if (bombs == null)
+        //            {
+        //                safeBlocks.Add(loc);
+        //            }
+        //            else
+        //            {
+        //                var anyNewBomb = bombs.Except(bombsToDodge).Any();
 
-                        if (!anyNewBomb)
-                        {
-                            safeBlocks.Add(loc);
-                        }
-                    }
-                }
+        //                if (!anyNewBomb)
+        //                {
+        //                    safeBlocks.Add(loc);
+        //                }
+        //            }
+        //        }
 
-                loc = new Location(curLoc.X - 1, curLoc.Y);
+        //        loc = new Location(curLoc.X - 1, curLoc.Y);
 
-                if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
-                {
-                    bombs = FindVisibleBombs(state, loc);
+        //        if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
+        //        {
+        //            bombs = FindVisibleBombs(state, loc);
 
-                    if (bombs == null)
-                    {
-                        safeBlocks.Add(loc);
-                    }
-                    else
-                    {
-                        var anyNewBomb = bombs.Except(bombsToDodge).Any();
+        //            if (bombs == null)
+        //            {
+        //                safeBlocks.Add(loc);
+        //            }
+        //            else
+        //            {
+        //                var anyNewBomb = bombs.Except(bombsToDodge).Any();
 
-                        if (!anyNewBomb)
-                        {
-                            safeBlocks.Add(loc);
-                        }
-                    }
-                }
-            }
-            else
-            {
-                loc = new Location(curLoc.X, curLoc.Y - 1);
+        //                if (!anyNewBomb)
+        //                {
+        //                    safeBlocks.Add(loc);
+        //                }
+        //            }
+        //        }
+        //    }
+        //    else
+        //    {
+        //        loc = new Location(curLoc.X, curLoc.Y - 1);
 
-                if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
-                {
-                    safeBlocks.Add(loc);
-                }
+        //        if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
+        //        {
+        //            safeBlocks.Add(loc);
+        //        }
 
-                loc = new Location(curLoc.X + 1, curLoc.Y);
+        //        loc = new Location(curLoc.X + 1, curLoc.Y);
 
-                if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
-                {
-                    safeBlocks.Add(loc);
-                }
+        //        if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
+        //        {
+        //            safeBlocks.Add(loc);
+        //        }
 
-                loc = new Location(curLoc.X, curLoc.Y + 1);
+        //        loc = new Location(curLoc.X, curLoc.Y + 1);
 
-                if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
-                {
-                    safeBlocks.Add(loc);
-                }
+        //        if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
+        //        {
+        //            safeBlocks.Add(loc);
+        //        }
 
-                loc = new Location(curLoc.X - 1, curLoc.Y);
+        //        loc = new Location(curLoc.X - 1, curLoc.Y);
 
-                if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
-                {
-                    safeBlocks.Add(loc);
-                }
-            }
-            return safeBlocks;
-        }
+        //        if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
+        //        {
+        //            safeBlocks.Add(loc);
+        //        }
+        //    }
+        //    return safeBlocks;
+        //}
 
 
 
