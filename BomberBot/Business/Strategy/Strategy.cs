@@ -222,8 +222,6 @@ namespace BomberBot.Business.Strategy
 
             // Place bomb       
             List<MapBombPlacementBlock> bombPlacementBlocks = null;
-            int maxPlacements;
-            var computePlacements = true;
 
             var visibleWalls = BotHelper.FindVisibleWalls(state, homePlayerLocation, homePlayer);
 
@@ -231,9 +229,8 @@ namespace BomberBot.Business.Strategy
             {
                 Move move;
 
-                maxPlacements = state.PercentageWall > 10 ? 5 : 1;
-                bombPlacementBlocks = FindBombPlacementBlocks(state, homePlayer, homePlayerLocation, 5);
-                computePlacements = false;
+                bombPlacementBlocks = FindBombPlacementBlocks(state, homePlayer, homePlayerLocation, oneBlockLookUp: true);
+
                 //if we can score 4
                 if (visibleWalls.Count == 3)
                 {
@@ -301,13 +298,9 @@ namespace BomberBot.Business.Strategy
                 return;
             }
 
-            // search for placement block
-            if (computePlacements)
-            {
-                maxPlacements = state.PercentageWall > 10 ? 5 : 1;
-                bombPlacementBlocks = FindBombPlacementBlocks(state, homePlayer, homePlayerLocation, maxPlacements);
-            }
-            
+
+            // compute bomb placement blocks
+            bombPlacementBlocks = state.PercentageWall > 10 ? FindBombPlacementBlocks(state, homePlayer, homePlayerLocation) : FindBombPlacementBlocks(state, homePlayer, homePlayerLocation, 2);
 
             if (visibleWalls != null)
             {
@@ -452,20 +445,27 @@ namespace BomberBot.Business.Strategy
             return false;
         }
 
-        private List<MapBombPlacementBlock> FindBombPlacementBlocks(GameState state, Player player, Location startLoc, int maxPlacementBlocks)
+        private List<MapBombPlacementBlock> FindBombPlacementBlocks(GameState state, Player player, Location startLoc, int maxPlacementBlocks = 5, bool oneBlockLookUp = false)
         {
             var openList = new List<Location>() { startLoc };
             var closedList = new List<Location>();
             var visitedList = new List<Location>();
             List<List<DestructibleWall>> destroyedWalls = new List<List<DestructibleWall>>();
+            int depth = 1;
 
             var bombPlacementBlocks = new List<MapBombPlacementBlock>();
             Location qLoc;
 
             while (openList.Count != 0)
             {
-
-                if (bombPlacementBlocks.Count > maxPlacementBlocks)
+                if (oneBlockLookUp && depth == 0)
+                {
+                    return bombPlacementBlocks.Count == 0 ? null : bombPlacementBlocks.OrderBy(b => b.SuperDistance)
+                                                                                      .ThenByDescending(b => b.VisibleWalls)
+                                                                                      .ThenBy(b => b.Distance)
+                                                                                      .ToList();
+                }
+                else if (bombPlacementBlocks.Count > maxPlacementBlocks)
                 {
                     return bombPlacementBlocks.OrderBy(b => b.SuperDistance)
                                               .ThenByDescending(b => b.VisibleWalls)
@@ -516,6 +516,7 @@ namespace BomberBot.Business.Strategy
                         }
                     }
                 }
+                if (oneBlockLookUp) depth--;
             }
             return bombPlacementBlocks.Count == 0 ? null : bombPlacementBlocks.OrderBy(b => b.SuperDistance)
                                                                               .ThenByDescending(b => b.VisibleWalls)

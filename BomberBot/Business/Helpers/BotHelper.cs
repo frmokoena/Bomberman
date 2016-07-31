@@ -654,8 +654,13 @@ namespace BomberBot.Business.Helpers
                 {
                     if (state.IsDestructibleWall(wLoc))
                     {
-                        var wall = (DestructibleWall)state.GetBlockAtLocation(wLoc).Entity;
-                        visibleWalls.Add(wall);
+                        var visibleBombs = FindVisibleBombs(state, wLoc);
+
+                        if (visibleBombs == null)
+                        {
+                            var wall = (DestructibleWall)state.GetBlockAtLocation(wLoc).Entity;
+                            visibleWalls.Add(wall);
+                        }                        
                     }
                     else
                     {
