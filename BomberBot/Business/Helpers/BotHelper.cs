@@ -114,8 +114,8 @@ namespace BomberBot.Business.Helpers
             Location loc;
             var movesLoc = new List<Location>();
 
-            if (curLoc.Equals(startLoc))
-            {
+            //if (curLoc.Equals(startLoc))
+            //{
                 List<Bomb> bombs;
                 loc = new Location(curLoc.X, curLoc.Y - 1);
 
@@ -127,24 +127,20 @@ namespace BomberBot.Business.Helpers
                     {
                         movesLoc.Add(loc);
                     }
-                    else
+                    else if(stayClear)
                     {
-                        var newBombs = bombsToDodge == null ? bombs : bombs.Except(bombsToDodge);                        
+                        var newBombs = bombs.Except(bombsToDodge);                        
 
                         if (!newBombs.Any())
                         {
                             movesLoc.Add(loc);
                         }
-                        else if (stayClear)
-                        {
-                            var test = newBombs.Any(b => player.IsBombOwner(b));
-                            if (newBombs.Count() == 1 
+                        else if (newBombs.Count() == 1 
                                 && newBombs.Any(b => player.IsBombOwner(b))
                                 && newBombs.First().BombTimer > 2)
                             {
                                 movesLoc.Add(loc);
-                            }
-                        }
+                            }                        
                     }
                 }
 
@@ -158,23 +154,19 @@ namespace BomberBot.Business.Helpers
                     {
                         movesLoc.Add(loc);
                     }
-                    else
+                    else if (stayClear)
                     {
-                        var newBombs = bombsToDodge == null ? bombs : bombs.Except(bombsToDodge);
+                        var newBombs = bombs.Except(bombsToDodge);
 
                         if (!newBombs.Any())
                         {
                             movesLoc.Add(loc);
                         }
-                        else if (stayClear)
-                        {
-                            var test = newBombs.Any(b => player.IsBombOwner(b));
-                            if (newBombs.Count() == 1
+                        else if (newBombs.Count() == 1
                                 && newBombs.Any(b => player.IsBombOwner(b))
                                 && newBombs.First().BombTimer > 2)
-                            {
-                                movesLoc.Add(loc);
-                            }
+                        {
+                            movesLoc.Add(loc);
                         }
                     }
                 }
@@ -189,23 +181,19 @@ namespace BomberBot.Business.Helpers
                     {
                         movesLoc.Add(loc);
                     }
-                    else
+                    else if (stayClear)
                     {
-                        var newBombs = bombsToDodge == null ? bombs : bombs.Except(bombsToDodge);
+                        var newBombs = bombs.Except(bombsToDodge);
 
                         if (!newBombs.Any())
                         {
                             movesLoc.Add(loc);
                         }
-                        else if (stayClear)
-                        {
-                            var test = newBombs.Any(b => player.IsBombOwner(b));
-                            if (newBombs.Count() == 1
+                        else if (newBombs.Count() == 1
                                 && newBombs.Any(b => player.IsBombOwner(b))
                                 && newBombs.First().BombTimer > 2)
-                            {
-                                movesLoc.Add(loc);
-                            }
+                        {
+                            movesLoc.Add(loc);
                         }
                     }
                 }
@@ -220,57 +208,53 @@ namespace BomberBot.Business.Helpers
                     {
                         movesLoc.Add(loc);
                     }
-                    else
+                    else if (stayClear)
                     {
-                        var newBombs = bombsToDodge == null ? bombs : bombs.Except(bombsToDodge);
+                        var newBombs = bombs.Except(bombsToDodge);
 
                         if (!newBombs.Any())
                         {
                             movesLoc.Add(loc);
                         }
-                        else if (stayClear)
-                        {
-                            var test = newBombs.Any(b => player.IsBombOwner(b));
-                            if (newBombs.Count() == 1
+                        else if (newBombs.Count() == 1
                                 && newBombs.Any(b => player.IsBombOwner(b))
                                 && newBombs.First().BombTimer > 2)
-                            {
-                                movesLoc.Add(loc);
-                            }
+                        {
+                            movesLoc.Add(loc);
                         }
                     }
                 }
-            }
-            else
-            {
-                loc = new Location(curLoc.X, curLoc.Y - 1);
+            //}
+            //else
+            //{
+            //    loc = new Location(curLoc.X, curLoc.Y - 1);
 
-                if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
-                {
-                    movesLoc.Add(loc);
-                }
+            //    if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
+            //    {
+            //        movesLoc.Add(loc);
+            //    }
 
-                loc = new Location(curLoc.X + 1, curLoc.Y);
+            //    loc = new Location(curLoc.X + 1, curLoc.Y);
 
-                if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
-                {
-                    movesLoc.Add(loc);
-                }
+            //    if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
+            //    {
+            //        movesLoc.Add(loc);
+            //    }
 
-                loc = new Location(curLoc.X, curLoc.Y + 1);
+            //    loc = new Location(curLoc.X, curLoc.Y + 1);
 
-                if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
-                {
-                    movesLoc.Add(loc);
-                }
+            //    if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
+            //    {
+            //        movesLoc.Add(loc);
+            //    }
 
-                loc = new Location(curLoc.X - 1, curLoc.Y);
+            //    loc = new Location(curLoc.X - 1, curLoc.Y);
 
-                if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
-                {
-                    movesLoc.Add(loc);
-                }
-            }
+            //    if (IsValidBlock(state, loc) && state.IsBlockClear(loc))
+            //    {
+            //        movesLoc.Add(loc);
+            //    }
+            //}
             return movesLoc;
         }
 

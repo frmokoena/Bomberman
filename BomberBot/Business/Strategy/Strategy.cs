@@ -32,15 +32,6 @@ namespace BomberBot.Business.Strategy
             //Player killed
             if (homePlayerLocation == null) return;
 
-            // Update procedure
-            // 1. Stay clear of bombs
-            // 2. Triger bomb
-            // 3. Chase power up if near than 3 blokcs
-            // 4. Plant plant bomb
-            // 5. Chase after power up
-            // 6. Search for the placementbomb or plant bomb
-
-
             // Stay clear
             var visibleBombs = BotHelper.FindVisibleBombs(state, homePlayerLocation);
 
@@ -56,8 +47,7 @@ namespace BomberBot.Business.Strategy
 
 
                 // if not own bomb
-
-                if (bombToDodge.Owner.Key != homePlayerKey)
+                if (!homePlayer.IsBombOwner(bombToDodge))
                 {
                     opponentLocation = state.GetPlayerLocationOnMap(bombToDodge.Owner.Key);
                     if (opponentLocation != null)
@@ -92,7 +82,7 @@ namespace BomberBot.Business.Strategy
 
                     foreach (var safeBlock in prioritySafeBlocks)
                     {
-                        if (bombToDodge.Owner.Key == homePlayerKey)
+                        if (homePlayer.IsBombOwner(bombToDodge))
                         {
                             var move = GetMoveFromLocation(homePlayerLocation, safeBlock.LocationToBlock);
                             GameService.WriteMove(move);
@@ -161,7 +151,7 @@ namespace BomberBot.Business.Strategy
                 }
 
                 // op bomb 
-                if (bombToDodge.Owner.Key != homePlayerKey)
+                if (!homePlayer.IsBombOwner(bombToDodge))
                 {
                     var mapSafeBlock = FindSafeBlockFromPlayer(state, homePlayer, homePlayerLocation, visibleBombs);
 
@@ -201,7 +191,7 @@ namespace BomberBot.Business.Strategy
             }
 
 
-            var nearByPowerUp = FindNearByMapPowerUpBlock(state, homePlayer, homePlayerLocation);
+            var nearByPowerUp = FindNearByMapPowerUpBlock(state, homePlayerLocation);
 
             if (nearByPowerUp != null)
             {
@@ -232,6 +222,8 @@ namespace BomberBot.Business.Strategy
 
             // Place bomb       
             List<MapBombPlacementBlock> bombPlacementBlocks = null;
+            int maxPlacements;
+            var computePlacements = true;
 
             var visibleWalls = BotHelper.FindVisibleWalls(state, homePlayerLocation, homePlayer);
 
@@ -239,8 +231,9 @@ namespace BomberBot.Business.Strategy
             {
                 Move move;
 
+                maxPlacements = state.PercentageWall > 10 ? 5 : 1;
                 bombPlacementBlocks = FindBombPlacementBlocks(state, homePlayer, homePlayerLocation, 5);
-
+                computePlacements = false;
                 //if we can score 4
                 if (visibleWalls.Count == 3)
                 {
@@ -258,9 +251,7 @@ namespace BomberBot.Business.Strategy
                         }
                     }
                 }
-
-                // if we can score 3
-                if (visibleWalls.Count == 2)
+                else if (visibleWalls.Count == 2)
                 {
                     // if a better location in next block
                     if (bombPlacementBlocks != null)
@@ -276,9 +267,7 @@ namespace BomberBot.Business.Strategy
                         }
                     }
                 }
-
-                // if we can score 2
-                if (visibleWalls.Count == 1)
+                else if (visibleWalls.Count == 1)
                 {
                     // if a better location in next block
                     if (bombPlacementBlocks != null)
@@ -313,9 +302,12 @@ namespace BomberBot.Business.Strategy
             }
 
             // search for placement block
-            var r = new Random();
-            var maxPlacementBlocks = r.Next(5, 20);
-            bombPlacementBlocks = FindBombPlacementBlocks(state, homePlayer, homePlayerLocation, maxPlacementBlocks);
+            if (computePlacements)
+            {
+                maxPlacements = state.PercentageWall > 10 ? 5 : 1;
+                bombPlacementBlocks = FindBombPlacementBlocks(state, homePlayer, homePlayerLocation, maxPlacements);
+            }
+            
 
             if (visibleWalls != null)
             {
@@ -381,7 +373,7 @@ namespace BomberBot.Business.Strategy
                 return;
             }
 
-            if (state.WallsExhausted)
+            if (state.WallsLeft == 0)
             {
                 if (BotHelper.IsAnyPlayerVisible(state, homePlayer, homePlayerLocation))
                 {
@@ -549,100 +541,6 @@ namespace BomberBot.Business.Strategy
             }
 
             return Move.DoNothing;
-        }
-
-        /// <summary>
-        /// Find all recheable power ups on the map
-        /// </summary>
-        /// <param name="state"></param>
-        /// <param name="curLoc"></param>
-        /// <returns>List of power ups on the map</returns>
-        private List<MapPowerUpBlock> FindMapPowerUpBlocks(GameState state, Location startLoc)
-        {
-            var mapPowerUps = new List<MapPowerUpBlock>();
-
-            var openList = new List<Location> { startLoc };//To be expanded
-            var closedList = new List<Location>();       //Expanded
-            var visitedList = new List<Location>();      //checked
-            Location qLoc;
-
-            while (openList.Count != 0)
-            {
-                qLoc = openList[0];
-                openList.RemoveAt(0);
-                closedList.Add(qLoc);
-
-                var possibleBlockLoc = BotHelper.ExpandMoveBlocks(state, startLoc, qLoc);
-
-                foreach (var loc in possibleBlockLoc)
-                {
-                    if (!visitedList.Contains(loc))
-                    {
-                        visitedList.Add(loc);
-
-                        var mapEntity = state.GetBlockAtLocation(loc).PowerUp;
-
-
-                        if (mapEntity != null)
-                        {
-                            var mapNode = BotHelper.BuildPathToTarget(state, startLoc, loc);
-                            if (mapNode != null)
-                            {
-                                mapPowerUps.Add(new MapPowerUpBlock { Location = loc, Distance = mapNode.FCost, LocationToBlock = BotHelper.ReconstructPath(mapNode), PowerUP = mapEntity });
-                            }
-                        }
-
-                        if (!closedList.Contains(loc))
-                        {
-                            openList.Add(loc);
-                        }
-                    }
-                }
-            }
-            return mapPowerUps.Count == 0 ? null : mapPowerUps.OrderBy(mapPowerUp => mapPowerUp.Distance).ToList();
-        }
-
-        /// <summary>
-        /// Find all power ups to my advantage
-        /// </summary>
-        /// <param name="mapPowerUps"></param>
-        /// <param name="curLoc"></param>
-        /// <param name="state"></param>
-        /// <returns>Power up to my advantage</returns>
-        private MapPowerUpBlock FindNearByMapPowerUpBlock(GameState state, Player player, Location curLoc)
-        {
-            var mapPowerUpBlocks = FindMapPowerUpBlocks(state, curLoc);
-
-            if (mapPowerUpBlocks == null) return null;
-
-            bool foundMapPowerUpBlock;
-            var opponents = state.Players.Where(p => p.Key != GameService.HomeKey && !p.Killed).ToList();
-
-            foreach (var mapPowerUpBlock in mapPowerUpBlocks)
-            {
-                var powerUp = state.GetBlockAtLocation(mapPowerUpBlock.Location).PowerUp;
-
-                foundMapPowerUpBlock = true;
-
-                foreach (var opponent in opponents)
-                {
-                    var opponentMapPowerUpBlocks = FindMapPowerUpBlocks(state, new Location(opponent.Location.X - 1, opponent.Location.Y - 1));
-
-                    var opponentMapPowerUpBlock = opponentMapPowerUpBlocks == null ? null : opponentMapPowerUpBlocks.Find(p => p.PowerUP == mapPowerUpBlock.PowerUP);
-
-                    if (opponentMapPowerUpBlock != null && opponentMapPowerUpBlock.Distance < mapPowerUpBlock.Distance)
-                    {
-                        foundMapPowerUpBlock = false;
-                        break;
-                    }
-                }
-
-                if (foundMapPowerUpBlock)
-                {
-                    return mapPowerUpBlock;
-                }
-            }
-            return null;
         }
 
         /// <summary>
@@ -841,6 +739,116 @@ namespace BomberBot.Business.Strategy
                             {
                                 openList.Add(loc);
                             }
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
+        private bool IsBlockInPlayerRange(GameState state, Location startLoc, Location targetLoc, int range)
+        {
+            var openList = new List<Location> { startLoc };
+            var closedList = new List<Location>();
+            var visitedList = new List<Location>();
+
+            while (openList.Count != 0)
+            {
+                var qLoc = openList[0];
+                openList.RemoveAt(0);
+                closedList.Add(qLoc);
+
+                var possibleMovesLoc = BotHelper.ExpandMoveBlocks(state, startLoc, qLoc);
+
+                foreach (var loc in possibleMovesLoc)
+                {
+                    if (!visitedList.Contains(loc))
+                    {
+                        var blockNode = BotHelper.BuildPathToTarget(state, startLoc, loc);
+
+                        if (blockNode != null && blockNode.FCost < range)
+                        {
+                            if (loc.Equals(targetLoc)) return true;
+
+                            if (state.IsPowerUp(loc)) return false;
+
+                            visitedList.Add(loc);
+
+                            if (!closedList.Contains(loc))
+                            {
+                                openList.Add(loc);
+                            }
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+
+
+        private MapPowerUpBlock FindNearByMapPowerUpBlock(GameState state, Location startLoc)
+        {
+
+            var opponentLocations = new List<Location>();
+
+            state.Players.Where(p => p.Key != GameService.HomeKey && !p.Killed)
+                         .ToList()
+                         .ForEach(p => opponentLocations.Add(new Location(p.Location.X - 1, p.Location.Y - 1)));
+
+            var openList = new List<Location> { startLoc };  //To be expanded
+            var closedList = new List<Location>();           //Expanded
+            var visitedList = new List<Location>();          //checked
+            Location qLoc;
+
+            while (openList.Count != 0)
+            {
+                qLoc = openList[0];
+                openList.RemoveAt(0);
+                closedList.Add(qLoc);
+
+                var possibleMovesLoc = BotHelper.ExpandMoveBlocks(state, startLoc, qLoc);
+
+                foreach (var loc in possibleMovesLoc)
+                {
+                    if (!visitedList.Contains(loc))
+                    {
+                        var mapEntity = state.GetBlockAtLocation(loc).PowerUp;
+
+                        if (mapEntity != null)
+                        {
+                            var mapNode = BotHelper.BuildPathToTarget(state, startLoc, loc);
+
+                            if (mapNode != null)
+                            {
+                                var foundPowerUpBlock = true;
+
+                                foreach (var playerLoc in opponentLocations)
+                                {
+                                    if (IsBlockInPlayerRange(state, playerLoc, loc, mapNode.FCost))
+                                    {
+                                        foundPowerUpBlock = false;
+                                        break;
+                                    }
+                                }
+
+                                if (foundPowerUpBlock)
+                                {
+                                    return new MapPowerUpBlock
+                                    {
+                                        Location = loc,
+                                        Distance = mapNode.FCost,
+                                        LocationToBlock = BotHelper.ReconstructPath(mapNode),
+                                        PowerUP = mapEntity
+                                    };
+                                }
+                            }
+                        }
+
+                        visitedList.Add(loc);
+                        if (!closedList.Contains(loc))
+                        {
+                            openList.Add(loc);
                         }
                     }
                 }

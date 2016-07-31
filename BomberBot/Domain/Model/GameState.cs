@@ -28,18 +28,35 @@ namespace BomberBot.Domain.Model
             }
         }
 
-        public bool WallsExhausted
+        public int WallsInitial
         {
             get
             {
+                return ((PlayerBounty * Players.Count) - 100) / 10;
+            }
+        }
+
+        public int WallsLeft
+        {
+            get
+            {
+                var wallsLeft = 0;
                 for (var x = 1; x < MapWidth; x++)
                 {
                     for (var y = 1; y < MapHeight; y++)
                     {
-                        if (GetBlockAtLocation(x, y).IsDestructibleWall()) return false;
+                        if (GetBlockAtLocation(x, y).IsDestructibleWall()) wallsLeft++;
                     }
                 }
-                return true;
+                return wallsLeft;
+            }
+        }
+
+        public double PercentageWall
+        {
+            get
+            {
+                return 100*((double)WallsLeft / (double)WallsInitial);
             }
         }
 
