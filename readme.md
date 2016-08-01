@@ -57,7 +57,7 @@ To run the tests, you will need the `NUnit Framework`, and the steps are:
 
 I use DIY hacks for my bot with A* search for path finding.
 
-During each round, any one of the following actions can happen:
+During each round, any one of the following actions (in order of importance) can happen:
 
  1. Stay clear of bombs
  2. Trigger the bomb if the timer it's not already 2.
