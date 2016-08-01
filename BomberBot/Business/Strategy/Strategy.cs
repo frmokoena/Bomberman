@@ -155,7 +155,7 @@ namespace BomberBot.Business.Strategy
 
                 if (opponentBomb != null)
                 {
-                    //op decsions
+                    // op decsions
                     // if didn't compute op's
                     if (homePlayer.IsBombOwner(bombToDodge))
                     {
@@ -172,7 +172,6 @@ namespace BomberBot.Business.Strategy
                         }
                     }
 
-                    // TODO: some logic here
                     if (opponentVisibleBombs == null || opponentSafeBlocks != null)
                     {
                         var mapSafeBlock = FindSafeBlockFromPlayer(state, homePlayer, homePlayerLocation, visibleBombs, opponentBomb);
@@ -181,18 +180,34 @@ namespace BomberBot.Business.Strategy
                         {
                             if (opponentSafeBlocks != null)
                             {
-                                // can reach safe block before op triggers
+                                // can clear safe bomb or rather reach safe block before op triggers
                                 if (mapSafeBlock.Distance <= opponentSafeBlocks[0].Distance + 1)
                                 {
-                                    // grab the location
-                                    var move = GetMoveFromLocation(homePlayerLocation, mapSafeBlock.LocationToBlock);
+                                    // emergency trigger
+                                    Move move;
+                                    var ownBombs = state.GetPlayerBombs(homePlayerKey);
+
+                                    if (ownBombs != null && !visibleBombs.Any(b => b == ownBombs[0]))
+                                    {
+                                        // check if we are clearing the correct bomb
+                                        var bombsToClear = BotHelper.FindVisibleBombs(state, mapSafeBlock.Location);
+
+                                        if (bombsToClear != null && bombsToClear.Any(b => b == ownBombs[0]))
+                                        {
+                                            move = Move.TriggerBomb;
+                                            GameService.WriteMove(move);
+                                            return;
+                                        }
+                                    }
+                                    // we don't have any safe bomb to clear, so just grab the location
+                                    move = GetMoveFromLocation(homePlayerLocation, mapSafeBlock.LocationToBlock);
                                     GameService.WriteMove(move);
                                     return;
                                 }
                             }
                             else if (opponentVisibleBombs == null)
                             {
-                                // grab the location
+                                // we are in real danger, so no time to clear any bomb
                                 var move = GetMoveFromLocation(homePlayerLocation, mapSafeBlock.LocationToBlock);
                                 GameService.WriteMove(move);
                                 return;
@@ -623,7 +638,7 @@ namespace BomberBot.Business.Strategy
                                 safeBlocks.Add(mapBlock);
 
                             }
-         
+
                             if (!closedList.Contains(loc))
                             {
                                 openList.Add(loc);
@@ -796,7 +811,7 @@ namespace BomberBot.Business.Strategy
                             if (loc.Equals(targetLoc)) return true;
 
                             if (state.IsPowerUp(loc)) return false;
-                                                
+
 
                             if (!closedList.Contains(loc))
                             {
