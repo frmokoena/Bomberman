@@ -56,7 +56,7 @@ namespace BomberBot.Domain.Model
         {
             get
             {
-                return 100*((double)WallsLeft / (double)WallsInitial);
+                return 100 * ((double)WallsLeft / (double)WallsInitial);
             }
         }
 
@@ -109,8 +109,15 @@ namespace BomberBot.Domain.Model
 
         public bool IsBlockClear(Location loc)
         {
+            if (loc.X < 1 || loc.X > MapWidth - 1 || loc.Y < 1 || loc.Y > MapHeight - 1)
+            {
+                return false;
+            }
+
             var block = GetBlockAtLocation(loc);
 
+            if (block.IsIndestructibleWall()) return false;
+            
             return block.IsEmpty()
                 || block.IsBombExploding()
                 || block.IsPowerUp();
@@ -118,7 +125,14 @@ namespace BomberBot.Domain.Model
 
         public bool IsBlockBombClear(Location loc)
         {
+            if (loc.X < 1 || loc.X > MapWidth - 1 || loc.Y < 1 || loc.Y > MapHeight - 1)
+            {
+                return false;
+            }
+
             var block = GetBlockAtLocation(loc);
+
+            if (block.IsIndestructibleWall()) return false;
 
             return block.IsEmpty()
                 || block.IsBombExploding()
@@ -131,7 +145,14 @@ namespace BomberBot.Domain.Model
         //plant clear
         public bool IsBlockPlantClear(Location loc)
         {
+            if (loc.X < 1 || loc.X > MapWidth - 1 || loc.Y < 1 || loc.Y > MapHeight - 1)
+            {
+                return false;
+            }
+
             var block = GetBlockAtLocation(loc);
+
+            if (block.IsIndestructibleWall()) return false;
 
             return block.IsEmpty()
                 || block.IsBombExploding()
@@ -145,9 +166,15 @@ namespace BomberBot.Domain.Model
         //actual super
         public bool IsBlockSuperClear(Location loc)
         {
+            if (loc.X < 1 || loc.X > MapWidth - 1 || loc.Y < 1 || loc.Y > MapHeight - 1)
+            {
+                return false;
+            }
+
             var block = GetBlockAtLocation(loc);
+                        
             return block.IsEmpty()
-                || !block.IsIndestructibleWall();
+                || !block.IsIndestructibleWall();                
         }
 
         public bool IsBomb(Location loc)
@@ -177,7 +204,14 @@ namespace BomberBot.Domain.Model
 
         public bool IsBlockPlayerClear(Location loc)
         {
+            if (loc.X < 1 || loc.X > MapWidth - 1 || loc.Y < 1 || loc.Y > MapHeight - 1)
+            {
+                return false;
+            }
+
             var block = GetBlockAtLocation(loc);
+
+            if (block.IsIndestructibleWall()) return false;
 
             return block.IsEmpty()
                 || block.IsBombExploding()

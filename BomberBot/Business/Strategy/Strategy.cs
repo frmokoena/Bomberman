@@ -6,6 +6,7 @@ using BomberBot.Enums;
 using BomberBot.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace BomberBot.Business.Strategy
@@ -228,8 +229,11 @@ namespace BomberBot.Business.Strategy
                 return;
             }
 
+            var stopwatch = Stopwatch.StartNew();
+            var nearByPowerUp = FindNearByMapPowerUpBlock(state, homePlayerLocation, homePlayerKey);
 
-            var nearByPowerUp = FindNearByMapPowerUpBlock(state, homePlayerLocation);
+            stopwatch.Stop();
+            var tTime = stopwatch.ElapsedMilliseconds;
 
             if (nearByPowerUp != null)
             {
@@ -263,69 +267,76 @@ namespace BomberBot.Business.Strategy
 
             var visibleWalls = BotHelper.FindVisibleWalls(state, homePlayerLocation, homePlayer);
 
-            if ((homePlayerBombs == null || homePlayerBombs.Count < homePlayer.BombBag) && visibleWalls != null)
+            if (homePlayerBombs == null || homePlayerBombs.Count < homePlayer.BombBag)
             {
                 Move move;
 
-                bombPlacementBlocks = FindBombPlacementBlocks(state, homePlayer, homePlayerLocation, oneBlockLookUp: true);
-
-                //if we can score 4
-                if (visibleWalls.Count == 3)
+                if (visibleWalls != null)
                 {
-                    // if a better location in next block
-                    if (bombPlacementBlocks != null)
-                    {
-                        var bombPlacementBlock = bombPlacementBlocks.Where(b => b.VisibleWalls > 3)
-                                                                    .FirstOrDefault(b => b.Distance < 2);
+                    bombPlacementBlocks = FindBombPlacementBlocks(state, homePlayer, homePlayerLocation, oneBlockLookUp: true);
 
-                        if (bombPlacementBlock != null)
+                    //if we can score 4
+                    if (visibleWalls.Count == 3)
+                    {
+                        // if a better location in next block
+                        if (bombPlacementBlocks != null)
                         {
-                            move = GetMoveFromLocation(homePlayerLocation, bombPlacementBlock.LocationToBlock);
-                            GameService.WriteMove(move);
-                            return;
+                            var bombPlacementBlock = bombPlacementBlocks.Where(b => b.VisibleWalls > 3)
+                                                                        .FirstOrDefault(b => b.Distance < 2);
+
+                            if (bombPlacementBlock != null)
+                            {
+                                move = GetMoveFromLocation(homePlayerLocation, bombPlacementBlock.LocationToBlock);
+                                GameService.WriteMove(move);
+                                return;
+                            }
                         }
                     }
-                }
-                else if (visibleWalls.Count == 2)
-                {
-                    // if a better location in next block
-                    if (bombPlacementBlocks != null)
+                    else if (visibleWalls.Count == 2)
                     {
-                        var bombPlacementBlock = bombPlacementBlocks.Where(b => b.VisibleWalls > 2)
-                                                                    .FirstOrDefault(b => b.Distance < 2);
-
-                        if (bombPlacementBlock != null)
+                        // if a better location in next block
+                        if (bombPlacementBlocks != null)
                         {
-                            move = GetMoveFromLocation(homePlayerLocation, bombPlacementBlock.LocationToBlock);
-                            GameService.WriteMove(move);
-                            return;
+                            var bombPlacementBlock = bombPlacementBlocks.Where(b => b.VisibleWalls > 2)
+                                                                        .FirstOrDefault(b => b.Distance < 2);
+
+                            if (bombPlacementBlock != null)
+                            {
+                                move = GetMoveFromLocation(homePlayerLocation, bombPlacementBlock.LocationToBlock);
+                                GameService.WriteMove(move);
+                                return;
+                            }
                         }
                     }
-                }
-                else if (visibleWalls.Count == 1)
-                {
-                    // if a better location in next block
-                    if (bombPlacementBlocks != null)
+                    else if (visibleWalls.Count == 1)
                     {
-                        var bombPlacementBlock = bombPlacementBlocks.Where(b => b.VisibleWalls > 1)
-                                                                    .FirstOrDefault(b => b.Distance < 2);
-
-                        if (bombPlacementBlock != null)
+                        // if a better location in next block
+                        if (bombPlacementBlocks != null)
                         {
-                            move = GetMoveFromLocation(homePlayerLocation, bombPlacementBlock.LocationToBlock);
-                            GameService.WriteMove(move);
-                            return;
+                            var bombPlacementBlock = bombPlacementBlocks.Where(b => b.VisibleWalls > 1)
+                                                                        .FirstOrDefault(b => b.Distance < 2);
+
+                            if (bombPlacementBlock != null)
+                            {
+                                move = GetMoveFromLocation(homePlayerLocation, bombPlacementBlock.LocationToBlock);
+                                GameService.WriteMove(move);
+                                return;
+                            }
                         }
+                    }
+
+                    // Plant if we can find hide block after planting the bomb
+                    if (visibleBombs == null && CanFindHidingBlock(state, homePlayer, homePlayerLocation))
+                    {
+                        move = Move.PlaceBomb;
+                        GameService.WriteMove(move);
+                        return;
                     }
                 }
 
-                // Plant if we can find hide block after planting the bomb
-                if (visibleBombs == null && CanFindHidingBlock(state, homePlayer, homePlayerLocation))
-                {
-                    move = Move.PlaceBomb;
-                    GameService.WriteMove(move);
-                    return;
-                }
+                //TODO: Attack
+
+
             }
 
             // Chase power up
@@ -406,7 +417,9 @@ namespace BomberBot.Business.Strategy
 
             if (state.WallsLeft == 0)
             {
-                if (BotHelper.IsAnyPlayerVisible(state, homePlayer, homePlayerLocation))
+                var visiblePlayers = BotHelper.FindVisiblePlayers(state, homePlayer, homePlayerLocation);
+
+                if (visiblePlayers != null)
                 {
                     if (homePlayerBombs == null || homePlayerBombs.Count < homePlayer.BombBag)
                     {
@@ -439,45 +452,51 @@ namespace BomberBot.Business.Strategy
             var blastRadius = player.BombRadius;
             var bombTimer = Math.Min(9, (player.BombBag * 3)) + 1;
 
-            var openList = new List<Location> { startLoc };
-            var closeList = new List<Location>();
-            var visitedList = new List<Location>();
+            var openList = new HashSet<MapNode> { new MapNode { Location = startLoc } };
+            var closedList = new HashSet<MapNode>();           
 
 
             while (openList.Count != 0)
             {
-                var qLoc = openList[0];
-                openList.RemoveAt(0);
-                closeList.Add(qLoc);
+                var qNode = openList.OrderBy(node => node.GCost).First();
 
-                var possibleBlocks = BotHelper.ExpandMoveBlocks(state, startLoc, qLoc);
+                openList.Remove(qNode);
+                closedList.Add(qNode);
 
+                var safeNode = BotHelper.BuildPathToTarget(state, startLoc, qNode.Location);
 
-                foreach (var loc in possibleBlocks)
+                if (safeNode != null && safeNode.FCost < bombTimer)
                 {
-                    if (!visitedList.Contains(loc))
+                    var visibleBombs = BotHelper.FindVisibleBombs(state, qNode.Location);
+
+                    if (visibleBombs == null)
                     {
-                        visitedList.Add(loc);
-                        var safeNode = BotHelper.BuildPathToTarget(state, startLoc, loc);
+                        if (qNode.Location.X != startLoc.X && qNode.Location.Y != startLoc.Y) return true;
 
-                        if (safeNode != null && safeNode.FCost < bombTimer)
+                        var blockDistance = qNode.Location.X == startLoc.X ? Math.Abs(qNode.Location.Y - startLoc.Y) : Math.Abs(qNode.Location.X - startLoc.X);
+
+                        if (blockDistance > blastRadius) return true;                        
+                    }
+
+                    var possibleBlocksLoc = BotHelper.ExpandMoveBlocks(state, startLoc, qNode.Location);
+
+                    for (var i = 0; i < possibleBlocksLoc.Count; i++)
+                    {
+                        var nodeInOpenList = openList.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
+
+                        if (nodeInOpenList != null) continue;
+
+                        var nodeInClosedList = closedList.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
+
+                        if (nodeInClosedList != null) continue;
+
+                        var newNode = new MapNode
                         {
-                            var visibleBombs = BotHelper.FindVisibleBombs(state, loc);
+                            Location = possibleBlocksLoc[i],
+                            GCost = qNode.GCost + 1
+                        };
 
-                            if (visibleBombs == null)
-                            {
-                                if (loc.X != startLoc.X && loc.Y != startLoc.Y) return true;
-
-                                var blockDistance = loc.X == startLoc.X ? Math.Abs(loc.Y - startLoc.Y) : Math.Abs(qLoc.X - startLoc.X);
-
-                                if (blockDistance > blastRadius) return true;
-
-                                if (!closeList.Contains(loc))
-                                {
-                                    openList.Add(loc);
-                                }
-                            }
-                        }
+                        openList.Add(newNode);
                     }
                 }
             }
@@ -486,14 +505,13 @@ namespace BomberBot.Business.Strategy
 
         private List<MapBombPlacementBlock> FindBombPlacementBlocks(GameState state, Player player, Location startLoc, int maxPlacementBlocks = 5, bool oneBlockLookUp = false)
         {
-            var openList = new List<Location>() { startLoc };
-            var closedList = new List<Location>();
-            var visitedList = new List<Location>();
+            var openList = new HashSet<MapNode>() { new MapNode { Location = startLoc } };
+            var closedList = new HashSet<MapNode>();
             List<List<DestructibleWall>> destroyedWalls = new List<List<DestructibleWall>>();
             int depth = 1;
 
             var bombPlacementBlocks = new List<MapBombPlacementBlock>();
-            Location qLoc;
+            MapNode qNode;
 
             while (openList.Count != 0)
             {
@@ -512,49 +530,58 @@ namespace BomberBot.Business.Strategy
                                               .ToList();
                 }
 
-                qLoc = openList[0];
-                openList.RemoveAt(0);
-                closedList.Add(qLoc);
+                qNode = openList.OrderBy(n => n.GCost).First();
 
-                var possibleBlocksLoc = BotHelper.ExpandMoveBlocks(state, startLoc, qLoc);
+                var visibleWalls = BotHelper.FindVisibleWalls(state, qNode.Location, player);
 
-                foreach (var loc in possibleBlocksLoc)
+                if (visibleWalls != null)
                 {
-                    if (!visitedList.Contains(loc))
+                    if (!WallsDestroyed(destroyedWalls, visibleWalls))
                     {
-                        visitedList.Add(loc);
+                        destroyedWalls.Add(visibleWalls);
 
-                        var visibleWalls = BotHelper.FindVisibleWalls(state, loc, player);
+                        var mapNode = BotHelper.BuildPathToTarget(state, startLoc, qNode.Location);
 
-                        if (visibleWalls != null)
+                        if (mapNode != null)
                         {
-                            if (!WallsDestroyed(destroyedWalls, visibleWalls))
+                            var mapBlock = new MapBombPlacementBlock
                             {
-                                destroyedWalls.Add(visibleWalls);
+                                Location = qNode.Location,
+                                Distance = mapNode.FCost,
+                                LocationToBlock = BotHelper.ReconstructPath(mapNode),
+                                VisibleWalls = visibleWalls.Count,
+                                SuperDistance = state.SuperLocation == null ? 0 : BotHelper.BuildPathToTarget(state, qNode.Location, state.SuperLocation, super: true).FCost
+                            };
 
-                                var mapNode = BotHelper.BuildPathToTarget(state, startLoc, loc);
-                                if (mapNode != null)
-                                {
-                                    var mapBlock = new MapBombPlacementBlock
-                                    {
-                                        Location = loc,
-                                        Distance = mapNode.FCost,
-                                        LocationToBlock = BotHelper.ReconstructPath(mapNode),
-                                        VisibleWalls = visibleWalls.Count,
-                                        SuperDistance = state.SuperLocation == null ? 0 : BotHelper.BuildPathToTarget(state, loc, state.SuperLocation, super: true).FCost
-                                    };
-
-                                    bombPlacementBlocks.Add(mapBlock);
-                                }
-                            }
-                        }
-
-                        if (!closedList.Contains(loc))
-                        {
-                            openList.Add(loc);
+                            bombPlacementBlocks.Add(mapBlock);
                         }
                     }
                 }
+
+                openList.Remove(qNode);
+                closedList.Add(qNode);
+
+                var possibleBlocksLoc = BotHelper.ExpandMoveBlocks(state, startLoc, qNode.Location);
+
+                for (var i = 0; i < possibleBlocksLoc.Count; i++)
+                {
+                    var nodeInOpenList = openList.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
+
+                    if (nodeInOpenList != null) continue;
+
+                    var nodeInClosedList = closedList.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
+
+                    if (nodeInClosedList != null) continue;
+
+                    var newNode = new MapNode
+                    {                        
+                        Location = possibleBlocksLoc[i],
+                        GCost = qNode.GCost + 1
+                    };
+
+                    openList.Add(newNode);
+                }
+
                 if (oneBlockLookUp) depth--;
             }
             return bombPlacementBlocks.Count == 0 ? null : bombPlacementBlocks.OrderBy(b => b.SuperDistance)
@@ -583,69 +610,70 @@ namespace BomberBot.Business.Strategy
             return Move.DoNothing;
         }
 
-        /// <summary>
-        /// Find safe block, running away from danger
-        /// </summary>
-        /// <param name="state"></param>
-        /// <param name="startLoc"></param>
-        /// <returns>Block which is bomb clear</returns>
+
         private List<MapSafeBlock> FindSafeBlocks(GameState state, Player player, Location startLoc, List<Bomb> bombsToDodge)
         {
             var safeBlocks = new List<MapSafeBlock>();
 
-            var openList = new List<Location> { startLoc }; //To be expanded
-            var closedList = new List<Location>();          //Expanded
-            var visitedList = new List<Location>();         //checked
-
-
-            Location qLoc;
+            var openList = new HashSet<MapNode> { new MapNode { Location = startLoc } }; //To be expanded
+            var closedList = new HashSet<MapNode>();          // Expanded and visited
+            
+            MapNode qNode;
 
             while (openList.Count != 0)
             {
-                qLoc = openList[0];
-                openList.RemoveAt(0);
-                closedList.Add(qLoc);
+                qNode = openList.OrderBy(node => node.GCost).First();
 
-                var possibleBlockLoc = BotHelper.ExpandMoveBlocks(state, startLoc, qLoc, player, bombsToDodge, stayClear: true);
+                openList.Remove(qNode);
+                closedList.Add(qNode);
 
-                foreach (var loc in possibleBlockLoc)
+                MapNode safeNode = BotHelper.BuildPathToTarget(state, startLoc, qNode.Location, player, bombsToDodge, stayClear: true);
+
+                //if we can reach this location, and in time
+                var bomb = bombsToDodge[0];
+
+                if (safeNode != null && safeNode.FCost < bomb.BombTimer)
                 {
-                    if (!visitedList.Contains(loc))
+                    var visibleBombs = BotHelper.FindVisibleBombs(state, qNode.Location);
+
+                    if (visibleBombs == null)
                     {
-                        visitedList.Add(loc);
-                        MapNode safeNode = BotHelper.BuildPathToTarget(state, startLoc, loc, player, bombsToDodge, stayClear: true);
+                        var visibleWalls = BotHelper.FindVisibleWalls(state, qNode.Location, player);
 
-                        //if we can reach this location, and in time
-                        var bomb = bombsToDodge[0];
-                        if (safeNode != null && safeNode.FCost < bomb.BombTimer)
+                        //add block
+                        var mapBlock = new MapSafeBlock
                         {
-                            var visibleBombs = BotHelper.FindVisibleBombs(state, loc);
-
-                            if (visibleBombs == null)
-                            {
-                                var visibleWalls = BotHelper.FindVisibleWalls(state, loc, player);
-
-                                //add block
-                                var mapBlock = new MapSafeBlock
-                                {
-                                    Location = loc,
-                                    Distance = safeNode.FCost,
-                                    LocationToBlock = BotHelper.ReconstructPath(safeNode),
-                                    VisibleWalls = visibleWalls == null ? 0 : visibleWalls.Count,
-                                    SuperDistance = state.SuperLocation == null ? 0 : state.SuperLocation == null ? 0 : BotHelper.BuildPathToTarget(state, loc, state.SuperLocation, super: true).FCost,
-                                    MapNode = safeNode
-                                };
-                                safeBlocks.Add(mapBlock);
-
-                            }
-
-                            if (!closedList.Contains(loc))
-                            {
-                                openList.Add(loc);
-                            }
-                        }
+                            Location = qNode.Location,
+                            Distance = safeNode.FCost,
+                            LocationToBlock = BotHelper.ReconstructPath(safeNode),
+                            VisibleWalls = visibleWalls == null ? 0 : visibleWalls.Count,
+                            SuperDistance = state.SuperLocation == null ? 0 : state.SuperLocation == null ? 0 : BotHelper.BuildPathToTarget(state, qNode.Location, state.SuperLocation, super: true).FCost,
+                            MapNode = safeNode
+                        };
+                        safeBlocks.Add(mapBlock);
                     }
-                }
+
+                    var possibleBlocksLoc = BotHelper.ExpandMoveBlocks(state, startLoc, qNode.Location, player, bombsToDodge, stayClear: true);
+
+                    for (var i = 0; i < possibleBlocksLoc.Count; i++)
+                    {
+                        var nodeInOpenList = openList.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
+
+                        if (nodeInOpenList != null) continue;
+
+                        var nodeInClosedList = closedList.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
+
+                        if (nodeInClosedList != null) continue;
+
+                        var newNode = new MapNode
+                        {
+                            Location = possibleBlocksLoc[i],
+                            GCost = qNode.GCost + 1
+                        };
+
+                        openList.Add(newNode);
+                    }
+                }         
             }
             return safeBlocks.Count == 0 ? null : safeBlocks.OrderBy(block => block.Distance).ToList();
         }
@@ -667,48 +695,55 @@ namespace BomberBot.Business.Strategy
 
         private MapBombPlacementBlock FindPlacementBlockToDestroyPlayer(GameState state, Player player, Location startLoc)
         {
-            var openList = new List<Location> { startLoc };
-            var closedList = new List<Location>();
-            var visitedList = new List<Location>();
-
-            Location qLoc;
+            var openList = new HashSet<MapNode> { new MapNode { Location = startLoc } };
+            var closedList = new HashSet<MapNode>();
+            
+            MapNode qNode;
 
 
             while (openList.Count != 0)
             {
-                qLoc = openList[0];
-                openList.RemoveAt(0);
-                closedList.Add(qLoc);
 
-                var possibleBlocksLoc = BotHelper.ExpandMoveBlocks(state, startLoc, qLoc);
+                qNode = openList.OrderBy(node => node.GCost).First();
 
-                foreach (var loc in possibleBlocksLoc)
+                if (BotHelper.IsAnyPlayerVisible(state, player, qNode.Location))
                 {
-                    if (!visitedList.Contains(loc))
+                    var mapNode = BotHelper.BuildPathToTarget(state, startLoc, qNode.Location);
+
+                    if (mapNode != null)
                     {
-                        if (BotHelper.IsAnyPlayerVisible(state, player, loc))
+                        return new MapBombPlacementBlock
                         {
-                            var mapNode = BotHelper.BuildPathToTarget(state, startLoc, loc);
-
-                            if (mapNode != null)
-                            {
-                                return new MapBombPlacementBlock
-                                {
-                                    Location = loc,
-                                    LocationToBlock = BotHelper.ReconstructPath(mapNode)
-                                };
-                            }
-                        }
-
-                        visitedList.Add(loc);
-
-                        if (!closedList.Contains(loc))
-                        {
-                            openList.Add(loc);
-                        }
+                            Location = qNode.Location,
+                            LocationToBlock = BotHelper.ReconstructPath(mapNode)
+                        };
                     }
                 }
-            }
+
+                openList.Remove(qNode);
+                closedList.Add(qNode);
+
+                var possibleBlocksLoc = BotHelper.ExpandMoveBlocks(state, startLoc, qNode.Location);
+
+                for (var i = 0; i < possibleBlocksLoc.Count; i++)
+                {
+                    var nodeInOpenList = openList.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
+
+                    if (nodeInOpenList != null) continue;
+
+                    var nodeInClosedList = closedList.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
+
+                    if (nodeInClosedList != null) continue;
+
+                    var newNode = new MapNode
+                    {
+                        Location = possibleBlocksLoc[i],
+                        GCost = qNode.GCost + 1
+                    };
+
+                    openList.Add(newNode);
+                }
+            }   
             return null;
         }
 
@@ -725,169 +760,204 @@ namespace BomberBot.Business.Strategy
 
         private MapSafeBlock FindSafeBlockFromPlayer(GameState state, Player player, Location startLoc, List<Bomb> bombsToDodge, Bomb opponentBomb)
         {
-            var openList = new List<Location> { startLoc };
-            var closedList = new List<Location>();
-            var visitedList = new List<Location>();
-
+            var openList = new HashSet<MapNode> { new MapNode { Location = startLoc } };
+            var closedList = new HashSet<MapNode>();
+            
             while (openList.Count != 0)
             {
-                var qLoc = openList[0];
-                openList.RemoveAt(0);
-                closedList.Add(qLoc);
+                var qNode = openList.OrderBy(node => node.GCost).First();
 
-                var possibleMoveLocations = BotHelper.ExpandMoveBlocks(state, startLoc, qLoc, player, bombsToDodge, stayClear: true);
+                openList.Remove(qNode);
+                closedList.Add(qNode);
 
-                foreach (var loc in possibleMoveLocations)
+                MapNode safeNode = BotHelper.BuildPathToTarget(state, startLoc, qNode.Location, player, bombsToDodge, stayClear: true);
+
+                if (safeNode != null && safeNode.FCost < opponentBomb.BombTimer)
                 {
-                    if (!visitedList.Contains(loc))
+                    var visibleBombs = BotHelper.FindVisibleBombs(state, qNode.Location);
+
+                    if (visibleBombs == null)
                     {
-                        visitedList.Add(loc);
-
-                        MapNode safeNode = BotHelper.BuildPathToTarget(state, startLoc, loc, player, bombsToDodge, stayClear: true);
-
-                        if (safeNode != null && safeNode.FCost < opponentBomb.BombTimer)
+                        return new MapSafeBlock
                         {
-                            var visibleBombs = BotHelper.FindVisibleBombs(state, loc);
-
-                            if (visibleBombs == null)
-                            {
-                                return new MapSafeBlock
-                                {
-                                    Location = loc,
-                                    Distance = safeNode.FCost,
-                                    LocationToBlock = BotHelper.ReconstructPath(safeNode),
-                                    MapNode = safeNode
-                                };
-                            }
-
-                            var bombToDodge = visibleBombs.Find(bomb => bomb == opponentBomb);
-
-                            if (bombToDodge == null)
-                            {
-
-                                return new MapSafeBlock
-                                {
-                                    Location = loc,
-                                    Distance = safeNode.FCost,
-                                    LocationToBlock = BotHelper.ReconstructPath(safeNode),
-                                    MapNode = safeNode
-                                };
-                            }
-
-                            if (!closedList.Contains(loc))
-                            {
-                                openList.Add(loc);
-                            }
-                        }
+                            Location = qNode.Location,
+                            Distance = safeNode.FCost,
+                            LocationToBlock = BotHelper.ReconstructPath(safeNode),
+                            MapNode = safeNode
+                        };
                     }
-                }
+
+                    var bombToDodge = visibleBombs.Find(bomb => bomb == opponentBomb);
+
+                    if (bombToDodge == null)
+                    {
+
+                        return new MapSafeBlock
+                        {
+                            Location = qNode.Location,
+                            Distance = safeNode.FCost,
+                            LocationToBlock = BotHelper.ReconstructPath(safeNode),
+                            MapNode = safeNode
+                        };
+                    }
+
+                    var possibleBlocksLoc = BotHelper.ExpandMoveBlocks(state, startLoc, qNode.Location, player, bombsToDodge, stayClear: true);
+
+                    for (var i = 0; i < possibleBlocksLoc.Count; i++)
+                    {
+                        var nodeInOpenList = openList.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
+
+                        if (nodeInOpenList != null) continue;
+
+                        var nodeInClosedList = closedList.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
+
+                        if (nodeInClosedList != null) continue;
+
+                        var newNode = new MapNode
+                        {
+                            Location = possibleBlocksLoc[i],
+                            GCost = qNode.GCost + 1
+                        };
+
+                        openList.Add(newNode);
+                    }
+                }                
             }
             return null;
         }
 
         private bool IsBlockInPlayerRange(GameState state, Location startLoc, Location targetLoc, int range)
         {
-            var openList = new List<Location> { startLoc };
-            var closedList = new List<Location>();
-            var visitedList = new List<Location>();
+            var openList = new HashSet<MapNode> { new MapNode { Location = startLoc } };
+            var closedList = new HashSet<MapNode>();
 
             while (openList.Count != 0)
             {
-                var qLoc = openList[0];
-                openList.RemoveAt(0);
-                closedList.Add(qLoc);
 
-                var possibleMovesLoc = BotHelper.ExpandMoveBlocks(state, startLoc, qLoc);
+                var qNode = openList.OrderBy(node => node.GCost).First();
 
-                foreach (var loc in possibleMovesLoc)
+                openList.Remove(qNode);
+                closedList.Add(qNode);
+
+                var blockNode = BotHelper.BuildPathToTarget(state, startLoc, qNode.Location);
+
+                if (blockNode != null && blockNode.FCost < range)
                 {
-                    if (!visitedList.Contains(loc))
+                    if (qNode.Location.Equals(targetLoc))
                     {
-                        visitedList.Add(loc);
-                        var blockNode = BotHelper.BuildPathToTarget(state, startLoc, loc);
+                        return true;
+                    }
 
-                        if (blockNode != null && blockNode.FCost < range)
-                        {
-                            if (loc.Equals(targetLoc)) return true;
+                    if (state.IsPowerUp(qNode.Location))
+                    {
+                        return false;
+                    }
 
-                            if (state.IsPowerUp(loc)) return false;
+                    var possibleBlocksLoc = BotHelper.ExpandMoveBlocks(state, startLoc, qNode.Location);
 
+                    for (var i = 0; i < possibleBlocksLoc.Count; i++)
+                    {
+                        var nodeInOpenList = openList.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
 
-                            if (!closedList.Contains(loc))
-                            {
-                                openList.Add(loc);
-                            }
-                        }
+                        if (nodeInOpenList != null) continue;
+
+                        var nodeInClosedList = closedList.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
+
+                        if (nodeInClosedList != null) continue;
+
+                        var newNode = new MapNode
+                        {                            
+                            Location = possibleBlocksLoc[i],
+                            GCost = qNode.GCost + 1
+                        };
+
+                        openList.Add(newNode);
                     }
                 }
-            }
+            }           
             return false;
         }
 
-        private MapPowerUpBlock FindNearByMapPowerUpBlock(GameState state, Location startLoc)
+        private MapPowerUpBlock FindNearByMapPowerUpBlock(GameState state, Location startLoc, string playerKey)
         {
 
             var opponentLocations = new List<Location>();
 
-            state.Players.Where(p => p.Key != GameService.HomeKey && !p.Killed)
-                         .ToList()
-                         .ForEach(p => opponentLocations.Add(new Location(p.Location.X - 1, p.Location.Y - 1)));
+            for (var i = 0; i < state.Players.Count; i++)
+            {
+                var opponent = state.Players[i];
+                if (opponent.Key != playerKey && !opponent.Killed)
+                {
+                    opponentLocations.Add(new Location(opponent.Location.X - 1, opponent.Location.Y - 1));
+                }
+            }
 
-            var openList = new List<Location> { startLoc };  //To be expanded
-            var closedList = new List<Location>();           //Expanded
-            var visitedList = new List<Location>();          //checked
-            Location qLoc;
+            var openList = new HashSet<MapNode> { new MapNode { Location = startLoc } };  //To be expanded
+            var closedList = new HashSet<MapNode>();           //Expanded
 
+            MapNode qNode;
+            
             while (openList.Count != 0)
             {
-                qLoc = openList[0];
-                openList.RemoveAt(0);
-                closedList.Add(qLoc);
 
-                var possibleMovesLoc = BotHelper.ExpandMoveBlocks(state, startLoc, qLoc);
+                qNode = openList.OrderBy(n => n.GCost).First();
 
-                foreach (var loc in possibleMovesLoc)
+                var mapEntity = state.GetBlockAtLocation(qNode.Location).PowerUp;
+
+                if (mapEntity != null)
                 {
-                    if (!visitedList.Contains(loc))
+                    var mapNode = BotHelper.BuildPathToTarget(state, startLoc, qNode.Location);
+
+                    if (mapNode != null)
                     {
-                        var mapEntity = state.GetBlockAtLocation(loc).PowerUp;
+                        var foundPowerUpBlock = true;
 
-                        if (mapEntity != null)
+                        foreach (var playerLoc in opponentLocations)
                         {
-                            var mapNode = BotHelper.BuildPathToTarget(state, startLoc, loc);
-
-                            if (mapNode != null)
+                            if (IsBlockInPlayerRange(state, playerLoc, qNode.Location, mapNode.FCost))
                             {
-                                var foundPowerUpBlock = true;
-
-                                foreach (var playerLoc in opponentLocations)
-                                {
-                                    if (IsBlockInPlayerRange(state, playerLoc, loc, mapNode.FCost))
-                                    {
-                                        foundPowerUpBlock = false;
-                                        break;
-                                    }
-                                }
-
-                                if (foundPowerUpBlock)
-                                {
-                                    return new MapPowerUpBlock
-                                    {
-                                        Location = loc,
-                                        Distance = mapNode.FCost,
-                                        LocationToBlock = BotHelper.ReconstructPath(mapNode),
-                                        PowerUP = mapEntity
-                                    };
-                                }
+                                foundPowerUpBlock = false;
+                                break;
                             }
                         }
 
-                        visitedList.Add(loc);
-                        if (!closedList.Contains(loc))
+                        if (foundPowerUpBlock)
                         {
-                            openList.Add(loc);
+                            return new MapPowerUpBlock
+                            {
+                                Location = qNode.Location,
+                                Distance = mapNode.FCost,
+                                LocationToBlock = BotHelper.ReconstructPath(mapNode),
+                                PowerUP = mapEntity
+                            };
                         }
                     }
+                }
+
+                //
+                openList.Remove(qNode);
+                closedList.Add(qNode);
+                                
+                var possibleBlocksLoc = BotHelper.ExpandMoveBlocks(state, startLoc, qNode.Location);
+
+
+                for (var i = 0; i < possibleBlocksLoc.Count; i++)
+                {
+                    var nodeInOpenList = openList.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
+
+                    if (nodeInOpenList != null) continue;
+
+                    var nodeInClosedList = closedList.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
+
+                    if (nodeInClosedList != null) continue;
+
+                    var newNode = new MapNode
+                    {
+                        Location = possibleBlocksLoc[i],
+                        GCost = qNode.GCost + 1
+                    };
+
+                    openList.Add(newNode);
                 }
             }
             return null;
