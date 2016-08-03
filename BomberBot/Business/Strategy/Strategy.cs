@@ -226,11 +226,7 @@ namespace BomberBot.Business.Strategy
                 return;
             }
 
-            var stopwatch = Stopwatch.StartNew();
             var nearByPowerUp = FindNearByMapPowerUpBlock(state, homePlayerLocation, homePlayerKey);
-
-            stopwatch.Stop();
-            var botExecutionTime = stopwatch.ElapsedMilliseconds;
 
             if (nearByPowerUp != null)
             {
