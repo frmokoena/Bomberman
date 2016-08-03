@@ -595,13 +595,6 @@ namespace BomberBot.Business.Helpers
             return visibleWalls.Count == 0 ? null : visibleWalls;
         }
 
-        /// <summary>
-        /// Expand plant blocks
-        /// </summary>
-        /// <param name="state"></param>
-        /// <param name="curLoc"></param>
-        /// <param name="blockLoc"></param>
-        /// <returns></returns>
         private static List<Location> ExpandWallBlocks(GameState state, Location curLoc, Location blockLoc, int bombRadius)
         {
             var blocksLoc = new List<Location>();

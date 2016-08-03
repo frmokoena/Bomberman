@@ -12,13 +12,6 @@ namespace BomberBotTests.UnitTests
     [TestFixture]
     class GameServiceTest
     {
-
-        [SetUp]
-        public void TestInit()
-        {
-
-        }
-
         [Test]
         public void ActualSimpleVariablesReturnedTest()
         {

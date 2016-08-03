@@ -6,7 +6,6 @@ using BomberBot.Enums;
 using BomberBot.Interfaces;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 
 namespace BomberBot.Business.Strategy
@@ -20,9 +19,6 @@ namespace BomberBot.Business.Strategy
             GameService = gameServie;
         }
 
-        /// <summary>
-        /// Public API
-        /// </summary>
         public void Execute()
         {
             GameState state = GameService.GameState;
@@ -229,11 +225,8 @@ namespace BomberBot.Business.Strategy
                 return;
             }
 
-            var stopwatch = Stopwatch.StartNew();
+            
             var nearByPowerUp = FindNearByMapPowerUpBlock(state, homePlayerLocation, homePlayerKey);
-
-            stopwatch.Stop();
-            var tTime = stopwatch.ElapsedMilliseconds;
 
             if (nearByPowerUp != null)
             {
@@ -447,21 +440,41 @@ namespace BomberBot.Business.Strategy
             GameService.WriteMove(Move.DoNothing);
         }
 
+        private Move GetMoveFromLocation(Location playerLoc, Location loc)
+        {
+            if (playerLoc.Equals(loc))
+            {
+                return Move.DoNothing;
+            }
+
+            if (loc.X == playerLoc.X)
+            {
+                return loc.Y > playerLoc.Y ? Move.MoveDown : Move.MoveUp;
+            }
+
+            if (loc.Y == playerLoc.Y)
+            {
+                return loc.X > playerLoc.X ? Move.MoveRight : Move.MoveLeft;
+            }
+
+            return Move.DoNothing;
+        }
+
         private bool CanFindHidingBlock(GameState state, Player player, Location startLoc)
         {
             var blastRadius = player.BombRadius;
             var bombTimer = Math.Min(9, (player.BombBag * 3)) + 1;
 
-            var openList = new HashSet<MapNode> { new MapNode { Location = startLoc } };
-            var closedList = new HashSet<MapNode>();           
+            var openSet = new HashSet<MapNode> { new MapNode { Location = startLoc } };
+            var closedSet = new HashSet<MapNode>();           
 
 
-            while (openList.Count != 0)
+            while (openSet.Count != 0)
             {
-                var qNode = openList.OrderBy(node => node.GCost).First();
+                var qNode = openSet.OrderBy(node => node.GCost).First();
 
-                openList.Remove(qNode);
-                closedList.Add(qNode);
+                openSet.Remove(qNode);
+                closedSet.Add(qNode);
 
                 var safeNode = BotHelper.BuildPathToTarget(state, startLoc, qNode.Location);
 
@@ -482,11 +495,11 @@ namespace BomberBot.Business.Strategy
 
                     for (var i = 0; i < possibleBlocksLoc.Count; i++)
                     {
-                        var nodeInOpenList = openList.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
+                        var nodeInOpenList = openSet.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
 
                         if (nodeInOpenList != null) continue;
 
-                        var nodeInClosedList = closedList.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
+                        var nodeInClosedList = closedSet.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
 
                         if (nodeInClosedList != null) continue;
 
@@ -496,7 +509,7 @@ namespace BomberBot.Business.Strategy
                             GCost = qNode.GCost + 1
                         };
 
-                        openList.Add(newNode);
+                        openSet.Add(newNode);
                     }
                 }
             }
@@ -505,15 +518,15 @@ namespace BomberBot.Business.Strategy
 
         private List<MapBombPlacementBlock> FindBombPlacementBlocks(GameState state, Player player, Location startLoc, int maxPlacementBlocks = 5, bool oneBlockLookUp = false)
         {
-            var openList = new HashSet<MapNode>() { new MapNode { Location = startLoc } };
-            var closedList = new HashSet<MapNode>();
+            var openSet = new HashSet<MapNode>() { new MapNode { Location = startLoc } };
+            var closedSet = new HashSet<MapNode>();
             List<List<DestructibleWall>> destroyedWalls = new List<List<DestructibleWall>>();
             int depth = 1;
 
             var bombPlacementBlocks = new List<MapBombPlacementBlock>();
             MapNode qNode;
 
-            while (openList.Count != 0)
+            while (openSet.Count != 0)
             {
                 if (oneBlockLookUp && depth == 0)
                 {
@@ -530,7 +543,7 @@ namespace BomberBot.Business.Strategy
                                               .ToList();
                 }
 
-                qNode = openList.OrderBy(n => n.GCost).First();
+                qNode = openSet.OrderBy(n => n.GCost).First();
 
                 var visibleWalls = BotHelper.FindVisibleWalls(state, qNode.Location, player);
 
@@ -558,18 +571,18 @@ namespace BomberBot.Business.Strategy
                     }
                 }
 
-                openList.Remove(qNode);
-                closedList.Add(qNode);
+                openSet.Remove(qNode);
+                closedSet.Add(qNode);
 
                 var possibleBlocksLoc = BotHelper.ExpandMoveBlocks(state, startLoc, qNode.Location);
 
                 for (var i = 0; i < possibleBlocksLoc.Count; i++)
                 {
-                    var nodeInOpenList = openList.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
+                    var nodeInOpenList = openSet.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
 
                     if (nodeInOpenList != null) continue;
 
-                    var nodeInClosedList = closedList.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
+                    var nodeInClosedList = closedSet.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
 
                     if (nodeInClosedList != null) continue;
 
@@ -579,7 +592,7 @@ namespace BomberBot.Business.Strategy
                         GCost = qNode.GCost + 1
                     };
 
-                    openList.Add(newNode);
+                    openSet.Add(newNode);
                 }
 
                 if (oneBlockLookUp) depth--;
@@ -590,42 +603,21 @@ namespace BomberBot.Business.Strategy
                                                                               .ToList();
         }
 
-        private Move GetMoveFromLocation(Location playerLoc, Location loc)
-        {
-            if (playerLoc.Equals(loc))
-            {
-                return Move.DoNothing;
-            }
-
-            if (loc.X == playerLoc.X)
-            {
-                return loc.Y > playerLoc.Y ? Move.MoveDown : Move.MoveUp;
-            }
-
-            if (loc.Y == playerLoc.Y)
-            {
-                return loc.X > playerLoc.X ? Move.MoveRight : Move.MoveLeft;
-            }
-
-            return Move.DoNothing;
-        }
-
-
         private List<MapSafeBlock> FindSafeBlocks(GameState state, Player player, Location startLoc, List<Bomb> bombsToDodge)
         {
             var safeBlocks = new List<MapSafeBlock>();
 
-            var openList = new HashSet<MapNode> { new MapNode { Location = startLoc } }; //To be expanded
-            var closedList = new HashSet<MapNode>();          // Expanded and visited
+            var openSet = new HashSet<MapNode> { new MapNode { Location = startLoc } }; //To be expanded
+            var closedSet = new HashSet<MapNode>();          // Expanded and visited
             
             MapNode qNode;
 
-            while (openList.Count != 0)
+            while (openSet.Count != 0)
             {
-                qNode = openList.OrderBy(node => node.GCost).First();
+                qNode = openSet.OrderBy(node => node.GCost).First();
 
-                openList.Remove(qNode);
-                closedList.Add(qNode);
+                openSet.Remove(qNode);
+                closedSet.Add(qNode);
 
                 MapNode safeNode = BotHelper.BuildPathToTarget(state, startLoc, qNode.Location, player, bombsToDodge, stayClear: true);
 
@@ -657,11 +649,11 @@ namespace BomberBot.Business.Strategy
 
                     for (var i = 0; i < possibleBlocksLoc.Count; i++)
                     {
-                        var nodeInOpenList = openList.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
+                        var nodeInOpenList = openSet.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
 
                         if (nodeInOpenList != null) continue;
 
-                        var nodeInClosedList = closedList.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
+                        var nodeInClosedList = closedSet.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
 
                         if (nodeInClosedList != null) continue;
 
@@ -671,7 +663,7 @@ namespace BomberBot.Business.Strategy
                             GCost = qNode.GCost + 1
                         };
 
-                        openList.Add(newNode);
+                        openSet.Add(newNode);
                     }
                 }         
             }
@@ -695,16 +687,16 @@ namespace BomberBot.Business.Strategy
 
         private MapBombPlacementBlock FindPlacementBlockToDestroyPlayer(GameState state, Player player, Location startLoc)
         {
-            var openList = new HashSet<MapNode> { new MapNode { Location = startLoc } };
-            var closedList = new HashSet<MapNode>();
+            var openSet = new HashSet<MapNode> { new MapNode { Location = startLoc } };
+            var closedSet = new HashSet<MapNode>();
             
             MapNode qNode;
 
 
-            while (openList.Count != 0)
+            while (openSet.Count != 0)
             {
 
-                qNode = openList.OrderBy(node => node.GCost).First();
+                qNode = openSet.OrderBy(node => node.GCost).First();
 
                 if (BotHelper.IsAnyPlayerVisible(state, player, qNode.Location))
                 {
@@ -720,18 +712,18 @@ namespace BomberBot.Business.Strategy
                     }
                 }
 
-                openList.Remove(qNode);
-                closedList.Add(qNode);
+                openSet.Remove(qNode);
+                closedSet.Add(qNode);
 
                 var possibleBlocksLoc = BotHelper.ExpandMoveBlocks(state, startLoc, qNode.Location);
 
                 for (var i = 0; i < possibleBlocksLoc.Count; i++)
                 {
-                    var nodeInOpenList = openList.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
+                    var nodeInOpenList = openSet.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
 
                     if (nodeInOpenList != null) continue;
 
-                    var nodeInClosedList = closedList.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
+                    var nodeInClosedList = closedSet.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
 
                     if (nodeInClosedList != null) continue;
 
@@ -741,7 +733,7 @@ namespace BomberBot.Business.Strategy
                         GCost = qNode.GCost + 1
                     };
 
-                    openList.Add(newNode);
+                    openSet.Add(newNode);
                 }
             }   
             return null;
@@ -760,15 +752,15 @@ namespace BomberBot.Business.Strategy
 
         private MapSafeBlock FindSafeBlockFromPlayer(GameState state, Player player, Location startLoc, List<Bomb> bombsToDodge, Bomb opponentBomb)
         {
-            var openList = new HashSet<MapNode> { new MapNode { Location = startLoc } };
-            var closedList = new HashSet<MapNode>();
+            var openSet = new HashSet<MapNode> { new MapNode { Location = startLoc } };
+            var closedSet = new HashSet<MapNode>();
             
-            while (openList.Count != 0)
+            while (openSet.Count != 0)
             {
-                var qNode = openList.OrderBy(node => node.GCost).First();
+                var qNode = openSet.OrderBy(node => node.GCost).First();
 
-                openList.Remove(qNode);
-                closedList.Add(qNode);
+                openSet.Remove(qNode);
+                closedSet.Add(qNode);
 
                 MapNode safeNode = BotHelper.BuildPathToTarget(state, startLoc, qNode.Location, player, bombsToDodge, stayClear: true);
 
@@ -805,11 +797,11 @@ namespace BomberBot.Business.Strategy
 
                     for (var i = 0; i < possibleBlocksLoc.Count; i++)
                     {
-                        var nodeInOpenList = openList.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
+                        var nodeInOpenList = openSet.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
 
                         if (nodeInOpenList != null) continue;
 
-                        var nodeInClosedList = closedList.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
+                        var nodeInClosedList = closedSet.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
 
                         if (nodeInClosedList != null) continue;
 
@@ -819,7 +811,7 @@ namespace BomberBot.Business.Strategy
                             GCost = qNode.GCost + 1
                         };
 
-                        openList.Add(newNode);
+                        openSet.Add(newNode);
                     }
                 }                
             }
@@ -828,16 +820,16 @@ namespace BomberBot.Business.Strategy
 
         private bool IsBlockInPlayerRange(GameState state, Location startLoc, Location targetLoc, int range)
         {
-            var openList = new HashSet<MapNode> { new MapNode { Location = startLoc } };
-            var closedList = new HashSet<MapNode>();
+            var openSet = new HashSet<MapNode> { new MapNode { Location = startLoc } };
+            var closedSet = new HashSet<MapNode>();
 
-            while (openList.Count != 0)
+            while (openSet.Count != 0)
             {
 
-                var qNode = openList.OrderBy(node => node.GCost).First();
+                var qNode = openSet.OrderBy(node => node.GCost).First();
 
-                openList.Remove(qNode);
-                closedList.Add(qNode);
+                openSet.Remove(qNode);
+                closedSet.Add(qNode);
 
                 var blockNode = BotHelper.BuildPathToTarget(state, startLoc, qNode.Location);
 
@@ -857,11 +849,11 @@ namespace BomberBot.Business.Strategy
 
                     for (var i = 0; i < possibleBlocksLoc.Count; i++)
                     {
-                        var nodeInOpenList = openList.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
+                        var nodeInOpenList = openSet.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
 
                         if (nodeInOpenList != null) continue;
 
-                        var nodeInClosedList = closedList.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
+                        var nodeInClosedList = closedSet.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
 
                         if (nodeInClosedList != null) continue;
 
@@ -871,7 +863,7 @@ namespace BomberBot.Business.Strategy
                             GCost = qNode.GCost + 1
                         };
 
-                        openList.Add(newNode);
+                        openSet.Add(newNode);
                     }
                 }
             }           
@@ -892,15 +884,15 @@ namespace BomberBot.Business.Strategy
                 }
             }
 
-            var openList = new HashSet<MapNode> { new MapNode { Location = startLoc } };  //To be expanded
-            var closedList = new HashSet<MapNode>();           //Expanded
+            var openSet = new HashSet<MapNode> { new MapNode { Location = startLoc } };  //To be expanded
+            var closedSet = new HashSet<MapNode>();           //Expanded
 
             MapNode qNode;
             
-            while (openList.Count != 0)
+            while (openSet.Count != 0)
             {
 
-                qNode = openList.OrderBy(n => n.GCost).First();
+                qNode = openSet.OrderBy(n => n.GCost).First();
 
                 var mapEntity = state.GetBlockAtLocation(qNode.Location).PowerUp;
 
@@ -935,19 +927,19 @@ namespace BomberBot.Business.Strategy
                 }
 
                 //
-                openList.Remove(qNode);
-                closedList.Add(qNode);
+                openSet.Remove(qNode);
+                closedSet.Add(qNode);
                                 
                 var possibleBlocksLoc = BotHelper.ExpandMoveBlocks(state, startLoc, qNode.Location);
 
 
                 for (var i = 0; i < possibleBlocksLoc.Count; i++)
                 {
-                    var nodeInOpenList = openList.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
+                    var nodeInOpenList = openSet.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
 
                     if (nodeInOpenList != null) continue;
 
-                    var nodeInClosedList = closedList.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
+                    var nodeInClosedList = closedSet.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
 
                     if (nodeInClosedList != null) continue;
 
@@ -957,7 +949,7 @@ namespace BomberBot.Business.Strategy
                         GCost = qNode.GCost + 1
                     };
 
-                    openList.Add(newNode);
+                    openSet.Add(newNode);
                 }
             }
             return null;
