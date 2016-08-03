@@ -28,15 +28,13 @@ namespace BomberBot.Business.Helpers
 
                 openList.Remove(qMapNode);
                 closedList.Add(qMapNode);
-
-
+                
                 var childrenLoc = super ? ExpandSuperBlocks(state, qMapNode.Location) : ExpandMoveBlocks(state, startLoc, qMapNode.Location, player, bombsToDodge, stayClear);
-
-
+                
                 for (var i = 0; i < childrenLoc.Count; i++)
                 {
                     gCost = qMapNode.GCost + 1;
-                    hCost = Math.Abs(childrenLoc[i].X - targetLoc.X) + Math.Abs(childrenLoc[i].Y - targetLoc.Y);
+                    hCost = 2*(Math.Abs(childrenLoc[i].X - targetLoc.X) + Math.Abs(childrenLoc[i].Y - targetLoc.Y));
                     fCost = gCost + hCost;
 
                     var newNode = new MapNode
@@ -336,7 +334,7 @@ namespace BomberBot.Business.Helpers
             var visibleBombs = new List<Bomb>();
 
             //Sitting on Bomb
-            if (state.IsBomb(curLoc) && !chaining)
+            if (!chaining && state.IsBomb(curLoc))
             {
                 var bomb = state.GetBlockAtLocation(curLoc).Bomb;
                 visibleBombs.Add(bomb);
@@ -609,7 +607,6 @@ namespace BomberBot.Business.Helpers
                     blocksLoc.Add(loc);
                 }
 
-
                 loc = new Location(curLoc.X + 1, curLoc.Y);
 
                 if (state.IsBlockPlantClear(loc))
@@ -698,7 +695,6 @@ namespace BomberBot.Business.Helpers
             return false;
         }
 
-
         public static List<Player> FindVisiblePlayers(GameState state, Player player, Location startLoc)
         {
             var openBlocks = new List<Location> { startLoc };
@@ -730,7 +726,6 @@ namespace BomberBot.Business.Helpers
 
                         // player doesn't block a bomb
                         openBlocks.Add(bLoc);
-
                     }
                     else
                     {

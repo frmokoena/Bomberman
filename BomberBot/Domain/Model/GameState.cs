@@ -12,13 +12,10 @@ namespace BomberBot.Domain.Model
         public int PlayerBounty { get; set; }
         public int MapHeight { get; set; }
         public int MapWidth { get; set; }
-
         [JsonProperty("RegisteredPlayerEntities")]
         public List<Player> Players { get; set; }
-
         [JsonProperty("GameBlocks")]
         public Block[][] Map { get; set; }
-
         public Location SuperLocation
         {
             get
@@ -27,7 +24,6 @@ namespace BomberBot.Domain.Model
                 return GetBlockAtLocation(superLocation).PowerUp != null ? superLocation : null;
             }
         }
-
         public int WallsInitial
         {
             get
@@ -35,7 +31,6 @@ namespace BomberBot.Domain.Model
                 return ((PlayerBounty * Players.Count) - 100) / 10;
             }
         }
-
         public int WallsLeft
         {
             get
@@ -51,7 +46,6 @@ namespace BomberBot.Domain.Model
                 return wallsLeft;
             }
         }
-
         public double PercentageWall
         {
             get

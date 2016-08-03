@@ -6,6 +6,7 @@ using BomberBot.Enums;
 using BomberBot.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace BomberBot.Business.Strategy
@@ -225,8 +226,11 @@ namespace BomberBot.Business.Strategy
                 return;
             }
 
-            
+            var stopwatch = Stopwatch.StartNew();
             var nearByPowerUp = FindNearByMapPowerUpBlock(state, homePlayerLocation, homePlayerKey);
+
+            stopwatch.Stop();
+            var botExecutionTime = stopwatch.ElapsedMilliseconds;
 
             if (nearByPowerUp != null)
             {
@@ -246,12 +250,23 @@ namespace BomberBot.Business.Strategy
                     return;
                 }
 
-                //if bomb is super power up
+                //if bomb radius power up
+                if (nearByPowerUp.PowerUP is BombBagPowerUp
+                    && nearByPowerUp.Distance < 11
+                    && homePlayer.BombBag < 2)
+                {
+                    var move = GetMoveFromLocation(homePlayerLocation, nearByPowerUp.LocationToBlock);
+                    GameService.WriteMove(move);
+                    return;
+                }
+
+                //if super power up
                 if (nearByPowerUp.PowerUP is SuperPowerUp)
                 {
                     var move = GetMoveFromLocation(homePlayerLocation, nearByPowerUp.LocationToBlock);
                     GameService.WriteMove(move);
                     return;
+
                 }
             }
 
@@ -466,7 +481,7 @@ namespace BomberBot.Business.Strategy
             var bombTimer = Math.Min(9, (player.BombBag * 3)) + 1;
 
             var openSet = new HashSet<MapNode> { new MapNode { Location = startLoc } };
-            var closedSet = new HashSet<MapNode>();           
+            var closedSet = new HashSet<MapNode>();
 
 
             while (openSet.Count != 0)
@@ -488,7 +503,7 @@ namespace BomberBot.Business.Strategy
 
                         var blockDistance = qNode.Location.X == startLoc.X ? Math.Abs(qNode.Location.Y - startLoc.Y) : Math.Abs(qNode.Location.X - startLoc.X);
 
-                        if (blockDistance > blastRadius) return true;                        
+                        if (blockDistance > blastRadius) return true;
                     }
 
                     var possibleBlocksLoc = BotHelper.ExpandMoveBlocks(state, startLoc, qNode.Location);
@@ -521,14 +536,14 @@ namespace BomberBot.Business.Strategy
             var openSet = new HashSet<MapNode>() { new MapNode { Location = startLoc } };
             var closedSet = new HashSet<MapNode>();
             List<List<DestructibleWall>> destroyedWalls = new List<List<DestructibleWall>>();
-            int depth = 1;
+            int searchCount = 5;
 
             var bombPlacementBlocks = new List<MapBombPlacementBlock>();
             MapNode qNode;
 
             while (openSet.Count != 0)
             {
-                if (oneBlockLookUp && depth == 0)
+                if (oneBlockLookUp && searchCount < 1)
                 {
                     return bombPlacementBlocks.Count == 0 ? null : bombPlacementBlocks.OrderBy(b => b.SuperDistance)
                                                                                       .ThenByDescending(b => b.VisibleWalls)
@@ -587,7 +602,7 @@ namespace BomberBot.Business.Strategy
                     if (nodeInClosedList != null) continue;
 
                     var newNode = new MapNode
-                    {                        
+                    {
                         Location = possibleBlocksLoc[i],
                         GCost = qNode.GCost + 1
                     };
@@ -595,7 +610,7 @@ namespace BomberBot.Business.Strategy
                     openSet.Add(newNode);
                 }
 
-                if (oneBlockLookUp) depth--;
+                if (oneBlockLookUp) searchCount--;
             }
             return bombPlacementBlocks.Count == 0 ? null : bombPlacementBlocks.OrderBy(b => b.SuperDistance)
                                                                               .ThenByDescending(b => b.VisibleWalls)
@@ -609,7 +624,7 @@ namespace BomberBot.Business.Strategy
 
             var openSet = new HashSet<MapNode> { new MapNode { Location = startLoc } }; //To be expanded
             var closedSet = new HashSet<MapNode>();          // Expanded and visited
-            
+
             MapNode qNode;
 
             while (openSet.Count != 0)
@@ -665,9 +680,11 @@ namespace BomberBot.Business.Strategy
 
                         openSet.Add(newNode);
                     }
-                }         
+                }
             }
-            return safeBlocks.Count == 0 ? null : safeBlocks.OrderBy(block => block.Distance).ToList();
+            return safeBlocks.Count == 0 ? null : safeBlocks.OrderBy(block => block.Distance)
+                                                            .ThenBy(Block => Block.SuperDistance)
+                                                            .ToList();
         }
 
 
@@ -689,7 +706,7 @@ namespace BomberBot.Business.Strategy
         {
             var openSet = new HashSet<MapNode> { new MapNode { Location = startLoc } };
             var closedSet = new HashSet<MapNode>();
-            
+
             MapNode qNode;
 
 
@@ -735,7 +752,7 @@ namespace BomberBot.Business.Strategy
 
                     openSet.Add(newNode);
                 }
-            }   
+            }
             return null;
         }
 
@@ -754,7 +771,7 @@ namespace BomberBot.Business.Strategy
         {
             var openSet = new HashSet<MapNode> { new MapNode { Location = startLoc } };
             var closedSet = new HashSet<MapNode>();
-            
+
             while (openSet.Count != 0)
             {
                 var qNode = openSet.OrderBy(node => node.GCost).First();
@@ -813,7 +830,7 @@ namespace BomberBot.Business.Strategy
 
                         openSet.Add(newNode);
                     }
-                }                
+                }
             }
             return null;
         }
@@ -858,15 +875,14 @@ namespace BomberBot.Business.Strategy
                         if (nodeInClosedList != null) continue;
 
                         var newNode = new MapNode
-                        {                            
+                        {
                             Location = possibleBlocksLoc[i],
                             GCost = qNode.GCost + 1
                         };
-
                         openSet.Add(newNode);
                     }
                 }
-            }           
+            }
             return false;
         }
 
@@ -875,23 +891,18 @@ namespace BomberBot.Business.Strategy
 
             var opponentLocations = new List<Location>();
 
-            for (var i = 0; i < state.Players.Count; i++)
-            {
-                var opponent = state.Players[i];
-                if (opponent.Key != playerKey && !opponent.Killed)
-                {
-                    opponentLocations.Add(new Location(opponent.Location.X - 1, opponent.Location.Y - 1));
-                }
-            }
+            state.Players
+                 .Where(p => (p.Key != playerKey && !p.Killed))
+                 .ToList()
+                 .ForEach(p => opponentLocations.Add(new Location(p.Location.X - 1, p.Location.Y - 1)));
 
-            var openSet = new HashSet<MapNode> { new MapNode { Location = startLoc } };  //To be expanded
-            var closedSet = new HashSet<MapNode>();           //Expanded
+            var openSet = new HashSet<MapNode> { new MapNode { Location = startLoc } };
+            var closedSet = new HashSet<MapNode>();
 
             MapNode qNode;
-            
+
             while (openSet.Count != 0)
             {
-
                 qNode = openSet.OrderBy(n => n.GCost).First();
 
                 var mapEntity = state.GetBlockAtLocation(qNode.Location).PowerUp;
@@ -929,9 +940,8 @@ namespace BomberBot.Business.Strategy
                 //
                 openSet.Remove(qNode);
                 closedSet.Add(qNode);
-                                
-                var possibleBlocksLoc = BotHelper.ExpandMoveBlocks(state, startLoc, qNode.Location);
 
+                var possibleBlocksLoc = BotHelper.ExpandMoveBlocks(state, startLoc, qNode.Location);
 
                 for (var i = 0; i < possibleBlocksLoc.Count; i++)
                 {
