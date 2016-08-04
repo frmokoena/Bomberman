@@ -73,9 +73,9 @@ namespace BomberBot.Business.Strategy
                     var findNearestHiding = chainBombs != null || playerVisible;
 
                     var prioritySafeBlocks = findNearestHiding ? safeBlocks : safeBlocks.OrderBy(block => block.SuperDistance)
+                                                                                        .ThenBy(block => block.PowerDistance)
                                                                                         .ThenByDescending(block => block.VisibleWalls)
-                                                                                        .ThenBy(block => block.Distance)
-                                                                                        .ToList();
+                                                                                        .ThenBy(block => block.Distance);
 
                     foreach (var safeBlock in prioritySafeBlocks)
                     {
@@ -362,7 +362,7 @@ namespace BomberBot.Business.Strategy
             // compute bomb placement blocks
             var r = new Random();
             var maxPlacements = r.Next(5, 10);
-            bombPlacementBlocks = state.PercentageWall > 10 ? FindBombPlacementBlocks(state, homePlayer, homePlayerLocation,maxPlacements) : FindBombPlacementBlocks(state, homePlayer, homePlayerLocation, 2);
+            bombPlacementBlocks = state.PercentageWall > 10 ? FindBombPlacementBlocks(state, homePlayer, homePlayerLocation, maxPlacements) : FindBombPlacementBlocks(state, homePlayer, homePlayerLocation, 2);
 
             if (visibleWalls != null)
             {
@@ -551,12 +551,14 @@ namespace BomberBot.Business.Strategy
                 if (oneBlockLookUp && searchCount < 1)
                 {
                     return bombPlacementBlocks.Count == 0 ? null : bombPlacementBlocks.OrderBy(b => b.SuperDistance)
+                                                                                      .ThenBy(b => b.PowerDistance)
                                                                                       .ThenByDescending(b => b.VisibleWalls)
                                                                                       .ThenBy(b => b.Distance);
                 }
                 else if (bombPlacementBlocks.Count > maxPlacementBlocks)
                 {
                     return bombPlacementBlocks.OrderBy(b => b.SuperDistance)
+                                              .ThenBy(b => b.PowerDistance)
                                               .ThenByDescending(b => b.VisibleWalls)
                                               .ThenBy(b => b.Distance);
                 }
@@ -575,12 +577,15 @@ namespace BomberBot.Business.Strategy
 
                         if (mapNode != null)
                         {
+                            var nearByPowerUp = FindNearByMapPowerUpBlock(state, qNode.Location, player.Key);
+
                             var mapBlock = new MapBombPlacementBlock
                             {
                                 Location = qNode.Location,
                                 Distance = mapNode.FCost,
                                 LocationToBlock = BotHelper.ReconstructPath(mapNode),
                                 VisibleWalls = visibleWalls.Count,
+                                PowerDistance = nearByPowerUp == null ? int.MaxValue : nearByPowerUp.Distance,
                                 SuperDistance = state.SuperLocation == null ? 0 : BotHelper.BuildPathToTarget(state, qNode.Location, state.SuperLocation, super: true).FCost
                             };
 
@@ -616,6 +621,7 @@ namespace BomberBot.Business.Strategy
                 if (oneBlockLookUp) searchCount--;
             }
             return bombPlacementBlocks.Count == 0 ? null : bombPlacementBlocks.OrderBy(b => b.SuperDistance)
+                                                                              .ThenBy(b => b.PowerDistance)
                                                                               .ThenByDescending(b => b.VisibleWalls)
                                                                               .ThenBy(b => b.Distance);
         }
@@ -640,7 +646,7 @@ namespace BomberBot.Business.Strategy
                 MapNode safeNode = BotHelper.BuildPathToTarget(state, startLoc, qNode.Location, player, bombsToDodge, stayClear: true);
 
                 //if we can reach this location, and in time
-                
+
 
                 if (safeNode != null && safeNode.FCost < bomb.BombTimer)
                 {
@@ -650,6 +656,8 @@ namespace BomberBot.Business.Strategy
                     {
                         var visibleWalls = BotHelper.FindVisibleWalls(state, qNode.Location, player);
 
+                        var nearByPowerUp = FindNearByMapPowerUpBlock(state, qNode.Location, player.Key);
+
                         //add block
                         var mapBlock = new MapSafeBlock
                         {
@@ -657,6 +665,7 @@ namespace BomberBot.Business.Strategy
                             Distance = safeNode.FCost,
                             LocationToBlock = BotHelper.ReconstructPath(safeNode),
                             VisibleWalls = visibleWalls == null ? 0 : visibleWalls.Count,
+                            PowerDistance = nearByPowerUp == null ? int.MaxValue : nearByPowerUp.Distance,
                             SuperDistance = state.SuperLocation == null ? 0 : state.SuperLocation == null ? 0 : BotHelper.BuildPathToTarget(state, qNode.Location, state.SuperLocation, super: true).FCost,
                             MapNode = safeNode
                         };
@@ -686,7 +695,8 @@ namespace BomberBot.Business.Strategy
                 }
             }
             return safeBlocks.Count == 0 ? null : safeBlocks.OrderBy(block => block.Distance)
-                                                            .ThenBy(Block => Block.SuperDistance);                                                            
+                                                            .ThenBy(Block => Block.SuperDistance)
+                                                            .ThenBy(block => block.PowerDistance);
         }
 
 
@@ -893,7 +903,7 @@ namespace BomberBot.Business.Strategy
 
             var opponentLocations = new List<Location>();
 
-            state.Players.FindAll(p => (p.Key != playerKey && !p.Killed))                 
+            state.Players.FindAll(p => (p.Key != playerKey && !p.Killed))
                  .ForEach(p => opponentLocations.Add(new Location(p.Location.X - 1, p.Location.Y - 1)));
 
             var openSet = new HashSet<MapNode> { new MapNode { Location = startLoc } };
