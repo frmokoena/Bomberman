@@ -30,7 +30,7 @@ namespace BomberBotTests.UnitTests
             var expect = new Location(1, 2);
             //Act
 
-            var result = BotHelper.FindVisibleBombs(gameService.GameState, playerLoc);
+            var result = BotHelper.FindVisibleBombs(gameService.GameState, playerLoc).ToList();
 
             //Assert
             Assert.IsNotNull(gameService.GameState.GetBlockAtLocation(expect).Bomb);

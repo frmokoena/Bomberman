@@ -3,6 +3,7 @@ using BomberBot.Common;
 using BomberBot.Services;
 using NUnit.Framework;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace BomberBotTests.UnitTests
 {
@@ -72,7 +73,7 @@ namespace BomberBotTests.UnitTests
             var expectBombs = new List<Location> { new Location(19, 3) };
 
             //Act
-            var actualBombs = BotHelper.FindVisibleBombs(state, new Location(19, 1));
+            var actualBombs = BotHelper.FindVisibleBombs(state, new Location(19, 1)).ToList();
 
             //Assert
             for (var i = 0; i < expectBombs.Count; i++)
