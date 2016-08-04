@@ -9,7 +9,7 @@ namespace BomberBot.Business.Helpers
 {
     public class BotHelper
     {
-        public static MapNode BuildPathToTarget(GameState state, Location startLoc, Location targetLoc, Player player = null, List<Bomb> bombsToDodge = null, bool stayClear = false, bool super = false)
+        public static MapNode BuildPathToTarget(GameState state, Location startLoc, Location targetLoc, Player player = null, IEnumerable<Bomb> bombsToDodge = null, bool stayClear = false, bool super = false)
         {
             var openList = new HashSet<MapNode> { new MapNode { Location = startLoc } };
             var closedList = new HashSet<MapNode>();
@@ -28,13 +28,13 @@ namespace BomberBot.Business.Helpers
 
                 openList.Remove(qMapNode);
                 closedList.Add(qMapNode);
-                
+
                 var childrenLoc = super ? ExpandSuperBlocks(state, qMapNode.Location) : ExpandMoveBlocks(state, startLoc, qMapNode.Location, player, bombsToDodge, stayClear);
-                
+
                 for (var i = 0; i < childrenLoc.Count; i++)
                 {
                     gCost = qMapNode.GCost + 1;
-                    hCost = 2*(Math.Abs(childrenLoc[i].X - targetLoc.X) + Math.Abs(childrenLoc[i].Y - targetLoc.Y));
+                    hCost = 2 * (Math.Abs(childrenLoc[i].X - targetLoc.X) + Math.Abs(childrenLoc[i].Y - targetLoc.Y));
                     fCost = gCost + hCost;
 
                     var newNode = new MapNode
@@ -76,14 +76,14 @@ namespace BomberBot.Business.Helpers
             return currentMapNode.Location;
         }
 
-        public static List<Location> ExpandMoveBlocks(GameState state, Location startLoc, Location curLoc, Player player = null, List<Bomb> bombsToDodge = null, bool stayClear = false)
+        public static List<Location> ExpandMoveBlocks(GameState state, Location startLoc, Location curLoc, Player player = null, IEnumerable<Bomb> bombsToDodge = null, bool stayClear = false)
         {
             Location loc;
             var movesLoc = new List<Location>();
 
             //if (curLoc.Equals(startLoc))
             //{
-            List<Bomb> bombs;
+            IEnumerable<Bomb> bombs;
             loc = new Location(curLoc.X, curLoc.Y - 1);
 
             if (state.IsBlockClear(loc))
@@ -107,6 +107,29 @@ namespace BomberBot.Business.Helpers
                             && newBombs.First().BombTimer > 2)
                     {
                         movesLoc.Add(loc);
+                    }
+                    else
+                    {
+                        var opponentClear = false;
+                        foreach (var newBomb in newBombs)
+                        {
+                            var opponentLocation = state.GetPlayerLocationOnMap(newBomb.Owner.Key);
+                            if (opponentLocation != null)
+                            {
+                                var opponentVisibleBombs = FindVisibleBombs(state, opponentLocation);
+
+                                if(opponentVisibleBombs == null)
+                                {
+                                    opponentClear = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (!opponentClear)
+                        {
+                            movesLoc.Add(loc);
+                        }
                     }
                 }
             }
@@ -135,6 +158,29 @@ namespace BomberBot.Business.Helpers
                     {
                         movesLoc.Add(loc);
                     }
+                    else
+                    {
+                        var opponentClear = false;
+                        foreach (var newBomb in newBombs)
+                        {
+                            var opponentLocation = state.GetPlayerLocationOnMap(newBomb.Owner.Key);
+                            if (opponentLocation != null)
+                            {
+                                var opponentVisibleBombs = FindVisibleBombs(state, opponentLocation);
+
+                                if (opponentVisibleBombs == null)
+                                {
+                                    opponentClear = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (!opponentClear)
+                        {
+                            movesLoc.Add(loc);
+                        }
+                    }
                 }
             }
 
@@ -162,6 +208,29 @@ namespace BomberBot.Business.Helpers
                     {
                         movesLoc.Add(loc);
                     }
+                    else
+                    {
+                        var opponentClear = false;
+                        foreach (var newBomb in newBombs)
+                        {
+                            var opponentLocation = state.GetPlayerLocationOnMap(newBomb.Owner.Key);
+                            if (opponentLocation != null)
+                            {
+                                var opponentVisibleBombs = FindVisibleBombs(state, opponentLocation);
+
+                                if (opponentVisibleBombs == null)
+                                {
+                                    opponentClear = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (!opponentClear)
+                        {
+                            movesLoc.Add(loc);
+                        }
+                    }
                 }
             }
 
@@ -188,6 +257,29 @@ namespace BomberBot.Business.Helpers
                             && newBombs.First().BombTimer > 2)
                     {
                         movesLoc.Add(loc);
+                    }
+                    else
+                    {
+                        var opponentClear = false;
+                        foreach (var newBomb in newBombs)
+                        {
+                            var opponentLocation = state.GetPlayerLocationOnMap(newBomb.Owner.Key);
+                            if (opponentLocation != null)
+                            {
+                                var opponentVisibleBombs = FindVisibleBombs(state, opponentLocation);
+
+                                if (opponentVisibleBombs == null)
+                                {
+                                    opponentClear = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (!opponentClear)
+                        {
+                            movesLoc.Add(loc);
+                        }
                     }
                 }
             }
@@ -329,7 +421,7 @@ namespace BomberBot.Business.Helpers
             return blocksLoc;
         }
 
-        public static List<Bomb> FindVisibleBombs(GameState state, Location curLoc, bool chaining = false)
+        public static IEnumerable<Bomb> FindVisibleBombs(GameState state, Location curLoc, bool chaining = false)
         {
             var visibleBombs = new List<Bomb>();
 
@@ -370,7 +462,7 @@ namespace BomberBot.Business.Helpers
                     }
                 }
             }
-            return visibleBombs.Count == 0 ? null : visibleBombs.OrderBy(b => b.BombTimer).ToList();
+            return visibleBombs.Count == 0 ? null : visibleBombs.OrderBy(b => b.BombTimer);
         }
 
         private static List<Location> ExpandBombBlocks(GameState state, Location curLoc, Location blockLoc)
