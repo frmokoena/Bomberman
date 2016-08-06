@@ -54,6 +54,30 @@ namespace BomberBot.Domain.Model
             }
         }
 
+        public int MaxBombBlast
+        {
+            get
+            {
+                return MapWidth > MapHeight ? MapWidth - 3 : MapHeight - 3;
+            }
+        }
+
+        public double MaxRadiusPowerChase
+        {
+            get
+            {
+                return 0.6 * MaxBombBlast;
+            }
+        }
+
+        public double MaxBagPowerChase
+        {
+            get
+            {
+                return 0.4 * MaxBombBlast;
+            }
+        }
+
         public Block GetBlockAtLocation(Location loc)
         {
             return Map[loc.X][loc.Y];
@@ -111,7 +135,7 @@ namespace BomberBot.Domain.Model
             var block = GetBlockAtLocation(loc);
 
             if (block.IsIndestructibleWall()) return false;
-            
+
             return block.IsEmpty()
                 || block.IsBombExploding()
                 || block.IsPowerUp();
@@ -166,9 +190,9 @@ namespace BomberBot.Domain.Model
             }
 
             var block = GetBlockAtLocation(loc);
-                        
+
             return block.IsEmpty()
-                || !block.IsIndestructibleWall();                
+                || !block.IsIndestructibleWall();
         }
 
         public bool IsBomb(Location loc)

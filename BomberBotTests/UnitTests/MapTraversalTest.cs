@@ -52,7 +52,7 @@ namespace BomberBotTests.UnitTests
             var expectLoc = new Location(4, 15);
 
             //Act
-            var actualLoc = BotHelper.BuildPathToTarget(state, new Location(3, 15), new Location(5, 17));
+            var actualLoc = BotHelper.FindPathToTarget(state, new Location(3, 15), new Location(5, 17));
 
 
             //Assert
@@ -80,7 +80,28 @@ namespace BomberBotTests.UnitTests
             {
                 Assert.AreEqual(expectBombs[i], actualBombs[i]);
             }
+        }
 
+        [Test]
+        public void MaxMapDistanceTest()
+        {
+            //Arrange
+            var workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\state1";
+            var playerKey = "B";
+
+            var gameService = new GameService(playerKey, workingDirectory);
+
+            var state = gameService.GameState;
+            var expectDistance = 2*state.MaxBombBlast;
+            var startLoc = new Location(1, 1);
+            var targetLoc = new Location(19, 19);
+
+            //Act
+            var result = BotHelper.FindPathToTarget(state, startLoc, targetLoc);
+
+            //Assert
+            Assert.AreEqual(expectDistance, result.FCost);
+            
         }
     }
 }

@@ -9,7 +9,7 @@ namespace BomberBot.Business.Helpers
 {
     public class BotHelper
     {
-        public static MapNode BuildPathToTarget(GameState state, Location startLoc, Location targetLoc, Player player = null, IEnumerable<Bomb> bombsToDodge = null, bool stayClear = false, bool super = false)
+        public static MapNode FindPathToTarget(GameState state, Location startLoc, Location targetLoc, Player player = null, IEnumerable<Bomb> bombsToDodge = null, bool stayClear = false, bool super = false)
         {
             var openList = new HashSet<MapNode> { new MapNode { Location = startLoc } };
             var closedList = new HashSet<MapNode>();
