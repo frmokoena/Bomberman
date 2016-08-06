@@ -124,7 +124,7 @@ namespace BomberBot.Business.Strategy
             return Move.DoNothing;
         }
 
-        private MapSafeBlock FindHidingBlock(GameState state, Player player, Location startLoc)
+        private MapSafeBlock FindHidingBlock(GameState state, Player player, Location startLoc, IEnumerable<Bomb> bombsToDodge = null, bool stayClear = false)
         {
             var blastRadius = player.BombRadius;
             var bombTimer = Math.Min(9, (player.BombBag * 3)) + 1;
@@ -140,7 +140,7 @@ namespace BomberBot.Business.Strategy
                 openSet.Remove(qNode);
                 closedSet.Add(qNode);
 
-                var safeNode = BotHelper.FindPathToTarget(state, startLoc, qNode.Location);
+                var safeNode = stayClear ? BotHelper.FindPathToTarget(state, startLoc, qNode.Location, player, bombsToDodge, stayClear) : BotHelper.FindPathToTarget(state, startLoc, qNode.Location);
 
                 if (safeNode != null && safeNode.FCost < bombTimer)
                 {
@@ -169,7 +169,7 @@ namespace BomberBot.Business.Strategy
                         }
                     }
 
-                    var possibleBlocksLoc = BotHelper.ExpandMoveBlocks(state, startLoc, qNode.Location);
+                    var possibleBlocksLoc = stayClear ? BotHelper.ExpandMoveBlocks(state, startLoc, qNode.Location, player, bombsToDodge, stayClear) : BotHelper.ExpandMoveBlocks(state, startLoc, qNode.Location);
 
                     for (var i = 0; i < possibleBlocksLoc.Count; i++)
                     {
@@ -693,8 +693,14 @@ namespace BomberBot.Business.Strategy
                 {
                     if (player.IsBombOwner(bombToDodge))
                     {
+                        var test = false;
 
-                        //var hideBlock = FindHidingBlock(GameState, MyPlayer, MyLocation);
+                        var hideBlock = FindHidingBlock(GameState, MyPlayer, MyLocation, visibleBombs, stayClear: true);
+
+                        if (hideBlock.Distance < bombToDodge.BombTimer - 1)
+                        {
+                            test = true;
+                        }
 
                         _move = GetMoveFromLocation(playerLoc, safeBlock.LocationToBlock);
                         return true;
@@ -749,8 +755,6 @@ namespace BomberBot.Business.Strategy
                                     return true;
                                 }
                             }
-
-
                         }
                         else
                         {
