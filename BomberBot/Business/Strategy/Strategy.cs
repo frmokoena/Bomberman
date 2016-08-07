@@ -64,7 +64,7 @@ namespace BomberBot.Business.Strategy
             }
 
             // Trigger bomb
-            if (TriggerBomb(GameState, MyLocation, MyKey))
+            if (TriggerBomb(GameState, MyPlayer, MyLocation, MyKey))
             {
                 GameService.WriteMove(_move);
                 return;
@@ -693,16 +693,14 @@ namespace BomberBot.Business.Strategy
                 {
                     if (player.IsBombOwner(bombToDodge))
                     {
-                        //var test = false;
-
-                        //var hideBlock = FindHidingBlock(GameState, MyPlayer, MyLocation, visibleBombs, stayClear: true);
-
-                        //if (hideBlock.Distance < bombToDodge.BombTimer - 1)
-                        //{
-                          //  var chainingBombs = BotHelper.FindVisibleBombs(state, new Location(bombToDodge.Location.X-1,bombToDodge.Location.Y-1),chaining:true);
-
-                            //test = true;
-                        //}
+                        if (!playerVisible)
+                        {
+                            if (UnSafePlaceBomb(state, player, playerLoc, playerKey, visibleBombs))
+                            {
+                                _move = Move.PlaceBomb;
+                                return true;
+                            }
+                        }
 
                         _move = GetMoveFromLocation(playerLoc, safeBlock.LocationToBlock);
                         return true;
@@ -834,7 +832,7 @@ namespace BomberBot.Business.Strategy
             return true;
         }
 
-        private bool TriggerBomb(GameState state, Location playerLoc, string playerKey)
+        private bool TriggerBomb(GameState state, Player player, Location playerLoc, string playerKey)
         {
             if (_anyBombVisible)
             {
@@ -843,17 +841,16 @@ namespace BomberBot.Business.Strategy
 
             var playerBombs = state.GetPlayerBombs(playerKey);
 
-            if (playerBombs == null)
-            {
-                return false;
-            }
+            //if (playerBombs == null || playerBombs.Count < player.BombBag)
+            //{
+            //    return false;
+            //}
 
-            if (playerBombs[0].BombTimer > 2)
+            if (playerBombs != null && playerBombs[0].BombTimer > 2)
             {
                 _move = Move.TriggerBomb;
                 return true;
             }
-
             return false;
         }
 
@@ -905,15 +902,15 @@ namespace BomberBot.Business.Strategy
                 return false;
             }
 
-            if (FindHidingBlock(state, player, playerLoc) == null)
-            {
-                return false;
-            }
-
             var playerBombs = state.GetPlayerBombs(playerKey);
 
             // return early if possible
             if (playerBombs != null && playerBombs.Count >= player.BombBag)
+            {
+                return false;
+            }
+
+            if (FindHidingBlock(state, player, playerLoc) == null)
             {
                 return false;
             }
@@ -1104,6 +1101,60 @@ namespace BomberBot.Business.Strategy
                 }
             }
 
+            return false;
+        }
+
+        private bool UnSafePlaceBomb(GameState state, Player player, Location playerLoc, string playerKey, IEnumerable<Bomb> bombsToDodge)
+        {
+            // return early if possible
+            if (bombsToDodge.Count() > 1) return false;
+
+            var playerBombs = state.GetPlayerBombs(playerKey);
+
+            if (playerBombs != null && playerBombs.Count >= player.BombBag)
+            {
+                return false;
+            }
+
+            var visibleWalls = BotHelper.FindVisibleWalls(state, playerLoc, player);
+
+            if (visibleWalls == null)
+            {
+                var visiblePlayers = BotHelper.FindVisiblePlayers(state, player, playerLoc);
+                if (visiblePlayers == null) return false;
+            }
+
+            var ExplodingBomb = bombsToDodge.First();
+
+            var chainingBombs = BotHelper.FindVisibleBombs(state, new Location(ExplodingBomb.Location.X - 1, ExplodingBomb.Location.Y - 1), chaining: true);
+
+            while (chainingBombs != null)
+            {
+                if (chainingBombs.Any(bomb => !player.IsBombOwner(bomb))) return false;
+
+                chainingBombs = chainingBombs.Where(bomb => bomb.BombTimer < ExplodingBomb.BombTimer);
+
+                if (chainingBombs.Count() > 1) return false;
+
+                if (chainingBombs.Count() > 0)
+                {
+                    ExplodingBomb = chainingBombs.First();
+                    chainingBombs = BotHelper.FindVisibleBombs(state, new Location(ExplodingBomb.Location.X - 1, ExplodingBomb.Location.Y - 1), chaining: true);
+                }
+                else
+                {
+                    chainingBombs = null;
+                }
+            }
+
+            var hideBlock = FindHidingBlock(GameState, MyPlayer, MyLocation, bombsToDodge, stayClear: true);
+
+            if (hideBlock == null) return false;
+
+            if (hideBlock.Distance < ExplodingBomb.BombTimer - 1)
+            {
+                return true;
+            }
             return false;
         }
     }

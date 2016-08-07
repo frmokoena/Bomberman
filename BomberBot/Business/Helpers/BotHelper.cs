@@ -108,7 +108,7 @@ namespace BomberBot.Business.Helpers
                     {
                         movesLoc.Add(loc);
                     }
-                    else
+                    else if (!newBombs.Any(bomb => player.IsBombOwner(bomb)))
                     {
                         var opponentClear = false;
                         foreach (var newBomb in newBombs)
@@ -118,7 +118,7 @@ namespace BomberBot.Business.Helpers
                             {
                                 var opponentVisibleBombs = FindVisibleBombs(state, opponentLocation);
 
-                                if(opponentVisibleBombs == null)
+                                if (opponentVisibleBombs == null)
                                 {
                                     opponentClear = true;
                                     break;
@@ -158,7 +158,7 @@ namespace BomberBot.Business.Helpers
                     {
                         movesLoc.Add(loc);
                     }
-                    else
+                    else if (!newBombs.Any(bomb => player.IsBombOwner(bomb)))
                     {
                         var opponentClear = false;
                         foreach (var newBomb in newBombs)
@@ -208,7 +208,7 @@ namespace BomberBot.Business.Helpers
                     {
                         movesLoc.Add(loc);
                     }
-                    else
+                    else if (!newBombs.Any(bomb => player.IsBombOwner(bomb)))
                     {
                         var opponentClear = false;
                         foreach (var newBomb in newBombs)
@@ -258,7 +258,7 @@ namespace BomberBot.Business.Helpers
                     {
                         movesLoc.Add(loc);
                     }
-                    else
+                    else if (!newBombs.Any(bomb => player.IsBombOwner(bomb)))
                     {
                         var opponentClear = false;
                         foreach (var newBomb in newBombs)
