@@ -693,14 +693,16 @@ namespace BomberBot.Business.Strategy
                 {
                     if (player.IsBombOwner(bombToDodge))
                     {
-                        var test = false;
+                        //var test = false;
 
-                        var hideBlock = FindHidingBlock(GameState, MyPlayer, MyLocation, visibleBombs, stayClear: true);
+                        //var hideBlock = FindHidingBlock(GameState, MyPlayer, MyLocation, visibleBombs, stayClear: true);
 
-                        if (hideBlock.Distance < bombToDodge.BombTimer - 1)
-                        {
-                            test = true;
-                        }
+                        //if (hideBlock.Distance < bombToDodge.BombTimer - 1)
+                        //{
+                          //  var chainingBombs = BotHelper.FindVisibleBombs(state, new Location(bombToDodge.Location.X-1,bombToDodge.Location.Y-1),chaining:true);
+
+                            //test = true;
+                        //}
 
                         _move = GetMoveFromLocation(playerLoc, safeBlock.LocationToBlock);
                         return true;
@@ -880,7 +882,7 @@ namespace BomberBot.Business.Strategy
             {
                 //if bag power up
                 if (nearByPowerUp.Distance < state.MaxBagPowerChase
-                    && player.BombBag < 2)
+                    && player.BombBag < 3)
                 {
                     _move = GetMoveFromLocation(playerLoc, nearByPowerUp.LocationToBlock);
                     return true;
