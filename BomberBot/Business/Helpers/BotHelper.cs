@@ -787,7 +787,7 @@ namespace BomberBot.Business.Helpers
             return false;
         }
 
-        public static List<Player> FindVisiblePlayers(GameState state, Player player, Location startLoc)
+        public static IEnumerable<Player> FindVisiblePlayers(GameState state, Player player, Location startLoc)
         {
             var openBlocks = new List<Location> { startLoc };
 
@@ -864,9 +864,9 @@ namespace BomberBot.Business.Helpers
             return superMovesLoc;
         }
 
-        public static List<Location> FindPlayerBombTargetBlocks(GameState state, Player player, Location startLoc)
-        {
-            return null;
-        }
+        //public static List<Location> FindPlayerBombTargetBlocks(GameState state, Player player, Location startLoc)
+        //{
+        //    return null;
+        //}
     }
 }

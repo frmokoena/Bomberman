@@ -908,6 +908,7 @@ namespace BomberBot.Business.Strategy
 
         private bool PlaceBomb(GameState state, Player player, Location playerLoc, string playerKey)
         {
+            //TODO: sometims plant even if not safe.
             if (_anyBombVisible)
             {
                 return false;
@@ -931,6 +932,23 @@ namespace BomberBot.Business.Strategy
             if (visibleWalls == null)
             {
                 //TODO: attack
+                var visibleOpponents = BotHelper.FindVisiblePlayers(state, player, playerLoc);
+
+                if (visibleOpponents == null)
+                {
+                    return false;
+                }
+                
+                foreach(var opponent in visibleOpponents)
+                {
+                    var opVisibleBombs = BotHelper.FindVisibleBombs(state, state.GetPlayerLocationOnMap(opponent.Key));
+                    if (opVisibleBombs != null)
+                    {
+                        _move = Move.PlaceBomb;
+                        return true;
+                    }
+                }                
+
                 return false;
             }
 
