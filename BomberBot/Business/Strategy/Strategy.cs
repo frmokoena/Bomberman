@@ -357,6 +357,7 @@ namespace BomberBot.Business.Strategy
             }
             return safeBlocks.Count == 0 ? null : safeBlocks.OrderBy(block => block.Distance)
                                                             .ThenBy(Block => Block.SuperDistance)
+                                                            .ThenByDescending(block=>block.VisibleWalls)
                                                             .ThenBy(block => block.PowerDistance);
         }
 
@@ -841,15 +842,25 @@ namespace BomberBot.Business.Strategy
 
             var playerBombs = state.GetPlayerBombs(playerKey);
 
-            //if (playerBombs == null || playerBombs.Count < player.BombBag)
-            //{
-            //    return false;
-            //}
+            if (playerBombs == null || playerBombs[0].BombTimer < 3)
+            {
+                return false;
+            }
 
-            if (playerBombs != null && playerBombs[0].BombTimer > 2)
+            var testPlacementBlock = FindBombPlacementBlocks(state, player, playerLoc);
+
+            if (testPlacementBlock == null)
             {
                 _move = Move.TriggerBomb;
                 return true;
+            }
+            else if (testPlacementBlock.First().Distance == 0)
+            {
+                if (playerBombs.Count >= player.BombBag || FindHidingBlock(state, player, playerLoc) == null)
+                {
+                    _move = Move.TriggerBomb;
+                    return true;
+                }
             }
             return false;
         }
