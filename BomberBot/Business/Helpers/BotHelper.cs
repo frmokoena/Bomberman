@@ -102,26 +102,75 @@ namespace BomberBot.Business.Helpers
                     {
                         movesLoc.Add(loc);
                     }
-                    else if (newBombs.Count() == 1
-                            && newBombs.Any(b => player.IsBombOwner(b))
-                            && newBombs.First().BombTimer > 2)
+                    else if (newBombs.Count() == 1 && newBombs.Any(b => player.IsBombOwner(b)))
                     {
-                        movesLoc.Add(loc);
+                        // check the correct timer
+                        var explodingBomb = newBombs.First();
+
+                        var chainingBombs = BotHelper.FindVisibleBombs(state, new Location(explodingBomb.Location.X - 1, explodingBomb.Location.Y - 1), chaining: true);
+
+                        bool addMoveLoc = true;
+
+                        while (chainingBombs != null && addMoveLoc == true)
+                        {
+                            if (chainingBombs.Any(bomb => !player.IsBombOwner(bomb))) addMoveLoc = false;
+
+                            chainingBombs = chainingBombs.Where(bomb => bomb.BombTimer < explodingBomb.BombTimer);
+
+                            if (chainingBombs.Count() > 1) addMoveLoc = false;
+
+                            if (chainingBombs.Count() > 0)
+                            {
+                                explodingBomb = chainingBombs.First();
+                                chainingBombs = BotHelper.FindVisibleBombs(state, new Location(explodingBomb.Location.X - 1, explodingBomb.Location.Y - 1), chaining: true);
+                            }
+                            else
+                            {
+                                chainingBombs = null;
+                            }
+                        }
+
+                        if (addMoveLoc && explodingBomb.BombTimer > 3)
+                        {
+                            movesLoc.Add(loc);
+                        }
                     }
-                    else if (!newBombs.Any(bomb => player.IsBombOwner(bomb)))
+                    else //if (newBombs.Any(bomb => !player.IsBombOwner(bomb)))
                     {
                         var opponentClear = false;
+
                         foreach (var newBomb in newBombs)
                         {
-                            var opponentLocation = state.GetPlayerLocationOnMap(newBomb.Owner.Key);
-                            if (opponentLocation != null)
-                            {
-                                var opponentVisibleBombs = FindVisibleBombs(state, opponentLocation);
+                            var bombLocation = new Location(newBomb.Location.X - 1, newBomb.Location.Y - 1);
 
-                                if (opponentVisibleBombs == null)
+                            var chains = FindVisibleBombs(state, bombLocation, chaining: true);
+
+                            if (chains != null && chains.Except(newBombs).Any())
+                            {
+                                opponentClear = true;
+                                break;
+                            }
+
+                            if (player.IsBombOwner(newBomb))
+                            {
+                                if (newBomb.BombTimer < 4)
                                 {
                                     opponentClear = true;
                                     break;
+                                }
+                            }
+                            else
+                            {
+                                var opponentLocation = state.GetPlayerLocationOnMap(newBomb.Owner.Key);
+                                if (opponentLocation != null)
+                                {
+                                    var opponentVisibleBombs = FindVisibleBombs(state, opponentLocation);
+
+                                    if (opponentVisibleBombs == null)
+                                    {
+                                        opponentClear = true;
+                                        break;
+                                    }
                                 }
                             }
                         }
@@ -152,26 +201,75 @@ namespace BomberBot.Business.Helpers
                     {
                         movesLoc.Add(loc);
                     }
-                    else if (newBombs.Count() == 1
-                            && newBombs.Any(b => player.IsBombOwner(b))
-                            && newBombs.First().BombTimer > 2)
+                    else if (newBombs.Count() == 1 && newBombs.Any(b => player.IsBombOwner(b)))
                     {
-                        movesLoc.Add(loc);
+                        // check the correct timer
+                        var explodingBomb = newBombs.First();
+
+                        var chainingBombs = BotHelper.FindVisibleBombs(state, new Location(explodingBomb.Location.X - 1, explodingBomb.Location.Y - 1), chaining: true);
+
+                        bool addMoveLoc = true;
+
+                        while (chainingBombs != null && addMoveLoc == true)
+                        {
+                            if (chainingBombs.Any(bomb => !player.IsBombOwner(bomb))) addMoveLoc = false;
+
+                            chainingBombs = chainingBombs.Where(bomb => bomb.BombTimer < explodingBomb.BombTimer);
+
+                            if (chainingBombs.Count() > 1) addMoveLoc = false;
+
+                            if (chainingBombs.Count() > 0)
+                            {
+                                explodingBomb = chainingBombs.First();
+                                chainingBombs = BotHelper.FindVisibleBombs(state, new Location(explodingBomb.Location.X - 1, explodingBomb.Location.Y - 1), chaining: true);
+                            }
+                            else
+                            {
+                                chainingBombs = null;
+                            }
+                        }
+
+                        if (addMoveLoc && explodingBomb.BombTimer > 3)
+                        {
+                            movesLoc.Add(loc);
+                        }
                     }
-                    else if (!newBombs.Any(bomb => player.IsBombOwner(bomb)))
+                    else //if (newBombs.Any(bomb => !player.IsBombOwner(bomb)))
                     {
                         var opponentClear = false;
+
                         foreach (var newBomb in newBombs)
                         {
-                            var opponentLocation = state.GetPlayerLocationOnMap(newBomb.Owner.Key);
-                            if (opponentLocation != null)
-                            {
-                                var opponentVisibleBombs = FindVisibleBombs(state, opponentLocation);
+                            var bombLocation = new Location(newBomb.Location.X - 1, newBomb.Location.Y - 1);
 
-                                if (opponentVisibleBombs == null)
+                            var chains = FindVisibleBombs(state, bombLocation, chaining: true);
+
+                            if (chains != null && chains.Except(newBombs).Any())
+                            {
+                                opponentClear = true;
+                                break;
+                            }
+
+                            if (player.IsBombOwner(newBomb))
+                            {
+                                if (newBomb.BombTimer < 4)
                                 {
                                     opponentClear = true;
                                     break;
+                                }
+                            }
+                            else
+                            {
+                                var opponentLocation = state.GetPlayerLocationOnMap(newBomb.Owner.Key);
+                                if (opponentLocation != null)
+                                {
+                                    var opponentVisibleBombs = FindVisibleBombs(state, opponentLocation);
+
+                                    if (opponentVisibleBombs == null)
+                                    {
+                                        opponentClear = true;
+                                        break;
+                                    }
                                 }
                             }
                         }
@@ -202,26 +300,75 @@ namespace BomberBot.Business.Helpers
                     {
                         movesLoc.Add(loc);
                     }
-                    else if (newBombs.Count() == 1
-                            && newBombs.Any(b => player.IsBombOwner(b))
-                            && newBombs.First().BombTimer > 2)
+                    else if (newBombs.Count() == 1 && newBombs.Any(b => player.IsBombOwner(b)))
                     {
-                        movesLoc.Add(loc);
+                        // check the correct timer
+                        var explodingBomb = newBombs.First();
+
+                        var chainingBombs = BotHelper.FindVisibleBombs(state, new Location(explodingBomb.Location.X - 1, explodingBomb.Location.Y - 1), chaining: true);
+
+                        bool addMoveLoc = true;
+
+                        while (chainingBombs != null && addMoveLoc == true)
+                        {
+                            if (chainingBombs.Any(bomb => !player.IsBombOwner(bomb))) addMoveLoc = false;
+
+                            chainingBombs = chainingBombs.Where(bomb => bomb.BombTimer < explodingBomb.BombTimer);
+
+                            if (chainingBombs.Count() > 1) addMoveLoc = false;
+
+                            if (chainingBombs.Count() > 0)
+                            {
+                                explodingBomb = chainingBombs.First();
+                                chainingBombs = BotHelper.FindVisibleBombs(state, new Location(explodingBomb.Location.X - 1, explodingBomb.Location.Y - 1), chaining: true);
+                            }
+                            else
+                            {
+                                chainingBombs = null;
+                            }
+                        }
+
+                        if (addMoveLoc && explodingBomb.BombTimer > 3)
+                        {
+                            movesLoc.Add(loc);
+                        }
                     }
-                    else if (!newBombs.Any(bomb => player.IsBombOwner(bomb)))
+                    else //if (newBombs.Any(bomb => !player.IsBombOwner(bomb)))
                     {
                         var opponentClear = false;
+
                         foreach (var newBomb in newBombs)
                         {
-                            var opponentLocation = state.GetPlayerLocationOnMap(newBomb.Owner.Key);
-                            if (opponentLocation != null)
-                            {
-                                var opponentVisibleBombs = FindVisibleBombs(state, opponentLocation);
+                            var bombLocation = new Location(newBomb.Location.X - 1, newBomb.Location.Y - 1);
 
-                                if (opponentVisibleBombs == null)
+                            var chains = FindVisibleBombs(state, bombLocation, chaining: true);
+
+                            if (chains != null && chains.Except(newBombs).Any())
+                            {
+                                opponentClear = true;
+                                break;
+                            }
+
+                            if (player.IsBombOwner(newBomb))
+                            {
+                                if (newBomb.BombTimer < 4)
                                 {
                                     opponentClear = true;
                                     break;
+                                }
+                            }
+                            else
+                            {
+                                var opponentLocation = state.GetPlayerLocationOnMap(newBomb.Owner.Key);
+                                if (opponentLocation != null)
+                                {
+                                    var opponentVisibleBombs = FindVisibleBombs(state, opponentLocation);
+
+                                    if (opponentVisibleBombs == null)
+                                    {
+                                        opponentClear = true;
+                                        break;
+                                    }
                                 }
                             }
                         }
@@ -252,26 +399,75 @@ namespace BomberBot.Business.Helpers
                     {
                         movesLoc.Add(loc);
                     }
-                    else if (newBombs.Count() == 1
-                            && newBombs.Any(b => player.IsBombOwner(b))
-                            && newBombs.First().BombTimer > 2)
+                    else if (newBombs.Count() == 1 && newBombs.Any(b => player.IsBombOwner(b)))
                     {
-                        movesLoc.Add(loc);
+                        // check the correct timer
+                        var explodingBomb = newBombs.First();
+
+                        var chainingBombs = BotHelper.FindVisibleBombs(state, new Location(explodingBomb.Location.X - 1, explodingBomb.Location.Y - 1), chaining: true);
+
+                        bool addMoveLoc = true;
+
+                        while (chainingBombs != null && addMoveLoc == true)
+                        {
+                            if (chainingBombs.Any(bomb => !player.IsBombOwner(bomb))) addMoveLoc = false;
+
+                            chainingBombs = chainingBombs.Where(bomb => bomb.BombTimer < explodingBomb.BombTimer);
+
+                            if (chainingBombs.Count() > 1) addMoveLoc = false;
+
+                            if (chainingBombs.Count() > 0)
+                            {
+                                explodingBomb = chainingBombs.First();
+                                chainingBombs = BotHelper.FindVisibleBombs(state, new Location(explodingBomb.Location.X - 1, explodingBomb.Location.Y - 1), chaining: true);
+                            }
+                            else
+                            {
+                                chainingBombs = null;
+                            }
+                        }
+
+                        if (addMoveLoc && explodingBomb.BombTimer > 3)
+                        {
+                            movesLoc.Add(loc);
+                        }
                     }
-                    else if (!newBombs.Any(bomb => player.IsBombOwner(bomb)))
+                    else //if (newBombs.Any(bomb => !player.IsBombOwner(bomb)))
                     {
                         var opponentClear = false;
+
                         foreach (var newBomb in newBombs)
                         {
-                            var opponentLocation = state.GetPlayerLocationOnMap(newBomb.Owner.Key);
-                            if (opponentLocation != null)
-                            {
-                                var opponentVisibleBombs = FindVisibleBombs(state, opponentLocation);
+                            var bombLocation = new Location(newBomb.Location.X - 1, newBomb.Location.Y - 1);
 
-                                if (opponentVisibleBombs == null)
+                            var chains = FindVisibleBombs(state, bombLocation, chaining: true);
+
+                            if (chains != null && chains.Except(newBombs).Any())
+                            {
+                                opponentClear = true;
+                                break;
+                            }
+
+                            if (player.IsBombOwner(newBomb))
+                            {
+                                if (newBomb.BombTimer < 4)
                                 {
                                     opponentClear = true;
                                     break;
+                                }
+                            }
+                            else
+                            {
+                                var opponentLocation = state.GetPlayerLocationOnMap(newBomb.Owner.Key);
+                                if (opponentLocation != null)
+                                {
+                                    var opponentVisibleBombs = FindVisibleBombs(state, opponentLocation);
+
+                                    if (opponentVisibleBombs == null)
+                                    {
+                                        opponentClear = true;
+                                        break;
+                                    }
                                 }
                             }
                         }
@@ -421,6 +617,29 @@ namespace BomberBot.Business.Helpers
             return blocksLoc;
         }
 
+
+        public static HashSet<Location> FindAllBlastLocations(GameState state, Location startLoc, int bombRadius)
+        {
+            var openBlocks = new List<Location> { startLoc };
+
+            var blastBlocks = new HashSet<Location>();
+
+            Location qLoc;
+
+            List<Location> blocksLoc;
+
+            while (openBlocks.Count != 0)
+            {
+                qLoc = openBlocks[0];
+                openBlocks.RemoveAt(0);
+                blocksLoc = ExpandPlayerBlocks(state, startLoc, qLoc, bombRadius);
+
+                blastBlocks.UnionWith(blocksLoc);
+                openBlocks.AddRange(blocksLoc);
+            }
+            return blastBlocks.Count == 0 ? null : blastBlocks;
+        }
+
         public static IEnumerable<Bomb> FindVisibleBombs(GameState state, Location curLoc, bool chaining = false)
         {
             var visibleBombs = new List<Bomb>();
@@ -462,7 +681,7 @@ namespace BomberBot.Business.Helpers
                     }
                 }
             }
-            return visibleBombs.Count == 0 ? null : visibleBombs.OrderBy(b => b.BombTimer);
+            return visibleBombs.Count == 0 ? null : visibleBombs;
         }
 
         private static List<Location> ExpandBombBlocks(GameState state, Location curLoc, Location blockLoc)
@@ -787,7 +1006,7 @@ namespace BomberBot.Business.Helpers
             return false;
         }
 
-        public static IEnumerable<Player> FindVisiblePlayers(GameState state, Player player, Location startLoc)
+        public static IEnumerable<Player> FindVisiblePlayers(GameState state, Location startLoc, string playerKey, int bombRadius)
         {
             var openBlocks = new List<Location> { startLoc };
 
@@ -801,7 +1020,7 @@ namespace BomberBot.Business.Helpers
 
                 openBlocks.RemoveAt(0);
 
-                blocksLoc = ExpandPlayerBlocks(state, startLoc, qLoc, player.BombRadius);
+                blocksLoc = ExpandPlayerBlocks(state, startLoc, qLoc, bombRadius);
 
                 foreach (var bLoc in blocksLoc)
                 {
@@ -811,7 +1030,7 @@ namespace BomberBot.Business.Helpers
                     {
                         var opponent = (Player)entity;
 
-                        if (opponent.Key != player.Key)
+                        if (opponent.Key != playerKey)
                         {
                             visiblePlayers.Add(opponent);
                         }

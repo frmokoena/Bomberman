@@ -56,6 +56,7 @@
     <Compile Include="Domain\Model\MapBombPlacementBlock.cs" />
     <Compile Include="Domain\Model\MapNode.cs" />
     <Compile Include="Domain\Model\MapBlock.cs" />
+    <Compile Include="Domain\Model\MapOpponent.cs" />
     <Compile Include="Domain\Model\MapPowerUpBlock.cs" />
     <Compile Include="Domain\Model\MapSafeBlock.cs" />
     <Compile Include="Domain\Objects\Block.cs" />

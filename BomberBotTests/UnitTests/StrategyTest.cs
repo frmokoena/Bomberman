@@ -5,6 +5,7 @@ using BomberBot.Domain.Model;
 using BomberBot.Enums;
 using BomberBot.Interfaces;
 using BomberBot.Services;
+using BomberBotTests.Properties;
 using NUnit.Framework;
 using System;
 using System.Diagnostics;
@@ -17,353 +18,330 @@ namespace BomberBotTests.UnitTests
     class StrategyTest
     {
         [Test]
-        public void FindBombsInLOS()
+        public void StrikeFalseOpponentWhenHeIsBusyTryingToEscapeBombsTest()
         {
             //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\state6";
-            string playerKey = "A";
-            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
-
-            Strategy bot = new Strategy(gameService);
-            Location playerLoc = new Location(1, 1);
-
-            var expect = new Location(1, 2);
-            //Act
-
-            var result = BotHelper.FindVisibleBombs(gameService.GameState, playerLoc).ToList();
-
-            //Assert
-            Assert.IsNotNull(gameService.GameState.GetBlockAtLocation(expect).Bomb);
-            Assert.AreEqual(expect.X, gameService.GameState.GetBlockAtLocation(expect).Bomb.Location.X - 1);
-            Assert.AreEqual(expect.Y, gameService.GameState.GetBlockAtLocation(expect).Bomb.Location.Y - 1);
-
-            Assert.AreEqual(1, result.Count);
-            Assert.AreEqual(expect.X, result[0].Location.X - 1);
-            Assert.AreEqual(expect.Y, result[0].Location.Y - 1);
-        }
-
-        [Test]
-        public void FindMapPowerUpsTest()
-        {
-            //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\state7";
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\1";
             string playerKey = "A";
             IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
 
             Strategy bot = new Strategy(gameService);
 
-            var playerAloc = new Location(5, 3);
+            var expectMove = Move.PlaceBomb;
 
-            //Act
-            //var result = bot.FindMapPowerUps(gameService.GameState, playerAloc);
-
-            //Assert
-            //Assert.IsNull(result);
-        }
-
-        [Test]
-        public void FindNearByPowerUpTest()
-        {
-            //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\state7";
-            string playerKey = "C";
-            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
-
-            Strategy bot = new Strategy(gameService);
-
-            var state = gameService.GameState;
-            var playerAloc = new Location(5, 11);
-
-            var expectLoc = new Location(6, 15);
-            //var expectDistance = 5;
-            var expectMove = new Location(5, 12);
-            var maxBombBlast = state.MapWidth > state.MapHeight ? state.MapWidth - 3:state.MapHeight - 3;
-            var player = state.Players.Find(p => p.Key == playerKey);
-
-            //Act
-            //var mapPowerUps = bot.FindMapPowerUps(gameService.GameState, playerAloc);
-            //var result = bot.FindNearByPowerUp(gameService.GameState,player, playerAloc,maxBombBlast);
-
-            //Assert
-            //Assert.IsNotNull(result);
-
-            //Assert.AreEqual(expectLoc, result.Location);
-            //Assert.AreEqual(expectDistance, result.Distance);
-            //Assert.AreEqual(expectMove, result.NextMove);
-        }
-
-        [Test]
-        public void NextMoveToNearByPowerUpTest()
-        {
-            //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\state12";
-            string playerKey = "D";
-            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
-
-            Strategy bot = new Strategy(gameService);
-
-
-
-            var expect = Move.MoveLeft;
-
-            // Act
+            //Act 
             bot.Execute();
+            var result = ReadMove(workingDirectory);
 
-
-            var moveTxt = ReadMoveFile(workingDirectory);
-
-            int result;
-            if (Int32.TryParse(moveTxt, out result)) { }
-
-            //Assert
-            Assert.AreEqual((int)expect, result);
+            // Assert
+            Assert.AreNotEqual((int)expectMove, result);                           
         }
 
         [Test]
-        public void FindSafeBlocksTest()
+        public void StrikeTrueOpponentWhenHeIsBusyTryingToEscapeBombsTest()
         {
             //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\state8";
-            string playerKey = "C";
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\3";
+            string playerKey = "B";
             IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
 
             Strategy bot = new Strategy(gameService);
 
-            Location playerAloc = gameService.GameState.GetPlayerLocationOnMap(playerKey);
+            var expectMove = Move.PlaceBomb;
 
-            var player = gameService.GameState.Players.Find(p => p.Key == playerKey);
+            //Act 
+            bot.Execute();
+            var result = ReadMove(workingDirectory);
 
-            var bombs = BotHelper.FindVisibleBombs(gameService.GameState, playerAloc);
-
-            var expect = new Location(5, 17);
-
-            //Act
-            //var safeBlocks = bot.FindSafeBlocks(gameService.GameState, player, playerAloc, bombs[0]);
-
-            //var result = safeBlocks.OrderByDescending(b => b.VisibleWalls).ToList();
-                             
-
-            //Assert
-            //Assert.AreEqual(expect.X, result[0].Location.X);
-            //Assert.AreEqual(expect.Y, result[0].Location.Y);
+            // Assert
+            Assert.AreEqual((int)expectMove, result);
         }
 
         [Test]
-        public void WallsInLOSNotTest()
+        public void AnotherStrikeTrueOpponentWhenHeIsBusyTryingToEscapeBombsTest()
         {
             //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\state9";
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\4";
             string playerKey = "A";
             IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
 
-            var curLoc = gameService.GameState.GetPlayerLocationOnMap(playerKey);
+            Strategy bot = new Strategy(gameService);
 
-            var player = gameService.GameState.Players.Find(p => p.Key == playerKey);
+            var expectMove = Move.PlaceBomb;
 
+            //Act 
+            bot.Execute();
+            var result = ReadMove(workingDirectory);
 
-            // Act
-            var result = BotHelper.FindVisibleWalls(gameService.GameState, curLoc, player);
-
-            //Assert
-            Assert.IsNull(result);
+            // Assert
+            Assert.AreEqual((int)expectMove, result);
         }
 
         [Test]
-        public void WallsInLOSTest()
+        public void StrikeTrueOpponentWhenHeIsBusyTryingToEscapeBombsAndMoveInToMyViewTest()
         {
             //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\state10";
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\5";
+            string playerKey = "B";
+            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
+
+            Strategy bot = new Strategy(gameService);
+
+            var expectMove = Move.PlaceBomb;
+
+            //Act 
+            bot.Execute();
+            var result = ReadMove(workingDirectory);
+
+            // Assert
+            Assert.AreEqual((int)expectMove, result);
+        }
+
+        [Test]
+        public void AnotherStrikeTrueOpponentWhenHeIsBusyTryingToEscapeBombsAndMoveInToMyViewTest()
+        {
+            //Arrange
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\6";
+            string playerKey = "B";
+            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
+
+            Strategy bot = new Strategy(gameService);
+
+            var expectMove = Move.PlaceBomb;
+
+            //Act 
+            bot.Execute();
+            var result = ReadMove(workingDirectory);
+
+            // Assert
+            Assert.AreEqual((int)expectMove, result);
+        }
+
+        [Test]
+        public void EscapeViaOpponentBombTest()
+        {
+            //Arrange
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\8";
+            string playerKey = "B";
+            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
+
+            Strategy bot = new Strategy(gameService);
+
+            var expectMove = Move.MoveUp;
+
+            //Act 
+            bot.Execute();
+            var result = ReadMove(workingDirectory);
+
+            // Assert
+            Assert.AreEqual((int)expectMove, result);
+        }
+
+        [Test]
+        public void EscapeMyMultipleBombsTest()
+        {
+            //Arrange
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\20";
+            string playerKey = "B";
+            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
+
+            Strategy bot = new Strategy(gameService);
+
+            var expectMove = Move.MoveRight;
+
+            //Act 
+            bot.Execute();
+            var result = ReadMove(workingDirectory);
+
+            // Assert
+            Assert.AreEqual((int)expectMove, result);
+        }
+
+        [Test]
+        public void EscapeCriticalBombsScenarioTest()
+        {
+            //Arrange
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\24";
+            string playerKey = "B";
+            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
+
+            Strategy bot = new Strategy(gameService);
+
+            var expectMove = Move.TriggerBomb;
+
+            //Act 
+            bot.Execute();
+            var result = ReadMove(workingDirectory);
+
+            // Assert
+            Assert.AreEqual((int)expectMove, result);
+        }
+
+        [Test]
+        public void AnotherEscapeCriticalBombsScenarioTest()
+        {
+            //Arrange
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\25";
             string playerKey = "C";
             IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
 
-            var curLoc = gameService.GameState.GetPlayerLocationOnMap(playerKey);
+            Strategy bot = new Strategy(gameService);
 
-            var player = gameService.GameState.Players.Find(p => p.Key == playerKey);
+            var expectMove = Move.DoNothing;
 
-            var expect = 2;
+            //Act 
+            bot.Execute();
+            var result = ReadMove(workingDirectory);
 
-            // Act
-            var result = BotHelper.FindVisibleWalls(gameService.GameState, curLoc, player);
-
-            //Assert
-            Assert.AreEqual(expect, result.Count);
-
-            Assert.AreEqual(1, result[0].Location.X - 1);
-            Assert.AreEqual(11, result[0].Location.Y - 1);
-
-            Assert.AreEqual(8, result[1].Location.X - 1);
-            Assert.AreEqual(11, result[1].Location.Y - 1);
-
+            // Assert
+            Assert.AreEqual((int)expectMove, result);
         }
 
         [Test]
-        public void NextMoveInStayClearTest()
+        public void SecondBombPlantTest()
         {
             //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\state11";
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\0";
             string playerKey = "B";
             IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
 
             Strategy bot = new Strategy(gameService);
 
-            var expect = Move.MoveRight;
+            var expectMove = Move.PlaceBomb;
 
-            // Act
+            //Act 
             bot.Execute();
+            var result = ReadMove(workingDirectory);
 
-
-            var moveTxt = ReadMoveFile(workingDirectory);
-
-            int result;
-            if (Int32.TryParse(moveTxt, out result)) { }
-
-            //Assert
-            Assert.AreEqual((int)expect, result);
+            // Assert
+            Assert.AreEqual((int)expectMove, result);
         }
 
         [Test]
-        public void TriggerBombTest()
+        public void ThirdBombPlantTest()
         {
             //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\state13";
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\16";
+            string playerKey = "A";
+            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
+
+            Strategy bot = new Strategy(gameService);
+
+            var expectMove = Move.PlaceBomb;
+
+            //Act 
+            bot.Execute();
+            var result = ReadMove(workingDirectory);
+
+            // Assert
+            Assert.AreEqual((int)expectMove, result);
+        }
+
+        [Test]
+        public void PlantFalseInMultipleBombsToThreatenPlayerTest()
+        {
+            //Arrange
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\48";
             string playerKey = "B";
             IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
 
             Strategy bot = new Strategy(gameService);
 
+            var expectMove = Move.PlaceBomb;
 
-
-            var expect = Move.TriggerBomb;
-
-            // Act
+            //Act 
             bot.Execute();
+            var result = ReadMove(workingDirectory);
 
-
-            var moveTxt = ReadMoveFile(workingDirectory);
-
-            int result;
-            if (Int32.TryParse(moveTxt, out result)) { }
-
-            //Assert
-            Assert.AreEqual((int)expect, result);
+            // Assert
+            Assert.AreNotEqual((int)expectMove, result);
         }
 
         [Test]
-        public void PlaceBombNowTest()
+        public void PlantTrueInMultipleBombsToThreatenPlayerTest()
         {
             //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\state14";
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\49";
             string playerKey = "B";
             IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
 
             Strategy bot = new Strategy(gameService);
 
+            var expectMove = Move.PlaceBomb;
 
-
-            var expect = Move.PlaceBomb;
-
-            // Act
+            //Act 
             bot.Execute();
+            var result = ReadMove(workingDirectory);
 
-
-            var moveTxt = ReadMoveFile(workingDirectory);
-
-            int result;
-            if (Int32.TryParse(moveTxt, out result)) { }
-
-            //Assert
-            Assert.AreEqual((int)expect, result);
+            // Assert
+            Assert.AreEqual((int)expectMove, result);
         }
 
         [Test]
-        public void NextMoveToPlaceBombTest()
+        public void YetAnotherEscapeCriticalBombsScenarioTest()
         {
             //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\state15";
-            string playerKey = "D";
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\50";
+            string playerKey = "B";
             IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
 
             Strategy bot = new Strategy(gameService);
 
+            var expectMove = Move.DoNothing;
 
-
-            var expect = Move.MoveLeft;
-
-            // Act
+            //Act 
             bot.Execute();
+            var result = ReadMove(workingDirectory);
 
-
-            var moveTxt = ReadMoveFile(workingDirectory);
-
-            int result;
-            if (Int32.TryParse(moveTxt, out result)) { }
-
-            //Assert
-            Assert.AreEqual((int)expect, result);
-        }
-
-
-        [Test]
-        public void CanFindHidingBlockPriorPlantIfCantPlantTest()
-        {
-            //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\state16";
-            string playerKey = "D";
-            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
-
-            Strategy bot = new Strategy(gameService);
-            var state = gameService.GameState;
-            var player = state.GetPlayer(playerKey);
-            var startLoc = state.GetPlayerLocationOnMap(playerKey);
-
-            // Act
-            //var result = bot.CanFindHidingBlock(state, player, startLoc);
-
-            //Assert
-            //Assert.IsFalse(result);            
+            // Assert
+            Assert.AreEqual((int)expectMove, result);
         }
 
         [Test]
-        public void CanFindHidingBlockPriorPlantIfCanPlantTest()
+        public void UnusualEscapeFailTest()
         {
             //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\state17";
-            string playerKey = "D";
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\51";
+            string playerKey = "B";
             IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
 
             Strategy bot = new Strategy(gameService);
-            var state = gameService.GameState;
-            var player = state.GetPlayer(playerKey);
-            var startLoc = state.GetPlayerLocationOnMap(playerKey);
 
-            // Act
-            //var result = bot.CanFindHidingBlock(state, player, startLoc);
+            var expectMove = Move.MoveLeft;
 
-            //Assert
-            //Assert.IsTrue(result);
+            //Act 
+            bot.Execute();
+            var result = ReadMove(workingDirectory);
+
+            // Assert
+            Assert.AreEqual((int)expectMove, result);
         }
-
-
-
-        //Read file
-        private string ReadMoveFile(string workingDirectory)
+        // Read move
+        private int ReadMove(string workingDirectory)
         {
-            var filename = Path.Combine(workingDirectory, "move.txt");
-
+            
+            var filename = Path.Combine(workingDirectory, Settings.Default.OutputFile );
+            int moveInt;
             try
             {
-                string jsonText;
+                string moveCommand;
                 using (var file = new StreamReader(filename))
                 {
-                    jsonText = file.ReadToEnd();
+                    moveCommand = file.ReadToEnd();                    
                 }
 
-                return jsonText;
+                if(int.TryParse(moveCommand, out moveInt))
+                {
+                    return moveInt;
+                }
+                else
+                {
+                    return -1;
+                }                
             }
-            catch (IOException e)
-            {
-                var trace = new StackTrace(e);
-                return null;
+            catch
+            {                
+                return -1;
             }
         }
     }
