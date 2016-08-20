@@ -50,6 +50,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
+    <Compile Include="UnitTests\GameServiceTest.cs" />
     <Compile Include="UnitTests\StrategyTest.cs" />
   </ItemGroup>
   <ItemGroup>

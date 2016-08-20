@@ -1,4 +1,6 @@
-﻿using BomberBot.Enums;
+﻿using BomberBot.Common;
+using BomberBot.Enums;
+using System.Collections.Generic;
 
 namespace BomberBot.Interfaces
 {
@@ -7,5 +9,7 @@ namespace BomberBot.Interfaces
         string HomeKey { get; set; }
         T GameState { get; }
         void WriteMove(Move move);
+        HashSet<Location> ToExploreLocations { get; }
+        void UpdateToExploreLocations(Location location);
     }
 }

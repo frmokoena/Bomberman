@@ -49,8 +49,8 @@ namespace BomberBot
                 Environment.Exit(1);
             }
 
-
-            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
+            var runDirectory = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
+            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory,runDirectory);
 
             Strategy bot = new Strategy(gameService);
             bot.Execute();

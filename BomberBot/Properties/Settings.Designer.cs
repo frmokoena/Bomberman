@@ -40,5 +40,14 @@ namespace BomberBot.Properties {
                 return ((string)(this["OutputFile"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("to.json")]
+        public string ToExplore {
+            get {
+                return ((string)(this["ToExplore"]));
+            }
+        }
     }
 }

@@ -8,5 +8,8 @@
     <Setting Name="OutputFile" Type="System.String" Scope="Application">
       <Value Profile="(Default)">move.txt</Value>
     </Setting>
+    <Setting Name="ToExplore" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">to.json</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

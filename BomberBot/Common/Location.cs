@@ -31,7 +31,8 @@ namespace BomberBot.Common
 
         public override int GetHashCode()
         {
-            return X * 0x00010000 + Y;
+            var result = X * 0x00010000 + Y;
+            return result;
         }
 
         public static bool operator ==(Location lhs, Location rhs)

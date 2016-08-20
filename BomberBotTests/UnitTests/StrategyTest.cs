@@ -1,16 +1,11 @@
-﻿using BomberBot.Business.Helpers;
-using BomberBot.Business.Strategy;
-using BomberBot.Common;
+﻿using BomberBot.Business.Strategy;
 using BomberBot.Domain.Model;
 using BomberBot.Enums;
 using BomberBot.Interfaces;
 using BomberBot.Services;
 using BomberBotTests.Properties;
 using NUnit.Framework;
-using System;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
 
 namespace BomberBotTests.UnitTests
 {
@@ -21,9 +16,10 @@ namespace BomberBotTests.UnitTests
         public void StrikeFalseOpponentWhenHeIsBusyTryingToEscapeBombsTest()
         {
             //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\1";
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\0";
+            string runDirectory = TestContext.CurrentContext.TestDirectory + @"\data";
             string playerKey = "A";
-            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
+            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory,runDirectory);
 
             Strategy bot = new Strategy(gameService);
 
@@ -41,9 +37,10 @@ namespace BomberBotTests.UnitTests
         public void StrikeTrueOpponentWhenHeIsBusyTryingToEscapeBombsTest()
         {
             //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\3";
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\1";
+            string runDirectory = TestContext.CurrentContext.TestDirectory + @"\data";
             string playerKey = "B";
-            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
+            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory,runDirectory);
 
             Strategy bot = new Strategy(gameService);
 
@@ -61,9 +58,10 @@ namespace BomberBotTests.UnitTests
         public void AnotherStrikeTrueOpponentWhenHeIsBusyTryingToEscapeBombsTest()
         {
             //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\4";
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\2";
+            string runDirectory = TestContext.CurrentContext.TestDirectory + @"\data";
             string playerKey = "A";
-            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
+            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory,runDirectory);
 
             Strategy bot = new Strategy(gameService);
 
@@ -81,9 +79,10 @@ namespace BomberBotTests.UnitTests
         public void StrikeTrueOpponentWhenHeIsBusyTryingToEscapeBombsAndMoveInToMyViewTest()
         {
             //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\5";
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\3";
+            string runDirectory = TestContext.CurrentContext.TestDirectory + @"\data";
             string playerKey = "B";
-            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
+            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory,runDirectory);
 
             Strategy bot = new Strategy(gameService);
 
@@ -101,9 +100,10 @@ namespace BomberBotTests.UnitTests
         public void AnotherStrikeTrueOpponentWhenHeIsBusyTryingToEscapeBombsAndMoveInToMyViewTest()
         {
             //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\6";
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\4";
+            string runDirectory = TestContext.CurrentContext.TestDirectory + @"\data";
             string playerKey = "B";
-            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
+            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory,runDirectory);
 
             Strategy bot = new Strategy(gameService);
 
@@ -121,9 +121,10 @@ namespace BomberBotTests.UnitTests
         public void EscapeViaOpponentBombTest()
         {
             //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\8";
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\5";
+            string runDirectory = TestContext.CurrentContext.TestDirectory + @"\data";
             string playerKey = "B";
-            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
+            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory,runDirectory);
 
             Strategy bot = new Strategy(gameService);
 
@@ -141,9 +142,10 @@ namespace BomberBotTests.UnitTests
         public void EscapeMyMultipleBombsTest()
         {
             //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\20";
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\6";
+            string runDirectory = TestContext.CurrentContext.TestDirectory + @"\data";
             string playerKey = "B";
-            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
+            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory,runDirectory);
 
             Strategy bot = new Strategy(gameService);
 
@@ -161,9 +163,10 @@ namespace BomberBotTests.UnitTests
         public void EscapeCriticalBombsScenarioTest()
         {
             //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\24";
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\7";
+            string runDirectory = TestContext.CurrentContext.TestDirectory + @"\data";
             string playerKey = "B";
-            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
+            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory,runDirectory);
 
             Strategy bot = new Strategy(gameService);
 
@@ -181,9 +184,10 @@ namespace BomberBotTests.UnitTests
         public void AnotherEscapeCriticalBombsScenarioTest()
         {
             //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\25";
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\8";
+            string runDirectory = TestContext.CurrentContext.TestDirectory + @"\data";
             string playerKey = "C";
-            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
+            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory,runDirectory);
 
             Strategy bot = new Strategy(gameService);
 
@@ -201,9 +205,10 @@ namespace BomberBotTests.UnitTests
         public void SecondBombPlantTest()
         {
             //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\0";
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\9";
+            string runDirectory = TestContext.CurrentContext.TestDirectory + @"\data";
             string playerKey = "B";
-            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
+            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory,runDirectory);
 
             Strategy bot = new Strategy(gameService);
 
@@ -221,9 +226,10 @@ namespace BomberBotTests.UnitTests
         public void ThirdBombPlantTest()
         {
             //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\16";
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\10";
+            string runDirectory = TestContext.CurrentContext.TestDirectory + @"\data";
             string playerKey = "A";
-            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
+            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory,runDirectory);
 
             Strategy bot = new Strategy(gameService);
 
@@ -241,9 +247,10 @@ namespace BomberBotTests.UnitTests
         public void PlantFalseInMultipleBombsToThreatenPlayerTest()
         {
             //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\48";
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\11";
+            string runDirectory = TestContext.CurrentContext.TestDirectory + @"\data";
             string playerKey = "B";
-            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
+            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory,runDirectory);
 
             Strategy bot = new Strategy(gameService);
 
@@ -261,9 +268,10 @@ namespace BomberBotTests.UnitTests
         public void PlantTrueInMultipleBombsToThreatenPlayerTest()
         {
             //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\49";
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\12";
+            string runDirectory = TestContext.CurrentContext.TestDirectory + @"\data";
             string playerKey = "B";
-            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
+            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory,runDirectory);
 
             Strategy bot = new Strategy(gameService);
 
@@ -281,9 +289,10 @@ namespace BomberBotTests.UnitTests
         public void YetAnotherEscapeCriticalBombsScenarioTest()
         {
             //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\50";
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\13";
+            string runDirectory = TestContext.CurrentContext.TestDirectory + @"\data";
             string playerKey = "B";
-            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
+            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory,runDirectory);
 
             Strategy bot = new Strategy(gameService);
 
@@ -301,9 +310,10 @@ namespace BomberBotTests.UnitTests
         public void UnusualEscapeFailTest()
         {
             //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\51";
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\14";
+            string runDirectory = TestContext.CurrentContext.TestDirectory + @"\data";
             string playerKey = "B";
-            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory);
+            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory,runDirectory);
 
             Strategy bot = new Strategy(gameService);
 

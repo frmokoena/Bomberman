@@ -3,6 +3,7 @@ using BomberBot.Domain.Objects;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 namespace BomberBot.Domain.Model
 {
@@ -52,6 +53,11 @@ namespace BomberBot.Domain.Model
             {
                 return 100 * ((double)WallsLeft / (double)WallsInitial);
             }
+        }
+
+        internal bool IsIndestructibleWall(int x, int y)
+        {
+            return GetBlockAtLocation(x,y).IsIndestructibleWall();
         }
 
         public int MaxBombBlast
