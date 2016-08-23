@@ -326,6 +326,7 @@ namespace BomberBotTests.UnitTests
             // Assert
             Assert.AreEqual((int)expectMove, result);
         }
+
         // Read move
         private int ReadMove(string workingDirectory)
         {

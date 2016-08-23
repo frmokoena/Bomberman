@@ -47,7 +47,23 @@ namespace BomberBot.Business.Strategy
         {
             get
             {
-                return GameState.GetPlayerLocationOnMap(MyKey);
+                return GameState.GetPlayerLocation(MyKey);
+            }
+        }
+
+        private bool WallsInMap
+        {
+            get
+            {
+                return GameState.WallsLeft != 0;
+            }
+        }
+
+        private bool BlocksToExploreInMap
+        {
+            get
+            {
+                return GameService.BlocksToExplore.Count != 0;
             }
         }
 
@@ -94,10 +110,21 @@ namespace BomberBot.Business.Strategy
 
 
             // compute bomb placement blocks
-            if (FindBombPlacementBlock(GameState, MyPlayer, MyLocation, MyKey))
+            if (WallsInMap)
             {
-                GameService.WriteMove(_move);
-                return;
+                if (FindBombPlacementBlock(GameState, MyPlayer, MyLocation, MyKey))
+                {
+                    GameService.WriteMove(_move);
+                    return;
+                }
+            }
+            else
+            {
+                if (FindPlacementBlockToExploreOrAttack(GameState, MyPlayer, MyLocation, MyKey))
+                {
+                    GameService.WriteMove(_move);
+                    return;
+                }
             }
 
             // Well, It seem we can't do anything good.
@@ -113,11 +140,13 @@ namespace BomberBot.Business.Strategy
 
             if (loc.X == playerLoc.X)
             {
+                GameService.UpdateBlocksToExplore(loc);
                 return loc.Y > playerLoc.Y ? Move.MoveDown : Move.MoveUp;
             }
 
             if (loc.Y == playerLoc.Y)
             {
+                GameService.UpdateBlocksToExplore(loc);
                 return loc.X > playerLoc.X ? Move.MoveRight : Move.MoveLeft;
             }
 
@@ -664,7 +693,7 @@ namespace BomberBot.Business.Strategy
             // if op bomb available
             if (visibleOpponentBomb != null)
             {
-                opponentLocation = state.GetPlayerLocationOnMap(visibleOpponentBomb.Owner.Key);
+                opponentLocation = state.GetPlayerLocation(visibleOpponentBomb.Owner.Key);
                 if (opponentLocation != null)
                 {
                     opponentBombs = state.GetPlayerBombs(visibleOpponentBomb.Owner.Key);
@@ -1039,7 +1068,7 @@ namespace BomberBot.Business.Strategy
 
                 foreach (var opponent in visibleOpponents)
                 {
-                    var opponentLocation = state.GetPlayerLocationOnMap(opponent.Key);
+                    var opponentLocation = state.GetPlayerLocation(opponent.Key);
 
                     var opVisibleBombs = BotHelper.FindVisibleBombs(state, opponentLocation);
 
@@ -1188,7 +1217,7 @@ namespace BomberBot.Business.Strategy
 
                 foreach (var opponent in visibleOpponents)
                 {
-                    var opponentLocation = state.GetPlayerLocationOnMap(opponent.Key);
+                    var opponentLocation = state.GetPlayerLocation(opponent.Key);
 
                     var opVisibleBombs = BotHelper.FindVisibleBombs(state, opponentLocation);
 
@@ -1432,33 +1461,99 @@ namespace BomberBot.Business.Strategy
                 return true;
             }
 
-            if (state.WallsLeft == 0)
-            {
-                var visiblePlayers = BotHelper.FindVisiblePlayers(state, playerLoc, playerKey, player.BombRadius);
+            return false;
+        }
 
-                if (visiblePlayers != null)
+        private bool FindPlacementBlockToExploreOrAttack(GameState state, Player player, Location playerLoc, string playerKey)
+        {
+            var playerBombs = state.GetPlayerBombs(playerKey);
+
+            if (!_anyBombVisible && (playerBombs == null || playerBombs.Count < player.BombBag))
+            {
+                // Plant if we can find hide block after planting the bomb
+                if (FindHidingBlock(state, player, playerLoc) != null)
                 {
-                    if (playerBombs == null || playerBombs.Count < player.BombBag)
+                    var visiblePlayers = BotHelper.FindVisiblePlayers(state, playerLoc, playerKey, player.BombRadius);
+
+                    if (visiblePlayers != null)
                     {
-                        // Plant if we can find hide block after planting the bomb
-                        if (!_anyBombVisible && FindHidingBlock(state, player, playerLoc) != null)
-                        {
-                            _move = Move.PlaceBomb;
-                            return true;
-                        }
+                        _move = Move.PlaceBomb;
+                        return true;
                     }
                 }
+            }
 
-                var visiblePlayerBlock = FindPlacementBlockToDestroyPlayer(state, player, playerLoc);
+            if (BlocksToExploreInMap)
+            {
+                BlockToExplore nearestToExplore = FindNearestBlockToExplore(state, playerLoc, GameService.BlocksToExplore);
 
-                if (visiblePlayerBlock != null)
+                if (nearestToExplore != null)
                 {
-                    _move = GetMoveFromLocation(playerLoc, visiblePlayerBlock.LocationToBlock);
+                    _move = GetMoveFromLocation(playerLoc, nearestToExplore.LocationToBlock);
                     return true;
                 }
             }
 
+            var visiblePlayerBlock = FindPlacementBlockToDestroyPlayer(state, player, playerLoc);
+
+            if (visiblePlayerBlock != null)
+            {
+                _move = GetMoveFromLocation(playerLoc, visiblePlayerBlock.LocationToBlock);
+                return true;
+            }
+
             return false;
+        }
+
+        private BlockToExplore FindNearestBlockToExplore(GameState state, Location startLoc, HashSet<Location> blocksToExplore)
+        {
+            var openSet = new HashSet<MapNode> { new MapNode { Location = startLoc } };
+            var closedSet = new HashSet<MapNode>();
+
+            while (openSet.Count != 0)
+            {
+                var qNode = openSet.OrderBy(node => node.GCost).First();
+
+                openSet.Remove(qNode);
+                closedSet.Add(qNode);
+
+                if (blocksToExplore.Contains(qNode.Location))
+                {
+                    MapNode mapNode = BotHelper.FindPathToTarget(state, startLoc, qNode.Location);
+
+                    if (mapNode != null)
+                    {
+                        return new BlockToExplore
+                        {
+                            Location = qNode.Location,
+                            Distance = mapNode.FCost,
+                            LocationToBlock = BotHelper.ReconstructPath(mapNode),
+                        };
+                    }
+                }
+
+                var possibleBlocksLoc = BotHelper.ExpandMoveBlocks(state, startLoc, qNode.Location);
+
+                for (var i = 0; i < possibleBlocksLoc.Count; i++)
+                {
+                    var nodeInOpenList = openSet.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
+
+                    if (nodeInOpenList != null) continue;
+
+                    var nodeInClosedList = closedSet.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
+
+                    if (nodeInClosedList != null) continue;
+
+                    var newNode = new MapNode
+                    {
+                        Location = possibleBlocksLoc[i],
+                        GCost = qNode.GCost + 1
+                    };
+
+                    openSet.Add(newNode);
+                }
+            }
+            return null;
         }
 
         private bool PlaceBombWhileInDanger(GameState state, Player player, Location playerLoc, string playerKey, IEnumerable<Bomb> bombsToDodge)
@@ -1485,7 +1580,7 @@ namespace BomberBot.Business.Strategy
                 {
                     foreach (var opponent in visibleOpponents)
                     {
-                        var opponentLocation = state.GetPlayerLocationOnMap(opponent.Key);
+                        var opponentLocation = state.GetPlayerLocation(opponent.Key);
 
                         var opVisibleBombs = BotHelper.FindVisibleBombs(state, opponentLocation);
 
@@ -1659,7 +1754,7 @@ namespace BomberBot.Business.Strategy
                 return true;
             }
 
-            var ownerLocation = state.GetPlayerLocationOnMap(bombOwner.Key);
+            var ownerLocation = state.GetPlayerLocation(bombOwner.Key);
 
             if (ownerLocation != null)
             {

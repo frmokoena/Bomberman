@@ -161,7 +161,7 @@ namespace BomberBot.Business.Helpers
                             }
                             else
                             {
-                                var opponentLocation = state.GetPlayerLocationOnMap(newBomb.Owner.Key);
+                                var opponentLocation = state.GetPlayerLocation(newBomb.Owner.Key);
                                 if (opponentLocation != null)
                                 {
                                     var opponentVisibleBombs = FindVisibleBombs(state, opponentLocation);
@@ -260,7 +260,7 @@ namespace BomberBot.Business.Helpers
                             }
                             else
                             {
-                                var opponentLocation = state.GetPlayerLocationOnMap(newBomb.Owner.Key);
+                                var opponentLocation = state.GetPlayerLocation(newBomb.Owner.Key);
                                 if (opponentLocation != null)
                                 {
                                     var opponentVisibleBombs = FindVisibleBombs(state, opponentLocation);
@@ -359,7 +359,7 @@ namespace BomberBot.Business.Helpers
                             }
                             else
                             {
-                                var opponentLocation = state.GetPlayerLocationOnMap(newBomb.Owner.Key);
+                                var opponentLocation = state.GetPlayerLocation(newBomb.Owner.Key);
                                 if (opponentLocation != null)
                                 {
                                     var opponentVisibleBombs = FindVisibleBombs(state, opponentLocation);
@@ -458,7 +458,7 @@ namespace BomberBot.Business.Helpers
                             }
                             else
                             {
-                                var opponentLocation = state.GetPlayerLocationOnMap(newBomb.Owner.Key);
+                                var opponentLocation = state.GetPlayerLocation(newBomb.Owner.Key);
                                 if (opponentLocation != null)
                                 {
                                     var opponentVisibleBombs = FindVisibleBombs(state, opponentLocation);

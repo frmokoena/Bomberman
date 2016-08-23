@@ -19,10 +19,10 @@ namespace BomberBotTests.UnitTests
             IGameService<GameState> gameService = new GameService(playerKey, workingDirectory,runDirectory);
                       
 
-            var expectToExploreLocations = 281;
+            var expectToExploreLocations = 280;
 
             //Act 
-            var result = gameService.ToExploreLocations;
+            var result = gameService.BlocksToExplore;
 
             // Assert
             Assert.AreEqual(expectToExploreLocations,result.Count);
@@ -41,7 +41,7 @@ namespace BomberBotTests.UnitTests
             var expectToExploreLocations = 281;
 
             //Act 
-            var result = gameService.ToExploreLocations;
+            var result = gameService.BlocksToExplore;
 
             // Assert
             Assert.AreEqual(expectToExploreLocations, result.Count);
@@ -62,9 +62,9 @@ namespace BomberBotTests.UnitTests
 
             //Act           
 
-            gameService.UpdateToExploreLocations(toRemove);          
+            gameService.UpdateBlocksToExplore(toRemove);          
 
-            var result = gameService.ToExploreLocations;
+            var result = gameService.BlocksToExplore;
             
             // Assert
             Assert.AreEqual(expectAfterRemove, result.Count);

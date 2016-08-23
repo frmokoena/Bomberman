@@ -9,7 +9,7 @@ namespace BomberBot.Interfaces
         string HomeKey { get; set; }
         T GameState { get; }
         void WriteMove(Move move);
-        HashSet<Location> ToExploreLocations { get; }
-        void UpdateToExploreLocations(Location location);
+        HashSet<Location> BlocksToExplore { get; }
+        void UpdateBlocksToExplore(Location location);
     }
 }

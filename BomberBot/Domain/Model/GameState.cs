@@ -99,7 +99,7 @@ namespace BomberBot.Domain.Model
             return Players.Find(p => p.Key == key);
         }
 
-        public Location GetPlayerLocationOnMap(string playerKey)
+        public Location GetPlayerLocation(string playerKey)
         {
             var player = Players.Find(p => p.Key == playerKey);
             if (player.Killed) return null;

@@ -19,11 +19,11 @@ namespace BomberBot.Services
         public string WorkingDirectory { get; set; }
         public string RunDirectory { get; set; }
 
-        public HashSet<Location> ToExploreLocations
+        public HashSet<Location> BlocksToExplore
         {
             get
             {
-                return GetToExploreLocations();
+                return GetBlocksToExplore();
             }
         }
         public GameState GameState
@@ -34,16 +34,16 @@ namespace BomberBot.Services
             }
         }
 
-        public HashSet<Location> GetToExploreLocations()
+        public HashSet<Location> GetBlocksToExplore()
         {
             if (GameState.CurrentRound == 0)
             {
-                return InitializeToExploreLocations();
+                return InitializeBlocksToExplore();
             }
-            return LoadToExploreLocations();
+            return LoadBlocksToExplore();
         }
 
-        private HashSet<Location> LoadToExploreLocations()
+        private HashSet<Location> LoadBlocksToExplore()
         {
             var filename = Path.Combine(RunDirectory, Settings.Default.ToExplore);
 
@@ -66,7 +66,7 @@ namespace BomberBot.Services
             }
         }
 
-        private HashSet<Location> InitializeToExploreLocations()
+        private HashSet<Location> InitializeBlocksToExplore()
         {
             var width = GameState.MapWidth;
             var height = GameState.MapHeight;
@@ -82,6 +82,8 @@ namespace BomberBot.Services
                     if (!state.IsIndestructibleWall(x, y)) toExplore.Add(new Location(x, y));
                 }
             }
+            var explored = state.GetPlayerLocation(HomeKey);
+            var rm = toExplore.Remove(explored);
             File.WriteAllText(toSave, JsonConvert.SerializeObject(toExplore.ToArray()));
             return toExplore;
         }
@@ -93,15 +95,15 @@ namespace BomberBot.Services
             RunDirectory = runDirectory;
         }
 
-        public void UpdateToExploreLocations(Location loc)
+        public void UpdateBlocksToExplore(Location loc)
         {
-            var toExploreLocations = ToExploreLocations;
-            bool removed = toExploreLocations.Remove(loc);
+            var blocksToExplore = BlocksToExplore;
+            bool removed = blocksToExplore.Remove(loc);
 
             if (removed)
             {
                 var toSave = Path.Combine(RunDirectory, Settings.Default.ToExplore);
-                File.WriteAllText(toSave, JsonConvert.SerializeObject(toExploreLocations.ToArray()));
+                File.WriteAllText(toSave, JsonConvert.SerializeObject(blocksToExplore.ToArray()));
             }
 
         }
