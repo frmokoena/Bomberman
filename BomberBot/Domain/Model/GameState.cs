@@ -55,7 +55,7 @@ namespace BomberBot.Domain.Model
             }
         }
 
-        internal bool IsIndestructibleWall(int x, int y)
+        public bool IsIndestructibleWall(int x, int y)
         {
             return GetBlockAtLocation(x,y).IsIndestructibleWall();
         }

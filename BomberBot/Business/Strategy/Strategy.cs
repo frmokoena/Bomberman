@@ -1055,9 +1055,7 @@ namespace BomberBot.Business.Strategy
                 }
             }
 
-            // TODO: opponent about to move into my territory
-
-            // TODO: attack 1
+            // attack 1
             var bombLoc = new Location(playerBombs[0].Location.X - 1, playerBombs[0].Location.Y - 1);
 
             var visibleOpponents = BotHelper.FindVisiblePlayers(state, bombLoc, playerKey, playerBombs[0].BombRadius);
@@ -1098,7 +1096,7 @@ namespace BomberBot.Business.Strategy
                 }
             }
 
-            // TODO: Attack 2
+            // attack 2
 
             var oneBlockOpponents = new List<MapOpponent>();
 
@@ -1187,7 +1185,6 @@ namespace BomberBot.Business.Strategy
 
         private bool PlaceBomb(GameState state, Player player, Location playerLoc, string playerKey)
         {
-            //TODO: sometims plant even if not safe.
             if (_anyBombVisible)
             {
                 return false;
@@ -1206,9 +1203,7 @@ namespace BomberBot.Business.Strategy
                 return false;
             }
 
-
-
-            //TODO: attack 1
+            // attack 1
             var visibleOpponents = BotHelper.FindVisiblePlayers(state, playerLoc, playerKey, player.BombRadius);
 
             if (visibleOpponents != null)
@@ -1250,7 +1245,6 @@ namespace BomberBot.Business.Strategy
             }
 
             // TODO: Attack 2
-
             var oneBlockOpponents = new List<MapOpponent>();
 
             var opponents = state.Players.Where(p => (p.Key != player.Key && !p.Killed))
@@ -1279,10 +1273,6 @@ namespace BomberBot.Business.Strategy
                 {
                     foreach (var oneBlockOpponent in oneBlockOpponents)
                     {
-                        //var opVisbleBombs = BotHelper.FindVisibleBombs(state, oneBlockOpponent.Location);
-
-                        //if (opVisbleBombs != null)
-                        //{
                         var opPossibleMoves = BotHelper.ExpandMoveBlocks(state, oneBlockOpponent.Location, oneBlockOpponent.Location);
 
                         if (opPossibleMoves.Count == 0)
@@ -1296,12 +1286,9 @@ namespace BomberBot.Business.Strategy
                             _move = Move.PlaceBomb;
                             return true;
                         }
-                        //}
                     }
                 }
             }
-
-
 
             var visibleWalls = BotHelper.FindVisibleWalls(state, playerLoc, player);
             if (visibleWalls == null)
@@ -1483,6 +1470,27 @@ namespace BomberBot.Business.Strategy
                 }
             }
 
+            var leadScore = state.Players
+                               .Where(p => p.Key != playerKey)
+                               .Where(p => !p.Killed)
+                               .OrderBy(p => p.Points)
+                               .Select(p=>p.Points)
+                               .First();
+
+            var playerScore = player.Points;
+
+            // if we are losing try to destroy the other chap
+            if (playerScore <= leadScore)
+            {
+                var visiblePlayerBlock = FindPlacementBlockToDestroyPlayer(state, player, playerLoc);
+
+                if (visiblePlayerBlock != null)
+                {
+                    _move = GetMoveFromLocation(playerLoc, visiblePlayerBlock.LocationToBlock);
+                    return true;
+                }
+            }
+
             if (BlocksToExploreInMap)
             {
                 BlockToExplore nearestToExplore = FindNearestBlockToExplore(state, playerLoc, GameService.BlocksToExplore);
@@ -1493,15 +1501,6 @@ namespace BomberBot.Business.Strategy
                     return true;
                 }
             }
-
-            var visiblePlayerBlock = FindPlacementBlockToDestroyPlayer(state, player, playerLoc);
-
-            if (visiblePlayerBlock != null)
-            {
-                _move = GetMoveFromLocation(playerLoc, visiblePlayerBlock.LocationToBlock);
-                return true;
-            }
-
             return false;
         }
 

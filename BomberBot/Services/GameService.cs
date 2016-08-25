@@ -98,14 +98,16 @@ namespace BomberBot.Services
         public void UpdateBlocksToExplore(Location loc)
         {
             var blocksToExplore = BlocksToExplore;
-            bool removed = blocksToExplore.Remove(loc);
 
-            if (removed)
+            if (blocksToExplore == null || blocksToExplore.Count == 0) return;
+
+            bool blockRemoved = blocksToExplore.Remove(loc);
+
+            if (blockRemoved)
             {
                 var toSave = Path.Combine(RunDirectory, Settings.Default.ToExplore);
                 File.WriteAllText(toSave, JsonConvert.SerializeObject(blocksToExplore.ToArray()));
             }
-
         }
         private GameState LoadGameState()
         {
