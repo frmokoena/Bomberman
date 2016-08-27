@@ -81,8 +81,8 @@ namespace BomberBot.Business.Helpers
             Location loc;
             var movesLoc = new List<Location>();
 
-            if (stayClear || curLoc.Equals(startLoc) || hiding)
-            {
+            //if (stayClear || curLoc.Equals(startLoc) || hiding)
+            //{
                 IEnumerable<Bomb> bombs;
                 loc = new Location(curLoc.X, curLoc.Y - 1);
 
@@ -479,37 +479,37 @@ namespace BomberBot.Business.Helpers
                         }
                     }
                 }
-            }
-            else
-            {
-                loc = new Location(curLoc.X, curLoc.Y - 1);
+            //}
+            //else
+            //{
+            //    loc = new Location(curLoc.X, curLoc.Y - 1);
 
-                if (state.IsBlockClear(loc))
-                {
-                    movesLoc.Add(loc);
-                }
+            //    if (state.IsBlockClear(loc))
+            //    {
+            //        movesLoc.Add(loc);
+            //    }
 
-                loc = new Location(curLoc.X + 1, curLoc.Y);
+            //    loc = new Location(curLoc.X + 1, curLoc.Y);
 
-                if (state.IsBlockClear(loc))
-                {
-                    movesLoc.Add(loc);
-                }
+            //    if (state.IsBlockClear(loc))
+            //    {
+            //        movesLoc.Add(loc);
+            //    }
 
-                loc = new Location(curLoc.X, curLoc.Y + 1);
+            //    loc = new Location(curLoc.X, curLoc.Y + 1);
 
-                if (state.IsBlockClear(loc))
-                {
-                    movesLoc.Add(loc);
-                }
+            //    if (state.IsBlockClear(loc))
+            //    {
+            //        movesLoc.Add(loc);
+            //    }
 
-                loc = new Location(curLoc.X - 1, curLoc.Y);
+            //    loc = new Location(curLoc.X - 1, curLoc.Y);
 
-                if (state.IsBlockClear(loc))
-                {
-                    movesLoc.Add(loc);
-                }
-            }
+            //    if (state.IsBlockClear(loc))
+            //    {
+            //        movesLoc.Add(loc);
+            //    }
+            //}
             return movesLoc;
         }
 

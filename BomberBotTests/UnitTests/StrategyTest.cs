@@ -338,7 +338,7 @@ namespace BomberBotTests.UnitTests
 
             Strategy bot = new Strategy(gameService);
 
-            var expectMove = Move.MoveLeft;
+            var expectMove = Move.DoNothing;
 
             //Act 
             bot.Execute();
@@ -445,6 +445,69 @@ namespace BomberBotTests.UnitTests
             Strategy bot = new Strategy(gameService);
 
             var expectMove = Move.MoveDown;
+
+            //Act 
+            bot.Execute();
+            var result = ReadMove(workingDirectory);
+
+            // Assert
+            Assert.AreEqual((int)expectMove, result);
+        }
+
+        [Test]
+        public void PlayerShouldNotMakeFunnyMoveDownTest()
+        {
+            //Arrange
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\23";
+            string runDirectory = TestContext.CurrentContext.TestDirectory + @"\data";
+            string playerKey = "A";
+            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory, runDirectory);
+
+            Strategy bot = new Strategy(gameService);
+
+            var expectMove = Move.MoveRight;
+
+            //Act 
+            bot.Execute();
+            var result = ReadMove(workingDirectory);
+
+            // Assert
+            Assert.AreEqual((int)expectMove, result);
+        }
+
+        [Test]
+        public void PlayerShouldNotDoThatTest()
+        {
+            //Arrange
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\24";
+            string runDirectory = TestContext.CurrentContext.TestDirectory + @"\data";
+            string playerKey = "A";
+            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory, runDirectory);
+
+            Strategy bot = new Strategy(gameService);
+
+            var expectMove = Move.MoveLeft;
+
+            //Act 
+            bot.Execute();
+            var result = ReadMove(workingDirectory);
+
+            // Assert
+            Assert.AreEqual((int)expectMove, result);
+        }
+
+        [Test]
+        public void PlayerUndecidedTest()
+        {
+            //Arrange
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\25";
+            string runDirectory = TestContext.CurrentContext.TestDirectory + @"\data";
+            string playerKey = "A";
+            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory, runDirectory);
+
+            Strategy bot = new Strategy(gameService);
+
+            var expectMove = Move.MoveLeft;
 
             //Act 
             bot.Execute();

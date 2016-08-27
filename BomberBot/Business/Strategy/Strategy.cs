@@ -349,17 +349,17 @@ namespace BomberBot.Business.Strategy
                     if (searchCount < 1)
                     {
                         return bombPlacementBlocks.Count == 0 ? null : bombPlacementBlocks.OrderBy(b => b.SuperDistance)
-                                                                                     .ThenBy(b => b.PowerDistance)
-                                                                                     .ThenByDescending(b => b.VisibleWalls)
-                                                                                     .ThenBy(b => b.Distance);
+                                                                                          .ThenBy(b => b.PowerDistance)
+                                                                                          .ThenByDescending(b => b.VisibleWalls)
+                                                                                          .ThenBy(b => b.Distance);
                     }
                 }
                 else if (bombPlacementBlocks.Count > maxPlacementBlocks)
                 {
-                    return bombPlacementBlocks.OrderBy(b => b.SuperDistance)
-                                              .ThenBy(b => b.PowerDistance)
+                    return bombPlacementBlocks.OrderBy(b => b.Distance)
                                               .ThenByDescending(b => b.VisibleWalls)
-                                              .ThenBy(b => b.Distance);
+                                              .ThenBy(b => b.SuperDistance)
+                                              .ThenBy(b => b.PowerDistance);                              
                 }
 
                 qNode = openSet.OrderBy(n => n.GCost).First();
@@ -419,10 +419,10 @@ namespace BomberBot.Business.Strategy
 
                 if (oneBlockLookUp) searchCount--;
             }
-            return bombPlacementBlocks.Count == 0 ? null : bombPlacementBlocks.OrderBy(b => b.SuperDistance)
-                                                                              .ThenBy(b => b.PowerDistance)
+            return bombPlacementBlocks.Count == 0 ? null : bombPlacementBlocks.OrderBy(b => b.Distance)
                                                                               .ThenByDescending(b => b.VisibleWalls)
-                                                                              .ThenBy(b => b.Distance);
+                                                                              .ThenBy(b => b.SuperDistance)
+                                                                              .ThenBy(b => b.PowerDistance);
         }
 
         private IEnumerable<MapSafeBlock> FindSafeBlocks(GameState state, Player player, Location startLoc, IEnumerable<Bomb> bombsToDodge)
@@ -494,9 +494,9 @@ namespace BomberBot.Business.Strategy
                     }
                 }
             }
-            return safeBlocks.Count == 0 ? null : safeBlocks.OrderBy(block => block.Distance)
-                                                            .ThenBy(Block => Block.SuperDistance)
+            return safeBlocks.Count == 0 ? null : safeBlocks.OrderBy(block => block.Distance)                                                            
                                                             .ThenByDescending(block => block.VisibleWalls)
+                                                            .ThenBy(Block => Block.SuperDistance)
                                                             .ThenBy(block => block.PowerDistance);
         }
 
