@@ -348,6 +348,111 @@ namespace BomberBotTests.UnitTests
             Assert.AreEqual((int)expectMove, result);
         }
 
+        [Test]
+        public void TakeAdvantageOfOpponentInDangerTest()
+        {
+            //Arrange
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\18";
+            string runDirectory = TestContext.CurrentContext.TestDirectory + @"\data";
+            string playerKey = "B";
+            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory, runDirectory);
+
+            Strategy bot = new Strategy(gameService);
+
+            var expectMove = Move.MoveLeft;
+
+            //Act 
+            bot.Execute();
+            var result = ReadMove(workingDirectory);
+
+            // Assert
+            Assert.AreEqual((int)expectMove, result);
+        }
+
+
+        [Test]
+        public void FunnyBehaviorTest()
+        {
+            //Arrange
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\19";
+            string runDirectory = TestContext.CurrentContext.TestDirectory + @"\data";
+            string playerKey = "B";
+            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory, runDirectory);
+
+            Strategy bot = new Strategy(gameService);
+
+            var expectMove = Move.DoNothing;
+
+            //Act 
+            bot.Execute();
+            var result = ReadMove(workingDirectory);
+
+            // Assert
+            Assert.AreEqual((int)expectMove, result);
+        }
+
+        [Test]
+        public void AnotherFunnyBehaviorTest()
+        {
+            //Arrange
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\20";
+            string runDirectory = TestContext.CurrentContext.TestDirectory + @"\data";
+            string playerKey = "B";
+            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory, runDirectory);
+
+            Strategy bot = new Strategy(gameService);
+
+            var expectMove = Move.MoveDown;
+
+            //Act 
+            bot.Execute();
+            var result = ReadMove(workingDirectory);
+
+            // Assert
+            Assert.AreEqual((int)expectMove, result);
+        }
+
+        [Test]
+        public void PlayerShouldDoNothingTest()
+        {
+            //Arrange
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\21";
+            string runDirectory = TestContext.CurrentContext.TestDirectory + @"\data";
+            string playerKey = "B";
+            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory, runDirectory);
+
+            Strategy bot = new Strategy(gameService);
+
+            var expectMove = Move.DoNothing;
+
+            //Act 
+            bot.Execute();
+            var result = ReadMove(workingDirectory);
+
+            // Assert
+            Assert.AreEqual((int)expectMove, result);
+        }
+
+        [Test]
+        public void PlayerShouldMoveDownTest()
+        {
+            //Arrange
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\22";
+            string runDirectory = TestContext.CurrentContext.TestDirectory + @"\data";
+            string playerKey = "B";
+            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory, runDirectory);
+
+            Strategy bot = new Strategy(gameService);
+
+            var expectMove = Move.MoveDown;
+
+            //Act 
+            bot.Execute();
+            var result = ReadMove(workingDirectory);
+
+            // Assert
+            Assert.AreEqual((int)expectMove, result);
+        }
         // Read move
         private int ReadMove(string workingDirectory)
         {

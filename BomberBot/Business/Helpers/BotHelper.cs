@@ -9,7 +9,7 @@ namespace BomberBot.Business.Helpers
 {
     public class BotHelper
     {
-        public static MapNode FindPathToTarget(GameState state, Location startLoc, Location targetLoc, Player player = null, IEnumerable<Bomb> bombsToDodge = null, bool stayClear = false, bool super = false)
+        public static MapNode FindPathToTarget(GameState state, Location startLoc, Location targetLoc, Player player = null, IEnumerable<Bomb> bombsToDodge = null, bool stayClear = false, bool super = false, bool hiding = false)
         {
             var openList = new HashSet<MapNode> { new MapNode { Location = startLoc } };
             var closedList = new HashSet<MapNode>();
@@ -29,7 +29,7 @@ namespace BomberBot.Business.Helpers
                 openList.Remove(qMapNode);
                 closedList.Add(qMapNode);
 
-                var childrenLoc = super ? ExpandSuperBlocks(state, qMapNode.Location) : ExpandMoveBlocks(state, startLoc, qMapNode.Location, player, bombsToDodge, stayClear);
+                var childrenLoc = super ? ExpandSuperBlocks(state, qMapNode.Location) : ExpandMoveBlocks(state, startLoc, qMapNode.Location, player, bombsToDodge, stayClear, hiding);
 
                 for (var i = 0; i < childrenLoc.Count; i++)
                 {
@@ -76,12 +76,12 @@ namespace BomberBot.Business.Helpers
             return currentMapNode.Location;
         }
 
-        public static List<Location> ExpandMoveBlocks(GameState state, Location startLoc, Location curLoc, Player player = null, IEnumerable<Bomb> bombsToDodge = null, bool stayClear = false)
+        public static List<Location> ExpandMoveBlocks(GameState state, Location startLoc, Location curLoc, Player player = null, IEnumerable<Bomb> bombsToDodge = null, bool stayClear = false, bool hiding = false)
         {
             Location loc;
             var movesLoc = new List<Location>();
 
-            if (stayClear || curLoc.Equals(startLoc))
+            if (stayClear || curLoc.Equals(startLoc) || hiding)
             {
                 IEnumerable<Bomb> bombs;
                 loc = new Location(curLoc.X, curLoc.Y - 1);

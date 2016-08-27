@@ -69,11 +69,32 @@ namespace BomberBot.Business.Strategy
 
         public void Execute()
         {
-            //Player killed
+            // Player killed
             if (MyLocation == null) return;
 
             //Stay Clear of Bombs
             if (StayClearOfBombs(GameState, MyPlayer, MyLocation, MyKey))
+            {
+                GameService.WriteMove(_move);
+                return;
+            }
+
+            // Take advantage of opponent in danger
+            if (BlockOpponentInDanger(GameState, MyPlayer, MyLocation))
+            {
+                GameService.WriteMove(_move);
+                return;
+            }
+
+            // Place bomb
+            if (PlaceBomb(GameState, MyPlayer, MyLocation, MyKey))
+            {
+                GameService.WriteMove(_move);
+                return;
+            }
+
+            // Immediate chase power
+            if (PriorityChasePower(GameState, MyPlayer, MyLocation, MyKey))
             {
                 GameService.WriteMove(_move);
                 return;
@@ -85,29 +106,6 @@ namespace BomberBot.Business.Strategy
                 GameService.WriteMove(_move);
                 return;
             }
-
-            // immediate chase power
-            if (PriorityChasePower(GameState, MyPlayer, MyLocation, MyKey))
-            {
-                GameService.WriteMove(_move);
-                return;
-            }
-
-            // place bomb
-            if (PlaceBomb(GameState, MyPlayer, MyLocation, MyKey))
-            {
-                GameService.WriteMove(_move);
-                return;
-            }
-
-
-            // Chase power up
-            if (ChasePower(GameState, MyPlayer, MyLocation))
-            {
-                GameService.WriteMove(_move);
-                return;
-            }
-
 
             // compute bomb placement blocks
             if (WallsInMap)
@@ -127,8 +125,119 @@ namespace BomberBot.Business.Strategy
                 }
             }
 
+            // Chase power up
+            if (ChasePower(GameState, MyPlayer, MyLocation))
+            {
+                GameService.WriteMove(_move);
+                return;
+            }
+
             // Well, It seem we can't do anything good.
             GameService.WriteMove(Move.DoNothing);
+        }
+
+        private bool BlockOpponentInDanger(GameState state, Player player, Location playerLoc)
+        {
+            // TODO: Attack
+            var opponents = state.Players.Where(p => (p.Key != player.Key && !p.Killed))
+                                         .Select(p => new MapOpponent(p));
+
+            foreach (var opponent in opponents)
+            {
+                var opponentVisibleBombs = BotHelper.FindVisibleBombs(state, opponent.Location);
+
+                if (opponentVisibleBombs == null) continue;
+
+                var dx = Math.Abs(playerLoc.X - opponent.Location.X);
+                var dy = Math.Abs(playerLoc.Y - opponent.Location.Y);
+
+                // one block difference
+                if (dx == 1 && dy == 1)
+                {
+                    var opPossibleMoves = BotHelper.ExpandMoveBlocks(state, opponent.Location, opponent.Location, opponent.Player, opponentVisibleBombs, stayClear: true);
+
+                    if (opPossibleMoves.Count == 0)
+                    {
+                        _move = Move.DoNothing;
+                        return true;
+                    }
+
+                    if (opPossibleMoves.Count == 1)
+                    {
+                        if (CanBlockPlayer(state, player, opponent.Player, playerLoc, opPossibleMoves[0]))
+                        {
+                            _move = GetMoveFromLocation(playerLoc, opPossibleMoves[0]);
+                            return true;
+                        }
+
+                        var bombsToGoTo = BotHelper.FindVisibleBombs(state, opPossibleMoves[0]);
+
+                        if (bombsToGoTo != null)
+                        {
+                            _move = Move.DoNothing;
+                            return true;
+                        }
+                    }
+
+                }
+                else
+                {
+
+                    //TODO: continue blocking
+                    var opSafeBlocks = FindSafeBlocks(state, opponent.Player, opponent.Location, opponentVisibleBombs);
+
+                    if (opSafeBlocks == null)
+                    {
+                        if (opponent.Location.X == playerLoc.X || opponent.Location.Y == playerLoc.Y)
+                        {
+                            _move = Move.DoNothing;
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        private bool CanBlockPlayer(GameState state, Player player, Player opponent, Location playerLoc, Location locationToBlock)
+        {
+            var dx = Math.Abs(playerLoc.X - locationToBlock.X);
+            var dy = Math.Abs(playerLoc.Y - locationToBlock.Y);
+
+            if (dx == 1 || dy == 1)
+            {
+                var visibleBombs = BotHelper.FindVisibleBombs(state, locationToBlock);
+
+                if (visibleBombs == null) return true;
+
+                if (visibleBombs.Count() > 1) return false;
+
+                var explodingBomb = visibleBombs.First();
+
+                var chainingBombs = BotHelper.FindVisibleBombs(state, new Location(explodingBomb.Location.X - 1, explodingBomb.Location.Y - 1), chaining: true);
+
+                while (chainingBombs != null)
+                {
+                    if (chainingBombs.Any(bomb => (!opponent.IsBombOwner(bomb) && !player.IsBombOwner(bomb)))) return false;
+
+                    chainingBombs = chainingBombs.Where(bomb => bomb.BombTimer < explodingBomb.BombTimer);
+
+                    if (chainingBombs.Count() > 1) return false;
+
+                    if (chainingBombs.Count() > 0)
+                    {
+                        explodingBomb = chainingBombs.First();
+                        chainingBombs = BotHelper.FindVisibleBombs(state, new Location(explodingBomb.Location.X - 1, explodingBomb.Location.Y - 1), chaining: true);
+                    }
+                    else
+                    {
+                        chainingBombs = null;
+                    }
+                }
+
+                if (explodingBomb.BombTimer > 2) return true;
+            }
+            return false;
         }
 
         private Move GetMoveFromLocation(Location playerLoc, Location loc)
@@ -169,7 +278,7 @@ namespace BomberBot.Business.Strategy
                 openSet.Remove(qNode);
                 closedSet.Add(qNode);
 
-                var safeNode = stayClear ? BotHelper.FindPathToTarget(state, startLoc, qNode.Location, player, bombsToDodge, stayClear) : BotHelper.FindPathToTarget(state, startLoc, qNode.Location);
+                var safeNode = stayClear ? BotHelper.FindPathToTarget(state, startLoc, qNode.Location, player, bombsToDodge, stayClear) : BotHelper.FindPathToTarget(state, startLoc, qNode.Location, hiding: true);
 
                 if (safeNode != null && safeNode.FCost < bombTimer)
                 {
@@ -198,7 +307,7 @@ namespace BomberBot.Business.Strategy
                         }
                     }
 
-                    var possibleBlocksLoc = stayClear ? BotHelper.ExpandMoveBlocks(state, startLoc, qNode.Location, player, bombsToDodge, stayClear) : BotHelper.ExpandMoveBlocks(state, startLoc, qNode.Location);
+                    var possibleBlocksLoc = stayClear ? BotHelper.ExpandMoveBlocks(state, startLoc, qNode.Location, player, bombsToDodge, stayClear) : BotHelper.ExpandMoveBlocks(state, startLoc, qNode.Location, hiding: true);
 
                     for (var i = 0; i < possibleBlocksLoc.Count; i++)
                     {
@@ -596,11 +705,6 @@ namespace BomberBot.Business.Strategy
             var opponentLocations = state.Players.Where(p => (p.Key != playerKey && !p.Killed))
                                                  .Select(p => new Location(p.Location.X - 1, p.Location.Y - 1));
 
-            //var opponentLocations = new List<Location>();
-
-            //state.Players.FindAll(p => (p.Key != playerKey && !p.Killed))
-            //     .ForEach(p => opponentLocations.Add(new Location(p.Location.X - 1, p.Location.Y - 1)));
-
             var openSet = new HashSet<MapNode> { new MapNode { Location = startLoc } };
             var closedSet = new HashSet<MapNode>();
 
@@ -642,7 +746,7 @@ namespace BomberBot.Business.Strategy
                     }
                 }
 
-                //
+
                 openSet.Remove(qNode);
                 closedSet.Add(qNode);
 
@@ -706,22 +810,6 @@ namespace BomberBot.Business.Strategy
                 }
             }
 
-            // if not own bomb
-            //if (!player.IsBombOwner(bombToDodge))
-            //{
-            //    opponentLocation = state.GetPlayerLocationOnMap(bombToDodge.Owner.Key);
-            //    if (opponentLocation != null)
-            //    {
-            //        opponentBombs = state.GetPlayerBombs(bombToDodge.Owner.Key);
-            //        opponentVisibleBombs = BotHelper.FindVisibleBombs(state, opponentLocation);
-
-            //        if (opponentVisibleBombs != null)
-            //        {
-            //            opponentSafeBlocks = FindSafeBlocks(state, bombToDodge.Owner, opponentLocation, opponentVisibleBombs);
-            //        }
-            //    }
-            //}
-
             var safeBlocks = FindSafeBlocks(state, player, playerLoc, visibleBombs);
 
             if (safeBlocks != null)
@@ -761,6 +849,12 @@ namespace BomberBot.Business.Strategy
                             }
                         }
 
+                        if (ContinueBlock(state, MyPlayer, MyLocation, MyKey, visibleBombs, safeBlocks))
+                        {
+                            _move = Move.DoNothing;
+                            return true;
+                        }
+
                         _move = GetMoveFromLocation(playerLoc, safeBlock.LocationToBlock);
                         return true;
                     }
@@ -782,6 +876,14 @@ namespace BomberBot.Business.Strategy
                         if (PlaceBombWhileInDangerToDestroyPlayer(state, player, playerLoc, playerKey, visibleBombs, opponentSafeBlocks))
                         {
                             _move = Move.PlaceBomb;
+                            return true;
+                        }
+
+                        //Here
+
+                        if (ContinueBlock(state, MyPlayer, MyLocation, MyKey, visibleBombs, safeBlocks))
+                        {
+                            _move = Move.DoNothing;
                             return true;
                         }
 
@@ -819,86 +921,6 @@ namespace BomberBot.Business.Strategy
                             }
                         }
                     }
-
-                    //if (player.IsBombOwner(bombToDodge))
-                    //{
-                    //    if (!anyPlayerVisible)
-                    //    {
-                    //        if (PlaceBombWhileInDanger(state, player, playerLoc, playerKey, visibleBombs))
-                    //        {
-                    //            _move = Move.PlaceBomb;
-                    //            return true;
-                    //        }
-                    //    }
-
-                    //    _move = GetMoveFromLocation(playerLoc, safeBlock.LocationToBlock);
-                    //    return true;
-                    //}
-                    //else
-                    //{
-                    //    if (opponentLocation == null)
-                    //    {
-                    //        _move = GetMoveFromLocation(playerLoc, safeBlock.LocationToBlock);
-                    //        return true;
-                    //    }
-
-                    //    //if (bombToDodge.BombTimer > opponentBombs[0].BombTimer)
-                    //    //{
-                    //    //    _move = GetMoveFromLocation(playerLoc, safeBlock.LocationToBlock);
-                    //    //    return true;
-                    //    //}
-
-                    //    if (opponentVisibleBombs == null)
-                    //    {
-                    //        // else just take the closet safe block
-                    //        _move = GetMoveFromLocation(playerLoc, safeBlocks.First().LocationToBlock);
-                    //        return true;
-                    //    }
-
-
-                    //    if (PlaceBombWhileInDangerToDestroyPlayer(state, player, playerLoc, playerKey, visibleBombs, opponentSafeBlocks))
-                    //    {
-                    //        _move = Move.PlaceBomb;
-                    //        return true;
-                    //    }
-
-                    //    //if (opponentVisibleBombs != null)
-                    //    //{
-                    //    // if we can reach our safe block before op
-                    //    if (opponentSafeBlocks == null || safeBlock.Distance <= opponentSafeBlocks.First().Distance)
-                    //    {
-                    //        _move = GetMoveFromLocation(playerLoc, safeBlock.LocationToBlock);
-                    //        return true;
-                    //    }
-
-                    //    if (opponentSafeBlocks != null)
-                    //    {
-                    //        var opponentSafeBlock = opponentSafeBlocks.First();
-
-                    //        // We might clear away from dangerous bomb well in time
-                    //        var maxSearch = opponentSafeBlock.Distance;
-                    //        var searchLocations = GetRouteLocations(safeBlock.MapNode);
-
-                    //        for (var i = 0; i < maxSearch; i++)
-                    //        {
-                    //            var bombsToDodge = BotHelper.FindVisibleBombs(state, searchLocations[i]);
-                    //            if (bombsToDodge == null || !bombsToDodge.Contains(bombToDodge))
-                    //            {
-                    //                _move = GetMoveFromLocation(playerLoc, safeBlock.LocationToBlock);
-                    //                return true;
-                    //            }
-                    //        }
-
-                    //        // This might be all we need, but I can't reproduce problem solved by the above routine
-                    //        // so, I'll just leave it. [distance to move to safety + 1 move to trigger]
-                    //        if (safeBlock.Distance <= opponentSafeBlock.Distance + 1)
-                    //        {
-                    //            _move = GetMoveFromLocation(playerLoc, safeBlock.LocationToBlock);
-                    //            return true;
-                    //        }
-                    //    }
-                    //    //}
-                    //}
                 }
             }
 
@@ -947,68 +969,88 @@ namespace BomberBot.Business.Strategy
                 }
             }
 
-            //var opponentBomb = visibleBombs.FirstOrDefault(bomb => !player.IsBombOwner(bomb));
-
-            //if (opponentBomb != null)
-            //{
-            //    // op decsions
-            //    // if didn't compute op's
-            //    if (player.IsBombOwner(bombToDodge))
-            //    {
-            //        opponentLocation = state.GetPlayerLocationOnMap(opponentBomb.Owner.Key);
-            //        if (opponentLocation != null)
-            //        {
-            //            opponentBombs = state.GetPlayerBombs(opponentBomb.Owner.Key);
-            //            opponentVisibleBombs = BotHelper.FindVisibleBombs(state, opponentLocation);
-
-            //            if (opponentVisibleBombs != null)
-            //            {
-            //                opponentSafeBlocks = FindSafeBlocks(state, opponentBomb.Owner, opponentLocation, opponentVisibleBombs);
-            //            }
-            //        }
-            //    }
-
-            //    if (opponentVisibleBombs == null || opponentSafeBlocks != null)
-            //    {
-            //        var mapSafeBlock = FindSafeBlockFromPlayer(state, player, playerLoc, visibleBombs, opponentBomb);
-
-            //        if (mapSafeBlock != null)
-            //        {
-            //            if (opponentSafeBlocks != null)
-            //            {
-            //                // can clear safe bomb or rather reach safe block before op triggers
-            //                if (mapSafeBlock.Distance <= opponentSafeBlocks.First().Distance + 1)
-            //                {
-            //                    // emergency trigger
-            //                    var ownBombs = state.GetPlayerBombs(playerKey);
-
-            //                    if (ownBombs != null && !visibleBombs.Any(b => b == ownBombs[0]))
-            //                    {
-            //                        // check if we are clearing the correct bomb
-            //                        var bombsToClear = BotHelper.FindVisibleBombs(state, mapSafeBlock.Location);
-
-            //                        if (bombsToClear != null && bombsToClear.Any(b => b == ownBombs[0]))
-            //                        {
-            //                            _move = Move.TriggerBomb;
-            //                            return true;
-            //                        }
-            //                    }
-            //                    // we don't have any safe bomb to clear, so just grab the location
-            //                    _move = GetMoveFromLocation(playerLoc, mapSafeBlock.LocationToBlock);
-            //                    return true;
-            //                }
-            //            }
-            //            else if (opponentVisibleBombs == null)
-            //            {
-            //                // we are in real danger, so no time to clear any bomb
-            //                _move = GetMoveFromLocation(playerLoc, mapSafeBlock.LocationToBlock);
-            //                return true;
-            //            }
-            //        }
-            //    }
-            //}
-
             _move = Move.DoNothing;
+            return true;
+        }
+
+        private bool ContinueBlock(GameState state, Player player, Location playerLoc, string myKey, IEnumerable<Bomb> visibleBombs, IEnumerable<MapSafeBlock> safeBlocks)
+        {
+            if (visibleBombs.Count() > 1) return false;
+
+            // TODO: block
+            var opponents = state.Players.Where(p => (p.Key != player.Key && !p.Killed))
+                                         .Select(p => new MapOpponent(p));
+
+            foreach (var opponent in opponents)
+            {
+                var opponentVisibleBombs = BotHelper.FindVisibleBombs(state, opponent.Location);
+
+                if (opponentVisibleBombs == null) continue;
+
+                var opponetSafeBlocks = FindSafeBlocks(state, opponent.Player, opponent.Location, opponentVisibleBombs);
+
+                var dx = Math.Abs(playerLoc.X - opponent.Location.X);
+                var dy = Math.Abs(playerLoc.Y - opponent.Location.Y);
+
+                // one block difference
+                if (dx == 1 || dy == 1)
+                {
+                    // TODO: logic
+                    if (opponetSafeBlocks == null)
+                    {
+                        if (!PlayerWillBeKilled(state, player, opponent.Player, playerLoc, visibleBombs, safeBlocks))
+                        {
+                            return true;
+                        }
+                    }
+                }
+                else
+                {
+                    //TODO: continue blocking
+                    if (opponetSafeBlocks == null)
+                    {
+                        if (opponent.Location.X == playerLoc.X || opponent.Location.Y == playerLoc.Y)
+                        {
+                            if (!PlayerWillBeKilled(state, player, opponent.Player, playerLoc, visibleBombs, safeBlocks))
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        private bool PlayerWillBeKilled(GameState state, Player player, Player opponent, Location playerLoc, IEnumerable<Bomb> visibleBombs, IEnumerable<MapSafeBlock> safeBlocks)
+        {
+            var explodingBomb = visibleBombs.First();
+
+            var chainingBombs = BotHelper.FindVisibleBombs(state, new Location(explodingBomb.Location.X - 1, explodingBomb.Location.Y - 1), chaining: true);
+
+            while (chainingBombs != null)
+            {
+                if (chainingBombs.Any(bomb => (!opponent.IsBombOwner(bomb) && !player.IsBombOwner(bomb)))) return true;
+
+                chainingBombs = chainingBombs.Where(bomb => bomb.BombTimer < explodingBomb.BombTimer);
+
+                if (chainingBombs.Count() > 1) return true;
+
+                if (chainingBombs.Count() > 0)
+                {
+                    explodingBomb = chainingBombs.First();
+                    chainingBombs = BotHelper.FindVisibleBombs(state, new Location(explodingBomb.Location.X - 1, explodingBomb.Location.Y - 1), chaining: true);
+                }
+                else
+                {
+                    chainingBombs = null;
+                }
+            }
+
+            if (safeBlocks == null) return true;
+
+            if (safeBlocks.First().Distance < explodingBomb.BombTimer - 1) return false;
+
             return true;
         }
 
@@ -1098,7 +1140,6 @@ namespace BomberBot.Business.Strategy
 
             // attack 2
 
-            var oneBlockOpponents = new List<MapOpponent>();
 
             var opponents = state.Players.Where(p => (p.Key != player.Key && !p.Killed))
                                          .Select(p => new MapOpponent(p));
@@ -1114,25 +1155,17 @@ namespace BomberBot.Business.Strategy
                     // one block difference
                     if (dx == 1 || dy == 1)
                     {
-                        oneBlockOpponents.Add(opponent);
-                    }
-                }
-            }
+                        var blastBlocks = BotHelper.FindAllBlastLocations(state, bombLoc, playerBombs[0].BombRadius);
 
-            if (oneBlockOpponents.Count > 0)
-            {
-                var blastBlocks = BotHelper.FindAllBlastLocations(state, bombLoc, playerBombs[0].BombRadius);
-
-                if (blastBlocks != null)
-                {
-                    foreach (var oneBlockOpponent in oneBlockOpponents)
-                    {
-                        var opPossibleMoves = BotHelper.ExpandMoveBlocks(state, oneBlockOpponent.Location, oneBlockOpponent.Location);
-
-                        if (opPossibleMoves.Count == 1 && blastBlocks.Contains(opPossibleMoves[0]))
+                        if (blastBlocks != null)
                         {
-                            _move = Move.TriggerBomb;
-                            return true;
+                            var opPossibleMoves = BotHelper.ExpandMoveBlocks(state, opponent.Location, opponent.Location);
+
+                            if (opPossibleMoves.Count == 1 && blastBlocks.Contains(opPossibleMoves[0]))
+                            {
+                                _move = Move.TriggerBomb;
+                                return true;
+                            }
                         }
                     }
                 }
@@ -1191,10 +1224,65 @@ namespace BomberBot.Business.Strategy
             }
 
             var playerBombs = state.GetPlayerBombs(playerKey);
-
+            var visibleWalls = BotHelper.FindVisibleWalls(state, playerLoc, player);
+            IEnumerable<MapBombPlacementBlock> bombPlacementBlocks;
             // return early if possible
             if (playerBombs != null && playerBombs.Count >= player.BombBag)
             {
+                if (visibleWalls != null)
+                {
+                    // test
+                    bombPlacementBlocks = FindBombPlacementBlocks(state, player, playerLoc, oneBlockLookUp: true);
+
+                    //if we can score 4
+                    if (visibleWalls.Count == 3)
+                    {
+                        // if a better location in next block
+                        if (bombPlacementBlocks != null)
+                        {
+                            var bombPlacementBlock = bombPlacementBlocks.Where(b => b.VisibleWalls > 3)
+                                                                        .FirstOrDefault(b => b.Distance < 2);
+
+                            if (bombPlacementBlock != null)
+                            {
+                                _move = GetMoveFromLocation(playerLoc, bombPlacementBlock.LocationToBlock);
+                                return true;
+                            }
+                        }
+                    }
+                    else if (visibleWalls.Count == 2)
+                    {
+                        // if a better location in next block
+                        if (bombPlacementBlocks != null)
+                        {
+                            var bombPlacementBlock = bombPlacementBlocks.Where(b => b.VisibleWalls > 2)
+                                                                        .FirstOrDefault(b => b.Distance < 2);
+
+                            if (bombPlacementBlock != null)
+                            {
+                                _move = GetMoveFromLocation(playerLoc, bombPlacementBlock.LocationToBlock);
+                                return true;
+                            }
+                        }
+                    }
+                    else if (visibleWalls.Count == 1)
+                    {
+                        // if a better location in next block
+                        if (bombPlacementBlocks != null)
+                        {
+                            var bombPlacementBlock = bombPlacementBlocks.Where(b => b.VisibleWalls > 1)
+                                                                        .FirstOrDefault(b => b.Distance < 2);
+
+                            if (bombPlacementBlock != null)
+                            {
+                                _move = GetMoveFromLocation(playerLoc, bombPlacementBlock.LocationToBlock);
+                                return true;
+                            }
+                        }
+                    }
+                    _move = Move.DoNothing;
+                    return true;
+                }
                 return false;
             }
 
@@ -1244,11 +1332,12 @@ namespace BomberBot.Business.Strategy
                 }
             }
 
-            // TODO: Attack 2
-            var oneBlockOpponents = new List<MapOpponent>();
+            // TODO: Attack 2  
 
             var opponents = state.Players.Where(p => (p.Key != player.Key && !p.Killed))
                                          .Select(p => new MapOpponent(p));
+
+            var blastBlocks = BotHelper.FindAllBlastLocations(state, playerLoc, player.BombRadius);
 
             foreach (var opponent in opponents)
             {
@@ -1260,43 +1349,34 @@ namespace BomberBot.Business.Strategy
                     // one block difference
                     if (dx == 1 || dy == 1)
                     {
-                        oneBlockOpponents.Add(opponent);
-                    }
-                }
-            }
 
-            if (oneBlockOpponents.Count > 0)
-            {
-                var blastBlocks = BotHelper.FindAllBlastLocations(state, playerLoc, player.BombRadius);
-
-                if (blastBlocks != null)
-                {
-                    foreach (var oneBlockOpponent in oneBlockOpponents)
-                    {
-                        var opPossibleMoves = BotHelper.ExpandMoveBlocks(state, oneBlockOpponent.Location, oneBlockOpponent.Location);
-
-                        if (opPossibleMoves.Count == 0)
+                        if (blastBlocks != null)
                         {
-                            _move = Move.PlaceBomb;
-                            return true;
-                        }
 
-                        if (opPossibleMoves.Count == 1 && blastBlocks.Contains(opPossibleMoves[0]))
-                        {
-                            _move = Move.PlaceBomb;
-                            return true;
+                            var opPossibleMoves = BotHelper.ExpandMoveBlocks(state, opponent.Location, opponent.Location);
+
+                            if (opPossibleMoves.Count == 0)
+                            {
+                                _move = Move.PlaceBomb;
+                                return true;
+                            }
+
+                            if (opPossibleMoves.Count == 1 && blastBlocks.Contains(opPossibleMoves[0]))
+                            {
+                                _move = Move.PlaceBomb;
+                                return true;
+                            }
                         }
                     }
                 }
             }
 
-            var visibleWalls = BotHelper.FindVisibleWalls(state, playerLoc, player);
             if (visibleWalls == null)
             {
                 return false;
             }
 
-            var bombPlacementBlocks = FindBombPlacementBlocks(state, player, playerLoc, oneBlockLookUp: true);
+            bombPlacementBlocks = FindBombPlacementBlocks(state, player, playerLoc, oneBlockLookUp: true);
 
             //if we can score 4
             if (visibleWalls.Count == 3)
@@ -1474,7 +1554,7 @@ namespace BomberBot.Business.Strategy
                                .Where(p => p.Key != playerKey)
                                .Where(p => !p.Killed)
                                .OrderBy(p => p.Points)
-                               .Select(p=>p.Points)
+                               .Select(p => p.Points)
                                .First();
 
             var playerScore = player.Points;
@@ -1612,10 +1692,10 @@ namespace BomberBot.Business.Strategy
                 // TODO: Attack 2
                 if (!strike)
                 {
-                    var oneBlockOpponents = new List<MapOpponent>();
-
                     var opponents = state.Players.Where(p => (p.Key != player.Key && !p.Killed))
                                                  .Select(p => new MapOpponent(p));
+
+                    var blastBlocks = BotHelper.FindAllBlastLocations(state, playerLoc, player.BombRadius);
 
                     foreach (var opponent in opponents)
                     {
@@ -1627,31 +1707,22 @@ namespace BomberBot.Business.Strategy
                             // one block difference
                             if (dx == 1 || dy == 1)
                             {
-                                oneBlockOpponents.Add(opponent);
-                            }
-                        }
-                    }
-
-                    if (oneBlockOpponents.Count > 0)
-                    {
-                        var blastBlocks = BotHelper.FindAllBlastLocations(state, playerLoc, player.BombRadius);
-
-                        if (blastBlocks != null)
-                        {
-                            foreach (var oneBlockOpponent in oneBlockOpponents)
-                            {
-                                var opPossibleMoves = BotHelper.ExpandMoveBlocks(state, oneBlockOpponent.Location, oneBlockOpponent.Location);
-
-                                if (opPossibleMoves.Count == 0)
+                                if (blastBlocks != null)
                                 {
-                                    strike = true;
-                                    break;
-                                }
 
-                                if (opPossibleMoves.Count == 1 && blastBlocks.Contains(opPossibleMoves[0]))
-                                {
-                                    strike = true;
-                                    break;
+                                    var opPossibleMoves = BotHelper.ExpandMoveBlocks(state, opponent.Location, opponent.Location);
+
+                                    if (opPossibleMoves.Count == 0)
+                                    {
+                                        strike = true;
+                                        break;
+                                    }
+
+                                    if (opPossibleMoves.Count == 1 && blastBlocks.Contains(opPossibleMoves[0]))
+                                    {
+                                        strike = true;
+                                        break;
+                                    }
                                 }
                             }
                         }
