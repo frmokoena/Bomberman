@@ -3,10 +3,8 @@ using BomberBot.Domain.Model;
 using BomberBot.Interfaces;
 using BomberBot.Services;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 
 namespace BomberBot
 {

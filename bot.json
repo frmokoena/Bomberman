@@ -1,7 +1,7 @@
 {
     "Author":"Rethabile Mokoena",
     "Email":"fr.mokoena@gmail.com",
-    "NickName" :"Rethabile",
+    "NickName" :"wildcat",
     "BotType": "CSharp",
     "ProjectLocation" : "",
 	"RunFile" : "BomberBot\\bin\\Release\\BomberBot.exe",
