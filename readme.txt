@@ -36,17 +36,17 @@ Either of the following two methods will do the job.
 
 I have written a number of automated tests (`BomberBotTests.csproj`) to ensure that the solution works as expected. Test data consititutes diferent state files picked from replay files of different matches.
 
-To run the tests, you will need the `NUnit Framework`, and the steps are:
+To run the tests, I use `NUnit 3 Test Adapter` nuget package, and the steps are:
 
-  1. Build the solution in Visual Studio to discover the tests.
-  2. Copy the `states` folder from the project `root` folder to the `Debug` directory of the test project.
-  3. I use `Test Explorer` in Visual Studio to run my tests.
-   
+  1. Build the solution in Visual Studio to discover available tests.
+  2. Copy the `testData` folder from the project `root` folder to the `Debug` directory of the test project.
+  3. I use `Test Explorer` in Visual Studio to view and run my tests.
+  4. Click `Run All` in the Test Explorer.   
   
 ### Running the application
 
   1. Download the latest release of the Game Engine from here [https://github.com/EntelectChallenge/2016-Bomberman/releases](https://github.com/EntelectChallenge/2016-Bomberman/releases) and extract it into a location of your choice.
-  2. Navigate to the root directory of the Game Engine (`Game Engine/`), and open the `Run.bat` file.
+  2. Navigate to the root directory of the Game Engine (`Game Engine`), and open the `Run.bat` file.
   3. Replace one of the bot directories from the `Run.bat` file with the root directory of this bot.
   2. Open the Command Prompt and change to the root directory of the Game Engine.
   3. Execute the application by running the following command: `Run.bat`
@@ -57,24 +57,21 @@ To run the tests, you will need the `NUnit Framework`, and the steps are:
 
 I use DIY hacks for my bot with A* search for path finding.
 
-During each round, any one of the following actions (in order of importance) can happen:
+Due to time limit (2 seconds), I use a state machine approach. During each round, any one of the following actions can happen:
 
  1. Stay clear of bombs
- 2. Trigger the bomb if the timer it's not already 2.
- 3. Chase nearby power ups based on thier importance.
- 4. Plant bomb if we can score and find hiding block.
- 5. Chase after power up
- 6. Search for next bomb placement block
- 7. Chase opponent if all walls have been destroyed
+ 2. Plant bomb if we have any in our bomb bag, and can score points (or block an opponent) and find hiding block
+ 3. Block an opponent if we can destroy her
+ 4. Chase power up
+ 5. Search for next bomb placement block
+ 6. Chase opponent if all walls have been destroyed, and we are losing on points.
+ 7. Expore the map if we haven't visited every block
  8. Do nothing if we can't do anything fruitful.
 		   
 ### Project Structure
 
 The solution houses two projects. The application project (`BomberBot.csproj`) and the test project (`BomberBotTests.csproj`).
 
+At the core of the application project is bot strategy (`IStrategy.cs` implemented by `Strategy.cs`), which makes move decisions. Bot helper class (`BotHelper.cs`) houses helper methods used by strategy class.
 
-At the core of the application project is bot strategy interface (`IStrategy.cs`). All the move decisions are carried out by the bot strategy class (`Strategy.cs` which implements `IStrategy`). Bot helper class (`BotHelper.cs`) contains some of helper methods used by strategy class.
-
-
-Reading of the state file and preparing of the game state is delegated to the game service (`IGameService.cs`).
-
+Reading of the state file and preparing of the game state is delegated to the game service (`IGameService.cs` implemented by `GameService.cs`).

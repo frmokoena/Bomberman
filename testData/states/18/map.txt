@@ -1,0 +1,40 @@
+Map Width: 21, Map Height: 21, Current Round: 78, Seed: 1959903205, PlayerBounty: 510
+#####################
+#      +     +++    #
+# # # # #+#+# # # #+#
+#    ++  + +  ++    #
+# # # #+# # #+# #+# #
+#  +     +++     ++ #
+# # # # # # # # #+# #
+#       +   + +     #
+# # # # #+#+# # # # #
+#       +++++ +     #
+# # # # #+$+# # # # #
+#       +1++        #
+# # # # # # # # # # #
+#     + B           #
+# #+# #A# # # # #!# #
+# ++ 3 6  +         #
+# #+# #+# # # # # # #
+#    ++  + +  +     #
+#+# # # #+#+# # # # #
+#    +++     ++++   #
+#####################
+---------------------------
+Player Name: Rethabile
+Key: A
+Points: 133
+Status: Alive
+Bombs: {x:6,y:16,fuse:3,radius:2},{x:8,y:16,fuse:6,radius:2}
+BombBag: 0
+BlastRadius: 2
+---------------------------
+---------------------------
+Player Name: Anarchist 2.0
+Key: B
+Points: 199
+Status: Alive
+Bombs: {x:10,y:12,fuse:1,radius:2}
+BombBag: 0
+BlastRadius: 2
+---------------------------
