@@ -1,0 +1,40 @@
+Map Width: 21, Map Height: 21, Current Round: 166, Seed: 128618429, PlayerBounty: 610
+#####################
+#   +    + ++       #
+# # # # # #+# # # # #
+#                5 +#
+# # # # # # # # # # #
+#+              +8++#
+# # # # # # # # # #+#
+#                A +#
+# # # #&# #8# # #+# #
+#                   #
+# # # # #  B# # # # #
+#                   #
+# # # # # # # # #+# #
+#                 ++#
+#+# # # # # # # # #+#
+#+              + ++#
+# # # # # # # # # #+#
+#+               +  #
+# # # # #+# # # # # #
+#          ++       #
+#####################
+---------------------------
+Player Name: bgh
+Key: A
+Points: 539
+Status: Alive
+Bombs: {x:18,y:4,fuse:5,radius:4},{x:18,y:6,fuse:8,radius:4}
+BombBag: 1
+BlastRadius: 4
+---------------------------
+---------------------------
+Player Name: Rethabile
+Key: B
+Points: 399
+Status: Alive
+Bombs: {x:12,y:9,fuse:8,radius:32}
+BombBag: 2
+BlastRadius: 32
+---------------------------

@@ -13,8 +13,8 @@ namespace BomberBotTests.UnitTests
         public void InitialToExploreLocationsTest()
         {
             //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\15";
-            string runDirectory = TestContext.CurrentContext.TestDirectory + @"\data\initial";
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\testData\states\15";
+            string runDirectory = TestContext.CurrentContext.TestDirectory + @"\testData\data\initial";
             string playerKey = "A";
             IGameService<GameState> gameService = new GameService(playerKey, workingDirectory,runDirectory);
                       
@@ -32,8 +32,8 @@ namespace BomberBotTests.UnitTests
         public void LoadToExploreLocationsTest()
         {
             //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\16";
-            string runDirectory = TestContext.CurrentContext.TestDirectory + @"\data\load";
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\testData\states\16";
+            string runDirectory = TestContext.CurrentContext.TestDirectory + @"\testData\data\load";
             string playerKey = "A";
             IGameService<GameState> gameService = new GameService(playerKey, workingDirectory,runDirectory);
 
@@ -51,8 +51,8 @@ namespace BomberBotTests.UnitTests
         public void UpdateToExploreLocationsTest()
         {
             //Arrange
-            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\states\16";
-            string runDirectory = TestContext.CurrentContext.TestDirectory + @"\data\edit";
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\testData\states\16";
+            string runDirectory = TestContext.CurrentContext.TestDirectory + @"\testData\data\edit";
             string playerKey = "A";
             IGameService<GameState> gameService = new GameService(playerKey, workingDirectory, runDirectory);
 

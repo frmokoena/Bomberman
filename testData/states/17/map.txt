@@ -1,0 +1,40 @@
+Map Width: 21, Map Height: 21, Current Round: 185, Seed: 983872755, PlayerBounty: 540
+#####################
+#    !              #
+# # #b# # # # # # # #
+#                   #
+# # # # # # # # # # #
+#                   #
+#+# # # # # # # # # #
+#                   #
+# # # # # # # # # # #
+#                   #
+#+# # # #   # # # # #
+#                   #
+# # # # # # # # # # #
+#                   #
+#+# # # # # # # # # #
+# +                 #
+# # # # # # # # # # #
+#                   #
+#+# # # # # # # # # #
+# + ++      A       #
+#####################
+---------------------------
+Player Name: Rethabile
+Key: A
+Points: 352
+Status: Alive
+Bombs: 
+BombBag: 4
+BlastRadius: 2
+---------------------------
+---------------------------
+Player Name: Flubber
+Key: B
+Points: 685
+Status: Alive
+Bombs: {x:6,y:3,fuse:7,radius:64}
+BombBag: 1
+BlastRadius: 64
+---------------------------

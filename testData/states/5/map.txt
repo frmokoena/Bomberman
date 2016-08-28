@@ -1,0 +1,40 @@
+Map Width: 21, Map Height: 21, Current Round: 209, Seed: 863366156, PlayerBounty: 660
+#####################
+#     +  +++  +   ++#
+# # # #+# # #+# #+# #
+#         +   +  +  #
+# # # # #+#+# # #+# #
+#       +   + +    +#
+# # # # # # # # # # #
+#               ++  #
+# # # # # # # # # #+#
+#                   #
+# # # # #   # # # #+#
+#                   #
+# # # # # # # # # #+#
+#                   #
+# # # # # # # # # # #
+#                 a+#
+# # # # # # #B# #+# #
+#            6   +  #
+# # # # # # # # # # #
+#         ++        #
+#####################
+---------------------------
+Player Name: John
+Key: A
+Points: 456
+Status: Alive
+Bombs: {x:19,y:16,fuse:10,radius:64}
+BombBag: 2
+BlastRadius: 64
+---------------------------
+---------------------------
+Player Name: Rethabile
+Key: B
+Points: 566
+Status: Alive
+Bombs: {x:14,y:18,fuse:6,radius:4}
+BombBag: 1
+BlastRadius: 4
+---------------------------
