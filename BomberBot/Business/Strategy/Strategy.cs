@@ -1462,9 +1462,8 @@ namespace BomberBot.Business.Strategy
 
         private bool FindBombPlacementBlock(GameState state, Player player, Location playerLoc, string playerKey)
         {
-            //var r = new Random();
-            //var maxPlacements = r.Next(5, 10);
-            var bombPlacementBlocks = state.PercentageWall > 10 ? FindBombPlacementBlocks(state, player, playerLoc, 10) : FindBombPlacementBlocks(state, player, playerLoc, 2);
+            var bombPlacementBlocks = state.PercentageWall > 25 ? FindBombPlacementBlocks(state, player, playerLoc, 10) : FindBombPlacementBlocks(state, player, playerLoc, 1);
+            
             var visibleWalls = BotHelper.FindVisibleWalls(state, playerLoc, player);
             var playerBombs = state.GetPlayerBombs(playerKey);
 
