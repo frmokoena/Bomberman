@@ -191,7 +191,7 @@ namespace BomberBotTests.UnitTests
 
             Strategy bot = new Strategy(gameService);
 
-            var expectMove = Move.DoNothing;
+            var expectMove = Move.TriggerBomb;
 
             //Act 
             bot.Execute();
@@ -529,6 +529,27 @@ namespace BomberBotTests.UnitTests
             Strategy bot = new Strategy(gameService);
 
             var expectMove = Move.MoveUp;
+
+            //Act 
+            bot.Execute();
+            var result = ReadMove(workingDirectory);
+
+            // Assert
+            Assert.AreEqual((int)expectMove, result);
+        }
+
+        [Test]
+        public void SafeToProceedToThroughTheBomb()
+        {
+            //Arrange
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\testData\states\27";
+            string runDirectory = TestContext.CurrentContext.TestDirectory + @"\testData\data";
+            string playerKey = "A";
+            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory, runDirectory);
+
+            Strategy bot = new Strategy(gameService);
+
+            var expectMove = Move.MoveLeft;
 
             //Act 
             bot.Execute();
