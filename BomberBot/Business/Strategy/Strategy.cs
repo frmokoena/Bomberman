@@ -184,9 +184,9 @@ namespace BomberBot.Business.Strategy
                 {
 
                     //TODO: continue blocking
-                    var opSafeBlocks = FindSafeBlocks(state, opponent.Player, opponent.Location, opponentVisibleBombs);
+                    var opSafeBlock = FindSafeBlocks(state, opponent.Player, opponent.Location, opponentVisibleBombs, opSafe: true);
 
-                    if (opSafeBlocks == null)
+                    if (opSafeBlock == null)
                     {
                         if (opponent.Location.X == playerLoc.X || opponent.Location.Y == playerLoc.Y)
                         {
@@ -359,7 +359,7 @@ namespace BomberBot.Business.Strategy
                     return bombPlacementBlocks.OrderBy(b => b.Distance)
                                               .ThenByDescending(b => b.VisibleWalls)
                                               .ThenBy(b => b.SuperDistance)
-                                              .ThenBy(b => b.PowerDistance);                              
+                                              .ThenBy(b => b.PowerDistance);
                 }
 
                 qNode = openSet.OrderBy(n => n.GCost).First();
@@ -425,7 +425,7 @@ namespace BomberBot.Business.Strategy
                                                                               .ThenBy(b => b.PowerDistance);
         }
 
-        private IEnumerable<MapSafeBlock> FindSafeBlocks(GameState state, Player player, Location startLoc, IEnumerable<Bomb> bombsToDodge)
+        private IEnumerable<MapSafeBlock> FindSafeBlocks(GameState state, Player player, Location startLoc, IEnumerable<Bomb> bombsToDodge, bool opSafe = false)
         {
             var safeBlocks = new List<MapSafeBlock>();
             var bomb = bombsToDodge.OrderByDescending(b => b.BombTimer)
@@ -454,12 +454,27 @@ namespace BomberBot.Business.Strategy
 
                     if (visibleBombs == null)
                     {
+                        MapSafeBlock mapBlock;
+                        if (opSafe)
+                        {
+                            //add block
+                            mapBlock = new MapSafeBlock
+                            {
+                                Location = qNode.Location,
+                                Distance = safeNode.FCost
+                            };
+
+                            safeBlocks.Add(mapBlock);
+                            return safeBlocks;
+                        }
+
+
                         var visibleWalls = BotHelper.FindVisibleWalls(state, qNode.Location, player);
 
                         var nearByPowerUp = FindNearByMapPowerUpBlock(state, qNode.Location, player.Key);
 
                         //add block
-                        var mapBlock = new MapSafeBlock
+                        mapBlock = new MapSafeBlock
                         {
                             Location = qNode.Location,
                             Distance = safeNode.FCost,
@@ -494,12 +509,11 @@ namespace BomberBot.Business.Strategy
                     }
                 }
             }
-            return safeBlocks.Count == 0 ? null : safeBlocks.OrderBy(block => block.Distance)                                                            
+            return safeBlocks.Count == 0 ? null : safeBlocks.OrderBy(block => block.Distance)
                                                             .ThenByDescending(block => block.VisibleWalls)
                                                             .ThenBy(Block => Block.SuperDistance)
                                                             .ThenBy(block => block.PowerDistance);
         }
-
 
         private List<Location> GetRouteLocations(MapNode mapNode)
         {
@@ -698,7 +712,7 @@ namespace BomberBot.Business.Strategy
             }
             return false;
         }
-
+        
         private MapPowerUpBlock FindNearByMapPowerUpBlock(GameState state, Location startLoc, string playerKey)
         {
 
@@ -757,7 +771,7 @@ namespace BomberBot.Business.Strategy
                     var nodeInOpenList = openSet.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
 
                     if (nodeInOpenList != null) continue;
-
+                    
                     var nodeInClosedList = closedSet.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
 
                     if (nodeInClosedList != null) continue;
@@ -805,7 +819,7 @@ namespace BomberBot.Business.Strategy
 
                     if (opponentVisibleBombs != null)
                     {
-                        opponentSafeBlocks = FindSafeBlocks(state, visibleOpponentBomb.Owner, opponentLocation, opponentVisibleBombs);
+                        opponentSafeBlocks = FindSafeBlocks(state, visibleOpponentBomb.Owner, opponentLocation, opponentVisibleBombs, opSafe: true);
                     }
                 }
             }
@@ -987,7 +1001,7 @@ namespace BomberBot.Business.Strategy
 
                 if (opponentVisibleBombs == null) continue;
 
-                var opponetSafeBlocks = FindSafeBlocks(state, opponent.Player, opponent.Location, opponentVisibleBombs);
+                var opSafeBlock = FindSafeBlocks(state, opponent.Player, opponent.Location, opponentVisibleBombs, opSafe: true);
 
                 var dx = Math.Abs(playerLoc.X - opponent.Location.X);
                 var dy = Math.Abs(playerLoc.Y - opponent.Location.Y);
@@ -996,7 +1010,7 @@ namespace BomberBot.Business.Strategy
                 if (dx == 1 || dy == 1)
                 {
                     // TODO: logic
-                    if (opponetSafeBlocks == null)
+                    if (opSafeBlock == null)
                     {
                         if (!PlayerWillBeKilled(state, player, opponent.Player, playerLoc, visibleBombs, safeBlocks))
                         {
@@ -1007,7 +1021,7 @@ namespace BomberBot.Business.Strategy
                 else
                 {
                     //TODO: continue blocking
-                    if (opponetSafeBlocks == null)
+                    if (opSafeBlock == null)
                     {
                         if (opponent.Location.X == playerLoc.X || opponent.Location.Y == playerLoc.Y)
                         {
@@ -1352,8 +1366,9 @@ namespace BomberBot.Business.Strategy
 
                         if (blastBlocks != null)
                         {
+                            var opVisibleBombs = BotHelper.FindVisibleBombs(state, opponent.Location);
 
-                            var opPossibleMoves = BotHelper.ExpandMoveBlocks(state, opponent.Location, opponent.Location);
+                            var opPossibleMoves = opVisibleBombs == null ? BotHelper.ExpandMoveBlocks(state, opponent.Location, opponent.Location) : BotHelper.ExpandMoveBlocks(state, opponent.Location, opponent.Location, opponent.Player, opVisibleBombs, stayClear: true);
 
                             if (opPossibleMoves.Count == 0)
                             {
@@ -1463,7 +1478,7 @@ namespace BomberBot.Business.Strategy
         private bool FindBombPlacementBlock(GameState state, Player player, Location playerLoc, string playerKey)
         {
             var bombPlacementBlocks = state.PercentageWall > 25 ? FindBombPlacementBlocks(state, player, playerLoc, 10) : FindBombPlacementBlocks(state, player, playerLoc, 1);
-            
+
             var visibleWalls = BotHelper.FindVisibleWalls(state, playerLoc, player);
             var playerBombs = state.GetPlayerBombs(playerKey);
 
