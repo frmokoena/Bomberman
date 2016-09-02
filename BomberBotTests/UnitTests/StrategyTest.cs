@@ -559,6 +559,27 @@ namespace BomberBotTests.UnitTests
             Assert.AreEqual((int)expectMove, result);
         }
 
+        [Test]
+        public void PlayerShouldProceedLeftTest()
+        {
+            //Arrange
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\testData\states\28";
+            string runDirectory = TestContext.CurrentContext.TestDirectory + @"\testData\data";
+            string playerKey = "A";
+            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory, runDirectory);
+
+            Strategy bot = new Strategy(gameService);
+
+            var expectMove = Move.MoveLeft;
+
+            //Act 
+            bot.Execute();
+            var result = ReadMove(workingDirectory);
+
+            // Assert
+            Assert.AreEqual((int)expectMove, result);
+        }
+
         // Read move
         private int ReadMove(string workingDirectory)
         {
