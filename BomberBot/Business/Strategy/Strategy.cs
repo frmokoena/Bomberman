@@ -458,6 +458,8 @@ namespace BomberBot.Business.Strategy
 
                         var nearByPowerUp = FindNearByMapPowerUpBlock(state, qNode.Location, player.Key);
 
+                        var blockProbability = FindBlockProbability(state, qNode.Location, safeNode.FCost, player.Key);
+
                         //add block
                         mapBlock = new MapSafeBlock
                         {
@@ -467,7 +469,8 @@ namespace BomberBot.Business.Strategy
                             VisibleWalls = visibleWalls == null ? 0 : visibleWalls.Count,
                             PowerDistance = nearByPowerUp == null ? int.MaxValue : nearByPowerUp.Distance,
                             SuperDistance = state.SuperLocation == null ? 0 : state.SuperLocation == null ? 0 : BotHelper.FindPathToTarget(state, qNode.Location, state.SuperLocation, super: true).FCost,
-                            MapNode = safeNode
+                            MapNode = safeNode,
+                            Probability = blockProbability
                         };
                         safeBlocks.Add(mapBlock);
                     }
@@ -494,7 +497,8 @@ namespace BomberBot.Business.Strategy
                     }
                 }
             }
-            return safeBlocks.Count == 0 ? null : safeBlocks.OrderBy(block => block.Distance)
+            return safeBlocks.Count == 0 ? null : safeBlocks.OrderByDescending(block=>block.Probability)                
+                                                            .ThenBy(block => block.Distance)
                                                             .ThenByDescending(block => block.VisibleWalls)
                                                             .ThenBy(Block => Block.SuperDistance)
                                                             .ThenBy(block => block.PowerDistance);
@@ -830,7 +834,8 @@ namespace BomberBot.Business.Strategy
                     if (anyChainingBomb) findNearestHidingBlock = true;
                 }
 
-                var prioritySafeBlocks = findNearestHidingBlock ? safeBlocks : safeBlocks.OrderBy(block => block.SuperDistance)
+                var prioritySafeBlocks = findNearestHidingBlock ? safeBlocks : safeBlocks.OrderByDescending(block => block.Probability)
+                                                                                         .ThenBy(block => block.SuperDistance)
                                                                                          .ThenBy(block => block.PowerDistance)
                                                                                          .ThenByDescending(block => block.VisibleWalls)
                                                                                          .ThenBy(block => block.Distance);
@@ -1205,7 +1210,7 @@ namespace BomberBot.Business.Strategy
                             var opVisibleBombs = BotHelper.FindVisibleBombs(state, opponent.Location);
 
                             var opPossibleMoves = opVisibleBombs == null ? BotHelper.ExpandMoveBlocks(state, opponent.Location, opponent.Location) : BotHelper.ExpandMoveBlocks(state, opponent.Location, opponent.Location, opponent.Player, opVisibleBombs, stayClear: true);
-                            
+
                             if (opPossibleMoves.Count == 1 && blastBlocks.Contains(opPossibleMoves[0]))
                             {
                                 _move = Move.TriggerBomb;
@@ -1590,7 +1595,7 @@ namespace BomberBot.Business.Strategy
             }
 
             var playerScores = state.Players
-                               .Where(p => p.Key != playerKey)                               
+                               .Where(p => p.Key != playerKey)
                                .OrderBy(p => p.Points)
                                .Select(p => p.Points)
                                .ToList();
@@ -1938,6 +1943,61 @@ namespace BomberBot.Business.Strategy
                 }
             }
             return false;
+        }
+
+        private int FindBlockProbability(GameState state, Location blockLoc, int blockDistance, string playerKey)
+        {
+            var openSet = new HashSet<MapNode> { new MapNode { Location = blockLoc } };
+            var closedSet = new HashSet<MapNode>();
+
+            MapNode qNode;
+
+            while (openSet.Count != 0)
+            {
+                qNode = openSet.OrderBy(n => n.GCost).First();
+
+                openSet.Remove(qNode);
+                closedSet.Add(qNode);
+
+                if (qNode.GCost <= blockDistance)
+                {
+                    var entity = state.GetBlockAtLocation(qNode.Location).Entity;
+
+                    if (entity is Player)
+                    {
+                        var opponent = (Player)entity;
+                        if (opponent.Key != playerKey)
+                        {
+                            var opLocation = new Location(opponent.Location.X - 1, opponent.Location.Y - 1);
+                            var opVisibleBombs = BotHelper.FindVisibleBombs(state, opLocation);
+                            if (opVisibleBombs == null) return 0;
+                        }
+                    }
+
+                    //expand
+                    var possibleBlocksLoc = BotHelper.ExpandBlocksForPlayer(state, qNode.Location);
+
+                    for (var i = 0; i < possibleBlocksLoc.Count; i++)
+                    {
+                        var nodeInOpenList = openSet.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
+
+                        if (nodeInOpenList != null) continue;
+
+                        var nodeInClosedList = closedSet.FirstOrDefault(node => (node.Location.Equals(possibleBlocksLoc[i])));
+
+                        if (nodeInClosedList != null) continue;
+
+                        var newNode = new MapNode
+                        {
+                            Location = possibleBlocksLoc[i],
+                            GCost = qNode.GCost + 1
+                        };
+
+                        openSet.Add(newNode);
+                    }
+                }
+            }
+            return 1;
         }
     }
 }
