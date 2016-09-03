@@ -57,7 +57,7 @@ namespace BomberBot.Domain.Model
 
         public bool IsIndestructibleWall(int x, int y)
         {
-            return GetBlockAtLocation(x,y).IsIndestructibleWall();
+            return GetBlockAtLocation(x, y).IsIndestructibleWall();
         }
 
         public int MaxBombBlast
@@ -68,19 +68,11 @@ namespace BomberBot.Domain.Model
             }
         }
 
-        public double MaxRadiusPowerChase
+        public double MaxPriorityChase
         {
             get
             {
-                return 0.6 * MaxBombBlast;
-            }
-        }
-
-        public double MaxBagPowerChase
-        {
-            get
-            {
-                return 0.4 * MaxBombBlast;
+                return Math.Ceiling(0.25 * MaxBombBlast);
             }
         }
 

@@ -338,7 +338,7 @@ namespace BomberBotTests.UnitTests
 
             Strategy bot = new Strategy(gameService);
 
-            var expectMove = Move.DoNothing;
+            var expectMove = Move.MoveLeft;
 
             //Act 
             bot.Execute();
@@ -444,7 +444,7 @@ namespace BomberBotTests.UnitTests
 
             Strategy bot = new Strategy(gameService);
 
-            var expectMove = Move.MoveDown;
+            var expectMove = Move.MoveUp;
 
             //Act 
             bot.Execute();
@@ -566,6 +566,48 @@ namespace BomberBotTests.UnitTests
             string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\testData\states\28";
             string runDirectory = TestContext.CurrentContext.TestDirectory + @"\testData\data";
             string playerKey = "A";
+            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory, runDirectory);
+
+            Strategy bot = new Strategy(gameService);
+
+            var expectMove = Move.MoveLeft;
+
+            //Act 
+            bot.Execute();
+            var result = ReadMove(workingDirectory);
+
+            // Assert
+            Assert.AreEqual((int)expectMove, result);
+        }
+
+        [Test]
+        public void ItIsSafeToProceedToLeftTest()
+        {
+            //Arrange
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\testData\states\29";
+            string runDirectory = TestContext.CurrentContext.TestDirectory + @"\testData\data";
+            string playerKey = "A";
+            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory, runDirectory);
+
+            Strategy bot = new Strategy(gameService);
+
+            var expectMove = Move.MoveLeft;
+
+            //Act 
+            bot.Execute();
+            var result = ReadMove(workingDirectory);
+
+            // Assert
+            Assert.AreEqual((int)expectMove, result);
+        }
+
+        [Test]
+        public void PriorityPowerChaseTest()
+        {
+            //Arrange
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\testData\states\30";
+            string runDirectory = TestContext.CurrentContext.TestDirectory + @"\testData\data";
+            string playerKey = "D";
             IGameService<GameState> gameService = new GameService(playerKey, workingDirectory, runDirectory);
 
             Strategy bot = new Strategy(gameService);
