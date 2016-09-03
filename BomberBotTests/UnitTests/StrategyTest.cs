@@ -622,6 +622,27 @@ namespace BomberBotTests.UnitTests
             Assert.AreEqual((int)expectMove, result);
         }
 
+        [Test]
+        public void DangerousMoveTest()
+        {
+            //Arrange
+            string workingDirectory = TestContext.CurrentContext.TestDirectory + @"\testData\states\31";
+            string runDirectory = TestContext.CurrentContext.TestDirectory + @"\testData\data";
+            string playerKey = "A";
+            IGameService<GameState> gameService = new GameService(playerKey, workingDirectory, runDirectory);
+
+            Strategy bot = new Strategy(gameService);
+
+            var expectMove = Move.DoNothing;
+
+            //Act 
+            bot.Execute();
+            var result = ReadMove(workingDirectory);
+
+            // Assert
+            Assert.AreEqual((int)expectMove, result);
+        }
+
         // Read move
         private int ReadMove(string workingDirectory)
         {

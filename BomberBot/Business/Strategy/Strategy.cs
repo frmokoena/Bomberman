@@ -518,8 +518,10 @@ namespace BomberBot.Business.Strategy
             return routeLocations;
         }
 
-        private MapBombPlacementBlock FindPlacementBlockToDestroyPlayer(GameState state, Player player, Location startLoc)
+        private IEnumerable<MapBombPlacementBlock> FindPlacementBlockToDestroyPlayer(GameState state, Player player, Location startLoc, int noOfPlacements = 2)
         {
+            var placementBlocks = new List<MapBombPlacementBlock>();
+
             var openSet = new HashSet<MapNode> { new MapNode { Location = startLoc } };
             var closedSet = new HashSet<MapNode>();
 
@@ -528,20 +530,32 @@ namespace BomberBot.Business.Strategy
 
             while (openSet.Count != 0)
             {
+                if (placementBlocks.Count > noOfPlacements)
+                {
+                    return placementBlocks.OrderByDescending(b => b.Distance);
+                }
 
                 qNode = openSet.OrderBy(node => node.GCost).First();
 
                 if (BotHelper.IsAnyPlayerVisible(state, player, qNode.Location))
                 {
-                    var mapNode = BotHelper.FindPathToTarget(state, startLoc, qNode.Location, player);
+                    var inLine = placementBlocks.Any(b => (b.Location.X == qNode.Location.X || b.Location.Y == qNode.Location.Y));
 
-                    if (mapNode != null)
+                    if (!inLine)
                     {
-                        return new MapBombPlacementBlock
+                        var mapNode = BotHelper.FindPathToTarget(state, startLoc, qNode.Location, player);
+
+                        if (mapNode != null)
                         {
-                            Location = qNode.Location,
-                            LocationToBlock = BotHelper.ReconstructPath(mapNode)
-                        };
+                            var placementBlock = new MapBombPlacementBlock
+                            {
+                                Location = qNode.Location,
+                                LocationToBlock = BotHelper.ReconstructPath(mapNode),
+                                Distance = mapNode.FCost
+                            };
+
+                            placementBlocks.Add(placementBlock);
+                        }
                     }
                 }
 
@@ -569,7 +583,7 @@ namespace BomberBot.Business.Strategy
                     openSet.Add(newNode);
                 }
             }
-            return null;
+            return placementBlocks.Count == 0 ? null : placementBlocks.OrderByDescending(b => b.Distance);
         }
 
         private bool WallsDestroyed(List<List<DestructibleWall>> destroyedWalls, List<DestructibleWall> walls)
@@ -837,7 +851,7 @@ namespace BomberBot.Business.Strategy
                 var prioritySafeBlocks = findNearestHidingBlock ? safeBlocks : safeBlocks.OrderByDescending(block => block.Probability)
                                                                                          .ThenByDescending(block => block.VisibleWalls)
                                                                                          .ThenBy(block => block.SuperDistance)
-                                                                                         .ThenBy(block => block.PowerDistance)                                                                                         
+                                                                                         .ThenBy(block => block.PowerDistance)
                                                                                          .ThenBy(block => block.Distance);
 
                 foreach (var safeBlock in prioritySafeBlocks)
@@ -1609,11 +1623,11 @@ namespace BomberBot.Business.Strategy
             // if we are losing try to destroy the other chap
             if (playerScore <= leadScore)
             {
-                var visiblePlayerBlock = FindPlacementBlockToDestroyPlayer(state, player, playerLoc);
+                var visiblePlayerBlocks = FindPlacementBlockToDestroyPlayer(state, player, playerLoc);
 
-                if (visiblePlayerBlock != null)
+                if (visiblePlayerBlocks != null)
                 {
-                    _move = GetMoveFromLocation(playerLoc, visiblePlayerBlock.LocationToBlock);
+                    _move = GetMoveFromLocation(playerLoc, visiblePlayerBlocks.First().LocationToBlock);
                     return true;
                 }
             }

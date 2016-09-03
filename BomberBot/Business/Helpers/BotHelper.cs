@@ -141,6 +141,12 @@ namespace BomberBot.Business.Helpers
 
                             foreach (var newBomb in newBombs)
                             {
+                                if (newBomb.BombTimer < 4)
+                                {
+                                    opponentClear = true;
+                                    break;
+                                }
+
                                 var bombLocation = new Location(newBomb.Location.X - 1, newBomb.Location.Y - 1);
 
                                 var chains = FindVisibleBombs(state, bombLocation, chaining: true);
@@ -150,27 +156,15 @@ namespace BomberBot.Business.Helpers
                                     opponentClear = true;
                                     break;
                                 }
-
-                                if (player.IsBombOwner(newBomb))
+                                var opponentLocation = state.GetPlayerLocation(newBomb.Owner.Key);
+                                if (opponentLocation != null)
                                 {
-                                    if (newBomb.BombTimer < 4)
+                                    var opponentVisibleBombs = FindVisibleBombs(state, opponentLocation);
+
+                                    if (opponentVisibleBombs == null)
                                     {
                                         opponentClear = true;
                                         break;
-                                    }
-                                }
-                                else
-                                {
-                                    var opponentLocation = state.GetPlayerLocation(newBomb.Owner.Key);
-                                    if (opponentLocation != null)
-                                    {
-                                        var opponentVisibleBombs = FindVisibleBombs(state, opponentLocation);
-
-                                        if (opponentVisibleBombs == null)
-                                        {
-                                            opponentClear = true;
-                                            break;
-                                        }
                                     }
                                 }
                             }
@@ -247,6 +241,12 @@ namespace BomberBot.Business.Helpers
 
                             foreach (var newBomb in newBombs)
                             {
+                                if (newBomb.BombTimer < 4)
+                                {
+                                    opponentClear = true;
+                                    break;
+                                }
+
                                 var bombLocation = new Location(newBomb.Location.X - 1, newBomb.Location.Y - 1);
 
                                 var chains = FindVisibleBombs(state, bombLocation, chaining: true);
@@ -256,17 +256,6 @@ namespace BomberBot.Business.Helpers
                                     opponentClear = true;
                                     break;
                                 }
-
-                                if (player.IsBombOwner(newBomb))
-                                {
-                                    if (newBomb.BombTimer < 4)
-                                    {
-                                        opponentClear = true;
-                                        break;
-                                    }
-                                }
-                                else
-                                {
                                     var opponentLocation = state.GetPlayerLocation(newBomb.Owner.Key);
                                     if (opponentLocation != null)
                                     {
@@ -277,8 +266,7 @@ namespace BomberBot.Business.Helpers
                                             opponentClear = true;
                                             break;
                                         }
-                                    }
-                                }
+                                    }                                
                             }
 
                             if (!opponentClear)
@@ -353,6 +341,12 @@ namespace BomberBot.Business.Helpers
 
                             foreach (var newBomb in newBombs)
                             {
+                                if (newBomb.BombTimer < 4)
+                                {
+                                    opponentClear = true;
+                                    break;
+                                }
+
                                 var bombLocation = new Location(newBomb.Location.X - 1, newBomb.Location.Y - 1);
 
                                 var chains = FindVisibleBombs(state, bombLocation, chaining: true);
@@ -362,17 +356,6 @@ namespace BomberBot.Business.Helpers
                                     opponentClear = true;
                                     break;
                                 }
-
-                                if (player.IsBombOwner(newBomb))
-                                {
-                                    if (newBomb.BombTimer < 4)
-                                    {
-                                        opponentClear = true;
-                                        break;
-                                    }
-                                }
-                                else
-                                {
                                     var opponentLocation = state.GetPlayerLocation(newBomb.Owner.Key);
                                     if (opponentLocation != null)
                                     {
@@ -383,8 +366,7 @@ namespace BomberBot.Business.Helpers
                                             opponentClear = true;
                                             break;
                                         }
-                                    }
-                                }
+                                    }                                
                             }
 
                             if (!opponentClear)
@@ -459,6 +441,12 @@ namespace BomberBot.Business.Helpers
 
                             foreach (var newBomb in newBombs)
                             {
+                                if (newBomb.BombTimer < 4)
+                                {
+                                    opponentClear = true;
+                                    break;
+                                }
+
                                 var bombLocation = new Location(newBomb.Location.X - 1, newBomb.Location.Y - 1);
 
                                 var chains = FindVisibleBombs(state, bombLocation, chaining: true);
@@ -469,26 +457,15 @@ namespace BomberBot.Business.Helpers
                                     break;
                                 }
 
-                                if (player.IsBombOwner(newBomb))
+                                var opponentLocation = state.GetPlayerLocation(newBomb.Owner.Key);
+                                if (opponentLocation != null)
                                 {
-                                    if (newBomb.BombTimer < 4)
+                                    var opponentVisibleBombs = FindVisibleBombs(state, opponentLocation);
+
+                                    if (opponentVisibleBombs == null)
                                     {
                                         opponentClear = true;
                                         break;
-                                    }
-                                }
-                                else
-                                {
-                                    var opponentLocation = state.GetPlayerLocation(newBomb.Owner.Key);
-                                    if (opponentLocation != null)
-                                    {
-                                        var opponentVisibleBombs = FindVisibleBombs(state, opponentLocation);
-
-                                        if (opponentVisibleBombs == null)
-                                        {
-                                            opponentClear = true;
-                                            break;
-                                        }
                                     }
                                 }
                             }
