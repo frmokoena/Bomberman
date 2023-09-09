@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This is my entry to the 2016 Entelect AI Challenge. The challenge details can be found here [http://challenge.entelect.co.za/](http://challenge.entelect.co.za/).
+This is my entry to the 2016 Entelect AI Challenge. The challenge details can be found here [https://challenge.entelect.co.za](https://challenge.entelect.co.za).
 
 ## Tools and technologies used
 
